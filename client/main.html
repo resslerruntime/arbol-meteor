@@ -1,25 +1,37 @@
+
 <head>
-  <title>~~crop~~</title>
+  <title>Crop</title>
 </head>
 
+
 <body>
-  <h1>Welcome to Crop!</h1>
-
-  {{> hello}}
-  {{> info}}
+  <div class="container">
+    <header>
+      <h1>Accounts and CROP balances</h1>
+    </header>
+ 
+    <ul>
+      {{#each balances}}
+        {{> row}}
+      {{/each}}
+    </ul>
+  </div>
 </body>
-
-<template name="hello">
-  <button>Click Me</button>
-  <p>You've pressed the button {{currentBlock}} times.</p>
+ 
+<template name="row">
+  <li>{{row}}</li>
 </template>
 
-<template name="info">
-  <h2>Learn Meteor!</h2>
-  <ul>
-    <li><a href="https://www.meteor.com/try" target="_blank">Do the Tutorial</a></li>
-    <li><a href="http://guide.meteor.com" target="_blank">Follow the Guide</a></li>
-    <li><a href="https://docs.meteor.com" target="_blank">Read the Docs</a></li>
-    <li><a href="https://forums.meteor.com" target="_blank">Discussions</a></li>
-  </ul>
+<!--
+<template name="crop">
+
+  <script>
+  var accounts = web3.eth.accounts
+  for (account = 0; account < accounts.length-1; account++) {
+    var addr = accounts[account];
+    document.write("address: " + addr + " | " + "balance: "+ {{balance(addr)}} + "<br");
+  }
+  </script>
+
 </template>
+-->
