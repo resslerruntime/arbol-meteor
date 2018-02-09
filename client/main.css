@@ -1,0 +1,27 @@
+/* Style the list */
+ul.tabs-list {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background-color: #f1f1f1;
+}
+
+/* Float the list items side by side */
+ul.tabs-list li {float: left;}
+
+/* Style the links inside the list items */
+ul.tabs-list li a {
+    display: inline-block;
+    color: black;
+    text-align: center;
+    padding: 14px 16px;
+    transition: 0.3s;
+    border: 1px solid #ccc;
+}
+
+/* Style the tab content */
+.tabs-content {
+    display: none;
+    padding: 6px 12px;
+}

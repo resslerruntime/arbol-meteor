@@ -1,5 +1,5 @@
 import { Template } from 'meteor/templating';
-
+import '../imports/ui/body.js';
 import './main.html';
 
 Template.body.onCreated(function cropOnCreated() {
@@ -302,20 +302,19 @@ function getAccounts(){
   contractInstance.balanceOf("0x627306090abaB3A6e1400e9345bC60c78a8BEf57", function(error, result){ console.log(result.toNumber())});
  // contractInstance.methods.balanceOf("0x627306090abaB3A6e1400e9345bC60c78a8BEf57").call().then(function (result) {
 //        console.log(result);
-    
 
   return accts;
 }
 
-Template.body.helpers({
-  balances: [
-    { row: getAccounts()},
-    { row: 'This is task 2' },
-    { row: 'This is task 3' },
-
-  //  return web3.eth.accounts[0];
-  ],
-});
+// Template.body.helpers({
+//   balances: [
+//     { row: getAccounts()},
+//     { row: 'This is task 2' },
+//     { row: 'This is task 3' },
+//
+//   //  return web3.eth.accounts[0];
+//   ],
+// });
 
 /*
   balance(address){

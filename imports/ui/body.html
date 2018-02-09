@@ -1,0 +1,42 @@
+
+
+<body>
+
+  <div class="container">
+    <header>
+      <h1>C R O P</h1>
+    </header>
+  </div>
+
+ {{> navigation}}
+</body>
+
+<template name="navigation">
+
+  <!-- Use `name` to add a custom class to the outer container -->
+  {{#basicTabs name="newTabs" tabs=tabs}}
+    <!--
+      There are two ways to define content for your tabs:
+
+      1. Wrap each tabbed section in a blank `<div></div>`.
+         Sections must correspond with the order of the tabs you specified.
+
+      2. Wrap each tabbed section in the provided block helper (RECOMMENDED!).
+         `{{#tabContent slug="nameOfSlug"}} ... {{/tabContent}}`
+         These can be defined in any order you like.
+    -->
+    {{#tabContent slug="open"}}
+      All open protections are displayed here in a table:
+    {{/tabContent}}
+
+    {{#tabContent slug="create"}}
+      Form used to create new protectsions
+    {{/tabContent}}
+
+    {{#tabContent slug="mine"}}
+      All personal protections are displated here in a table:
+    {{/tabContent}}
+
+  {{/basicTabs}}
+
+</template>
