@@ -12,3 +12,5 @@ Install local npm packages.
 Run the application.
 
     $ meteor run
+    
+Visit http://localhost:3000 in your favorite web browser,
