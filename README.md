@@ -8,3 +8,9 @@ Install npm packages.
 Run the application.
 
     $ meteor run
+
+
+
+Needed for seeing tabs?
+
+    $ meteor add templates:tabs

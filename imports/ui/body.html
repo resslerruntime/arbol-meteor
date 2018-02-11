@@ -12,7 +12,6 @@
 </body>
 
 <template name="navigation">
-
   <!-- Use `name` to add a custom class to the outer container -->
   {{#basicTabs name="newTabs" tabs=tabs}}
     <!--
@@ -25,18 +24,62 @@
          `{{#tabContent slug="nameOfSlug"}} ... {{/tabContent}}`
          These can be defined in any order you like.
     -->
+
+    <!-- "OPEN PROTECTIONS" TAB -->
     {{#tabContent slug="open"}}
       All open protections are displayed here in a table:
     {{/tabContent}}
 
+    <!-- "CREATE A PROTECTION" TAB -->
     {{#tabContent slug="create"}}
-      Form used to create new protectsions
+      Select the options for the protection you want to create and click create. Make sure you have enough ETH in your wallet, and if you are selling a protection, make sure you have enough CROP in your wallet as well.
+      {{> formNewProtection}}
     {{/tabContent}}
 
+    <!-- "MY PROTECTIONS" TAB -->
     {{#tabContent slug="mine"}}
-      All personal protections are displated here in a table:
+      All of your protections are displayed here in a table:
     {{/tabContent}}
-
   {{/basicTabs}}
+</template>
 
+
+<!-- TEMPLATES FOR "CREATE A PROTECTION FORM" -->
+
+<template name="formNewProtection">
+  <form class="new-protection">
+    <table>
+      {{#each formNewProtection}}
+        {{> elNewProtection}}
+      {{/each}}
+    </table>
+    <input type="submit" value="Create Request">
+  </form>
+</template>
+
+<template name="elNewProtection">
+  <tr>
+    <td>
+      <div class="tooltip">
+        {{title}}
+        <span class="tooltiptext">{{tooltiptext}}</span>
+      </div>
+    </td>
+    <td>
+      {{#if isEqual type "date"}}
+        <input type="{{type}}" id={{id}} name={{name}} class="date-picker" min={{minDate}}>
+      {{else if isEqual type "number"}}
+        <input type="{{type}}" name={{name}} step="0.0001" value="0" min="0">
+      {{else if isEqual type "select"}}
+        <select name={{name}}>
+          <option value="" selected disabled hidden>Select {{article}} {{name}}</option>
+          {{#each elOptions}}
+            <option value={{value}}>{{text}}</option>
+          {{/each}}
+        </select>
+      {{else if isEqual type "toggle"}}
+        <label class="buy-sell"><input type="checkbox" id="toggle-buy-sell"><div class="slider round"><span class="buy">BUY</span><span class="sell">SELL</span></div></label>
+      {{/if}}
+    </td>
+  </tr>
 </template>
