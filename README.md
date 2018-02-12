@@ -1,7 +1,11 @@
 Quickstart
 =====================
 
-Install npm packages.
+Install meteor globally as instructed on meteor.com
+
+    $ curl https://install.meteor.com/ | sh
+
+Install local npm packages.
 
     $ npm install
 
