@@ -141,17 +141,10 @@ Template.elNewProtection.helpers({
 
 // Dealing with submittal of form
 Template.formNewProtection.events({
-  'mouseleave .date-picker'(event) {
-    //TODO change properties of the other date picker so that incorrect values can't be chosen
+  'input .date-picker'(event) {
     var target = event.currentTarget;
-    var date = target.value;
-    var id = target.id;
-    console.log(date,id)
-    console.log(this)
-    console.log(Template.formNewProtection)
-  },
-  'keyup .date-picker'(event) {
-    //TODO change properties of the other date picker so that incorrect values can't be chosen
+    capDate(target);
+    console.log("input")
   },
   'submit .new-protection'(event) {
     // Prevent default browser form submit
@@ -197,8 +190,8 @@ Template.formNewProtection.events({
         //clear form
         target[0].value = "";
         target[1].value = "";
-        target[2].value = "";
-        target[3].value = "";
+        target[2].value = 0;
+        target[3].value = 0;
         target[4].value = "";
         target[5].value = "";
         target[6].value = "";
@@ -209,6 +202,21 @@ Template.formNewProtection.events({
     }
   },
 });
+
+function capDate(target){
+  //change properties of the other date picker so that incorrect values can't be chosen
+  var date = target.value;
+  var id = target.id;
+  var now = new Date().toISOString().substring(0,10);
+
+  //if start is changed first, then put min on end Date
+  if(id === 'start-date'){
+    if(date !== "") if(new Date(now) - new Date(date) < 0) $('#end-date')[0].min = date;
+  }
+  if(id === 'end-date'){
+    if(date !== "") $('#start-date')[0].max = date;
+  }
+}
 
 ////////////////////////////////////////////
 // FUNCTIONS RELATED TO "MY PROTECTIONS"
