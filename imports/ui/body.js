@@ -64,7 +64,42 @@ Template.navigation.helpers({
 ////////////////////////////////////////////
 
 //tables should display as loading until data is available
-$('table,#mask').addClass('loading');
+Template.openProtectionsTable.onCreated(function(){
+  var that = this;
+  that.bodyData = new ReactiveVar([]);
+  setTimeout(function(){
+    $('.wrapper').removeClass('loading');
+    $('.loader').hide();
+    that.bodyData.set([
+      {
+        type: "bodyRow"
+        ,column: [
+          {name:"#123456789"}
+          ,{name:"2 mo"}
+          ,{name:"2$"}
+          ,{name:"5$"}
+          ,{name:"US corn belt"}
+          ,{name:"Index"}
+          ,{name:"10%"}
+          ,{name:"Buy"}
+        ]
+      },
+      {
+        type: "bodyRow"
+        ,column: [
+          {name:"#285937365"}
+          ,{name:"5 mo"}
+          ,{name:"6$"}
+          ,{name:"2$"}
+          ,{name:"US corn belt"}
+          ,{name:"Index"}
+          ,{name:"10%"}
+          ,{name:"Fund"}
+        ]
+      }
+    ]);
+  }, 5000);
+});
 
 // populate open protections table
 Template.openProtectionsTable.helpers({
@@ -86,39 +121,7 @@ Template.openProtectionsTable.helpers({
     ];
   },
   bodyData: function(){
-    //this will be a function that makes a call and communicates with the ethereum
-    // var data = setTimeout(function(){
-    //   $('.wrapper').removeClass('loading');
-      return [
-        {
-          type: "bodyRow"
-          ,column: [
-            {name:"#123456789"}
-            ,{name:"2 mo"}
-            ,{name:"2$"}
-            ,{name:"5$"}
-            ,{name:"US corn belt"}
-            ,{name:"Index"}
-            ,{name:"10%"}
-            ,{name:"Buy"}
-          ]
-        },
-        {
-          type: "bodyRow"
-          ,column: [
-            {name:"#285937365"}
-            ,{name:"5 mo"}
-            ,{name:"6$"}
-            ,{name:"2$"}
-            ,{name:"US corn belt"}
-            ,{name:"Index"}
-            ,{name:"10%"}
-            ,{name:"Fund"}
-          ]
-        }
-      ];
-    // }, 1000);
-    // return data;
+    return Template.instance().bodyData.get();
   }
 });
 

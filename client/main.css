@@ -150,7 +150,7 @@ input:checked + .slider .sell
     CSS FOR MAKING LOADING ICON
   */
 
-  /*.wrapper {
+  .wrapper {
     position: relative;
   }
   .loading:before {
@@ -169,7 +169,7 @@ input:checked + .slider .sell
 
   .loader {
       border: 6px solid #f3f3f3;
-      border-top: 6px solid #3498db; 
+      border-top: 6px solid #3498db;
       border-radius: 50%;
       width: 35px;
       height: 35px;
@@ -183,4 +183,4 @@ input:checked + .slider .sell
   @keyframes spin {
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
-  }*/
+  }
