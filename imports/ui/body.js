@@ -9,6 +9,22 @@ import './body.html';
 // FUNCTIONS RELATED TO THE ENTIRE PAGE
 ////////////////////////////////////////////
 
+//instantiate sortable tables
+$(function(){
+  $("#openProtections").tablesorter();
+});
+
+$(function(){
+  $("#myProtections").tablesorter();
+});
+
+Template.sortableRows.helpers({
+  isEqual: function (a, b) {
+  return a === b;
+  }
+});
+
+//instantiate tab layout
 ReactiveTabs.createInterface({
   template: 'basicTabs',
   onChange: function (slug, template) {
@@ -47,6 +63,64 @@ Template.navigation.helpers({
 // FUNCTIONS RELATED TO "OPEN PROTECTIONS"
 ////////////////////////////////////////////
 
+//tables should display as loading until data is available
+$('table,#mask').addClass('loading');
+
+// populate open protections table
+Template.openProtectionsTable.helpers({
+  headerData: function() {
+    return [
+      {
+        type: "headerRow"
+        ,column: [
+          {name:"Token Hash"}
+          ,{name:"Term"}
+          ,{name:"Payout"}
+          ,{name:"Cost"}
+          ,{name:"Location"}
+          ,{name:"Index"}
+          ,{name:"Threshold"}
+          ,{name:"Buy/Fund"}
+        ]
+      }
+    ];
+  },
+  bodyData: function(){
+    //this will be a function that makes a call and communicates with the ethereum
+    // var data = setTimeout(function(){
+    //   $('.wrapper').removeClass('loading');
+      return [
+        {
+          type: "bodyRow"
+          ,column: [
+            {name:"#123456789"}
+            ,{name:"2 mo"}
+            ,{name:"2$"}
+            ,{name:"5$"}
+            ,{name:"US corn belt"}
+            ,{name:"Index"}
+            ,{name:"10%"}
+            ,{name:"Buy"}
+          ]
+        },
+        {
+          type: "bodyRow"
+          ,column: [
+            {name:"#285937365"}
+            ,{name:"5 mo"}
+            ,{name:"6$"}
+            ,{name:"2$"}
+            ,{name:"US corn belt"}
+            ,{name:"Index"}
+            ,{name:"10%"}
+            ,{name:"Fund"}
+          ]
+        }
+      ];
+    // }, 1000);
+    // return data;
+  }
+});
 
 ////////////////////////////////////////////
 // FUNCTIONS RELATED TO "CREATE A PROTECTION"
@@ -135,7 +209,7 @@ Template.elNewProtection.helpers({
     return new Date().toISOString().substring(0,10);
   },
   isEqual: function (a, b) {
-  return a === b;
+    return a === b;
   }
 });
 
@@ -211,7 +285,7 @@ function capDate(target){
 
   //if start is changed first, then put min on end Date
   if(id === 'start-date'){
-    if(date !== "") if(new Date(now) - new Date(date) < 0) $('#end-date')[0].min = date;
+    if(date !== "") if(new Date(now) - new Date(date) <= 0) $('#end-date')[0].min = date;
   }
   if(id === 'end-date'){
     if(date !== "") $('#start-date')[0].max = date;
@@ -221,3 +295,63 @@ function capDate(target){
 ////////////////////////////////////////////
 // FUNCTIONS RELATED TO "MY PROTECTIONS"
 ////////////////////////////////////////////
+
+// populate open protections table
+Template.myProtectionsTable.helpers({
+  headerData: function() {
+    return [
+      {
+        type: "headerRow"
+        ,column: [
+          {name:"Seller"}
+          ,{name:"Buyer"}
+          ,{name:"Start"}
+          ,{name:"End"}
+          ,{name:"Payout"}
+          ,{name:"Cost"}
+          ,{name:"Location"}
+          ,{name:"Index"}
+          ,{name:"Threshold"}
+          ,{name:"Status"}
+          ,{name:"Action"}
+        ]
+      }
+    ];
+  },
+  bodyData: function(){
+    //this will be a function that makes a call and communicates with the ethereum
+    return [
+      {
+        type: "bodyRow"
+        ,column: [
+          {name:"#325927593"}
+          ,{name:"#56425673"}
+          ,{name:"01-02-2018"}
+          ,{name:"03-04-2018"}
+          ,{name:"7$"}
+          ,{name:"8$"}
+          ,{name:"Alberta"}
+          ,{name:"index"}
+          ,{name:"10%"}
+          ,{name:"frozen"}
+          ,{name:"action"}
+        ]
+      },
+      {
+        type: "bodyRow"
+        ,column: [
+          {name:"#539503827"}
+          ,{name:"#56425673"}
+          ,{name:"07-02-2018"}
+          ,{name:"09-09-2018"}
+          ,{name:"1$"}
+          ,{name:"10$"}
+          ,{name:"Saskatchewan"}
+          ,{name:"index"}
+          ,{name:"10%"}
+          ,{name:"evaluating"}
+          ,{name:"action"}
+        ]
+      }
+    ];  }
+});

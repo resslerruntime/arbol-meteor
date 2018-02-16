@@ -28,6 +28,7 @@
     <!-- "OPEN PROTECTIONS" TAB -->
     {{#tabContent slug="open"}}
       All open protections are displayed here in a table:
+      {{> openProtectionsTable}}
     {{/tabContent}}
 
     <!-- "CREATE A PROTECTION" TAB -->
@@ -39,10 +40,46 @@
     <!-- "MY PROTECTIONS" TAB -->
     {{#tabContent slug="mine"}}
       All of your protections are displayed here in a table:
+      {{> myProtectionsTable}}
     {{/tabContent}}
   {{/basicTabs}}
 </template>
 
+<!-- TEMPLATES FOR SORTABLE TABLE -->
+
+<template name="sortableRows">
+  <tr>
+    {{#if isEqual type "headerRow"}}
+      {{#each column}}
+        <th> {{name}} </th>
+      {{/each}}
+    {{else if isEqual type "bodyRow"}}
+      {{#each column}}
+        <td> {{name}} </td>
+      {{/each}}
+    {{/if}}
+  </tr>
+</template>
+
+<!-- TEMPLATES FOR "OPEN PROTECTIONS" -->
+
+<template name="openProtectionsTable">
+  <div class="wrapper loading">
+    <table id="openProtections" class="tablesorter">
+      <thead>
+        {{#each headerData}}
+          {{> sortableRows}}
+        {{/each}}
+      </thead>
+      <tbody>
+        {{#each bodyData}}
+          {{> sortableRows}}
+        {{/each}}
+      </tbody>
+    </table>
+    <div class="loader"></div>
+  </div>
+</template>
 
 <!-- TEMPLATES FOR "CREATE A PROTECTION FORM" -->
 
@@ -82,4 +119,21 @@
       {{/if}}
     </td>
   </tr>
+</template>
+
+<!-- TEMPLATES FOR "MY PROTECTIONS" -->
+
+<template name="myProtectionsTable">
+  <table id="myProtections" class="tablesorter">
+    <thead>
+      {{#each headerData}}
+        {{> sortableRows}}
+      {{/each}}
+    </thead>
+    <tbody>
+      {{#each bodyData}}
+        {{> sortableRows}}
+      {{/each}}
+    </tbody>
+  </table>
 </template>
