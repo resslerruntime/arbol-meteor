@@ -1,6 +1,6 @@
-/*
+/* --------------------------------------------------------
   CSS FOR MAKING THE TABS LAYOUT
-*/
+-------------------------------------------------------- */
 
 /* Style the list */
 ul.tabs-list {
@@ -31,9 +31,9 @@ ul.tabs-list li a {
 }
 
 
-/*
+/* --------------------------------------------------------
   CSS FOR TOOLTIP
-*/
+-------------------------------------------------------- */
 
 .tooltip {
     position: relative;
@@ -62,9 +62,9 @@ ul.tabs-list li a {
     visibility: visible;
 }
 
-/*
+/* --------------------------------------------------------
   CSS FOR MAKING THE BUY / SELL TOGGLE ON THE CREATE PROTECTIONS FORM
-*/
+-------------------------------------------------------- */
 
 .buy-sell {
   position: relative;
@@ -146,9 +146,9 @@ input:checked + .slider .sell
 .slider.round:before {
   border-radius: 50%;}
 
-  /*
+  /* --------------------------------------------------------
     CSS FOR MAKING LOADING ICON
-  */
+  -------------------------------------------------------- */
 
   .wrapper {
     position: relative;
@@ -183,4 +183,12 @@ input:checked + .slider .sell
   @keyframes spin {
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
+  }
+
+  /* --------------------------------------------------------
+    CSS FOR TABLE SORT
+  -------------------------------------------------------- */
+
+  th.hover {
+    background-color: #4286f4;
   }

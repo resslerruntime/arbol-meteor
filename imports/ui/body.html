@@ -1,14 +1,24 @@
 
 
 <body>
-
   <div class="container">
     <header>
-      <h1>C R O P</h1>
+      <h1>A R B O L</h1>
     </header>
   </div>
 
- {{> navigation}}
+  <div id="web3-waiting">
+    <h3>Waiting for Web3 to load.</h3>
+  </div>
+  <div id="no-web3" style="display:none">
+    <h3>No Web3, consider using MetaMask: </h3>
+    <a href="https://metamask.io/">
+      <img src="/images/metamask-link.png" alt="Download MetaMask" height="120">
+    </a>
+  </div>
+ <div id="web3-onload" style="display:none">
+   {{> navigation}}
+</div>
 </body>
 
 <template name="navigation">
@@ -55,7 +65,15 @@
       {{/each}}
     {{else if isEqual type "bodyRow"}}
       {{#each column}}
-        <td> {{name}} </td>
+        <td>
+          {{#if isEqual type "text"}}
+            {{name}}
+          {{else if isEqual type "num"}}
+            {{name}}
+          {{else if isEqual type "button"}}
+            {{{button}}}
+          {{/if}}
+        </td>
       {{/each}}
     {{/if}}
   </tr>

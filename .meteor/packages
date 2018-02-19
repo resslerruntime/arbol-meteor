@@ -30,3 +30,5 @@ frozeman:persistent-minimongo2
 less
 templates:tabs
 andrei:tablesorter
+session
+underscore
