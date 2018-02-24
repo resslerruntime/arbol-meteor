@@ -10,10 +10,14 @@ import './body.html';
   const testUser    = "0x627306090abaB3A6e1400e9345bC60c78a8BEf57";
   const testUser2   = "0xf17f52151EbEF6C7334FAD080c5704D77216b732";
 
+  var user;
   var cropContract;
   var cropInstance;
   var witContract;
   var witInstance;
+
+  var myEvent;
+  var myEvent2;
 
 if (Meteor.isClient) {
   Meteor.startup(function() {
@@ -27,6 +31,7 @@ if (Meteor.isClient) {
       $('#web3-waiting').hide();
       $('#web3-onload').show();
       //initialize web3 contracts
+      user = web3.eth.accounts[0];
       cropContract = web3.eth.contract(CROPABI);
       cropInstance = cropContract.at(cropAddress);
       witContract = web3.eth.contract(WITABI);
@@ -39,6 +44,18 @@ if (Meteor.isClient) {
       console.log(WITABI)
       console.log(witContract)
       console.log(witInstance)
+      myEvent = witInstance.allEvents();
+      console.log(myEvent)
+      myEvent.watch(function(error, result){
+          console.log("on watch");
+          console.log(arguments);
+      });
+      myEvent2 = witInstance.allEvents({},{fromBlock: 0, toBlock: 'latest'});
+      console.log(myEvent2)
+      myEvent2.watch(function(error, result){
+          console.log("on watch2");
+          console.log(arguments);
+      });
     } else {
       console.log('No web3? You should consider trying MetaMask!')
       // fallback - use your fallback strategy (local node / hosted node + in-dapp id mgmt / fail)
@@ -72,6 +89,7 @@ const promisify = (inner) =>
             }
         })
     );
+
 
 ////////////////////////////////////////////
 // FUNCTIONS RELATED TO THE TAB LAYOUT
@@ -135,20 +153,27 @@ Template.sortableRows.events({
   },
   'click .fund': function(e){
     alert("fund");
-  },
+  }
+});
+
+Template.headerRow.onCreated(function(){
+  this.descending = new ReactiveVar(false);
+});
+
+Template.headerRow.events({
   'mouseenter th': function(e){
     $(e.target).addClass('hover');
   },
   'mouseleave th': function(e){
     $(e.target).removeClass('hover');
   },
-  'click th': function(e){
+  'click th': function(e,template){
     var t = e.target;
     $(t).fadeIn(100).fadeOut(100).fadeIn(100); //.fadeOut(100).fadeIn(100);
     //sort the json based on the header
     let array = [];
-    let sortedArray = [];
     let colIndex = 0;
+    let d = template.descending.get();
 
     if(t.parentElement.parentElement.parentElement.id === "openProtections"){
       console.log("sort openProtections")
@@ -162,13 +187,9 @@ Template.sortableRows.events({
       if(t.innerText === "INDEX") colIndex = 5;
       if(t.innerText === "THRESHOLD (%)") colIndex = 6;
       if(t.innerText === "BUY/FUND") colIndex = 7;
-      sortedArray = _.sortBy(array,function(obj){
-        let cell = obj.column[colIndex], key;
-        if(cell.type === "num") return key = parseFloat(cell.name);
-        if(cell.type === "text" || cell.type === "button") return key = cell.name;
-      });
       //set variable to new sorted array
-      Session.set("openProtectionsFilteredData",sortedArray);
+      Session.set("openProtectionsFilteredData",sortArray(array,colIndex,d));
+      template.descending.set(!d);
     }
     if(t.parentElement.parentElement.parentElement.id === "myProtections"){
       console.log("sort myProtections")
@@ -185,16 +206,23 @@ Template.sortableRows.events({
       if(t.innerText === "THRESHOLD") colIndex = 5;
       if(t.innerText === "STATUS") colIndex = 6;
       if(t.innerText === "ACTION") colIndex = 7;
-      sortedArray = _.sortBy(array,function(obj){
-        let cell = obj.column[colIndex], key;
-        if(cell.type === "num") return key = parseFloat(cell.name);
-        if(cell.type === "text" || cell.type === "button") return key = cell.name;
-      });
+      sortArray(array,colIndex,d);
       //set variable to new sorted array
-      Session.set("myProtectionsFilteredData",sortedArray);
+      Session.set("myProtectionsFilteredData",sortArray(array,colIndex,d));
+      template.descending.set(!d);
     }
   }
 });
+
+function sortArray(array,i,d){
+  let sortedArray = _.sortBy(array,function(obj){
+    let cell = obj.column[i], key;
+    if(cell.type === "num") return key = parseFloat(cell.name);
+    if(cell.type === "text" || cell.type === "button") return key = cell.name;
+  });
+  if(d) sortedArray.reverse();
+  return sortedArray;
+}
 
 ////////////////////////////////////////////
 // FUNCTIONS RELATED TO "OPEN PROTECTIONS"
@@ -202,6 +230,7 @@ Template.sortableRows.events({
 
 //tables should display as loading until data is available
 Template.openProtectionsTable.onCreated(function(){
+
   setTimeout(function(){
     $('.wrapper').removeClass('loading');
     $('.loader').hide();
@@ -238,6 +267,23 @@ Template.openProtectionsTable.onCreated(function(){
 
 // populate open protections table
 Template.openProtectionsTable.helpers({
+  filterData: function() {
+    return [
+      {
+        type: "headerRow"
+        ,column: [
+          {name:"Token Hash"}
+          ,{name:"Term (mo)"}
+          ,{name:"Payout (eth)"}
+          ,{name:"Cost (eth)"}
+          ,{name:"Location"}
+          ,{name:"Index"}
+          ,{name:"Threshold (%)"}
+          ,{name:"Buy/Fund"}
+        ]
+      }
+    ];
+  },
   headerData: function() {
     return [
       {

@@ -56,6 +56,16 @@
 </template>
 
 <!-- TEMPLATES FOR SORTABLE TABLE -->
+<template name="filterRow">
+</template>
+
+<template name="headerRow">
+  <tr>
+    {{#each column}}
+      <th> {{name}} </th>
+    {{/each}}
+  </tr>
+</template>
 
 <template name="sortableRows">
   <tr>
@@ -85,8 +95,11 @@
   <div class="wrapper loading">
     <table id="openProtections" class="tablesorter">
       <thead>
+        {{#each filterData}}
+          {{> filterRow}}
+        {{/each}}
         {{#each headerData}}
-          {{> sortableRows}}
+          {{> headerRow}}
         {{/each}}
       </thead>
       <tbody>
@@ -145,7 +158,7 @@
   <table id="myProtections" class="tablesorter">
     <thead>
       {{#each headerData}}
-        {{> sortableRows}}
+        {{> headerRow}}
       {{/each}}
     </thead>
     <tbody>
