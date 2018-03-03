@@ -6,7 +6,7 @@
       <h1>A R B O L</h1>
     </header>
   </div>
-
+  <div id="user">{{> user}}</div>
   <div id="web3-waiting">
     <h3>Waiting for Web3 to load.</h3>
   </div>
@@ -16,10 +16,18 @@
       <img src="/images/metamask-link.png" alt="Download MetaMask" height="120">
     </a>
   </div>
- <div id="web3-onload" style="display:none">
-   {{> navigation}}
-</div>
+  <div id="web3-onload" style="display:none">
+    {{> navigation}}
+  </div>
 </body>
+
+<template name="user">
+  <h3>
+    {{#each activeUser}}
+      {{name}}
+    {{/each}}
+  </h3>
+</template>
 
 <template name="navigation">
   <!-- Use `name` to add a custom class to the outer container -->
@@ -43,7 +51,7 @@
 
     <!-- "CREATE A PROTECTION" TAB -->
     {{#tabContent slug="create"}}
-      Select the options for the protection you want to create and click create. Make sure you have enough ETH in your wallet, and if you are selling a protection, make sure you have enough CROP in your wallet as well.
+      Select the options for the protection you want to create and click create. Make sure you have enough Wei in your wallet, and if you are selling a protection, make sure you have enough CROP in your wallet as well.
       {{> formNewProtection}}
     {{/tabContent}}
 
@@ -137,7 +145,7 @@
       {{#if isEqual type "date"}}
         <input type="{{type}}" id={{id}} name={{name}} class="date-picker" min={{minDate}}>
       {{else if isEqual type "number"}}
-        <input type="{{type}}" name={{name}} step="0.0001" value="0" min="0">
+        <input type="{{type}}" name={{name}} step="100" value="0" min="0">
       {{else if isEqual type "select"}}
         <select name={{name}}>
           <option value="" selected disabled hidden>Select {{article}} {{name}}</option>

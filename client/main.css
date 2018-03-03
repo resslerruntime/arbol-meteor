@@ -8,6 +8,10 @@ body {
                                   supported by Chrome and Opera */
 }
 
+div#user {
+  margin-left:2%;
+}
+
 /* --------------------------------------------------------
   CSS FOR MAKING THE TABS LAYOUT
 -------------------------------------------------------- */

@@ -5,79 +5,6 @@ import './body.html';
 // FUNCTIONS RELATED TO WEB3 PAGE STARTUP
 ////////////////////////////////////////////
 
-  const witAddress  = "0xf25186b5081ff5ce73482ad761db0eb0d25abfbf";
-  const cropAddress = "0x345ca3e014aaf5dca488057592ee47305d9b3e10";
-  const testUser    = "0x627306090abaB3A6e1400e9345bC60c78a8BEf57";
-  const testUser2   = "0xf17f52151EbEF6C7334FAD080c5704D77216b732";
-
-  var user;
-  var cropContract;
-  var cropInstance;
-  var witContract;
-  var witInstance;
-
-  var myEvent;
-  var myEvent2;
-
-if (Meteor.isClient) {
-  Meteor.startup(function() {
-    console.log('Meteor.startup');
-    // Checking if Web3 has been injected by the browser (Mist/MetaMask)
-    if (typeof web3 !== 'undefined') {
-      console.log("web3 from current provider: ",web3.currentProvider.constructor.name)
-      // Use Mist/MetaMask's provider
-      web3js = new Web3(web3.currentProvider);
-      //show relevant content depending on wether web3 is loaded or not
-      $('#web3-waiting').hide();
-      $('#web3-onload').show();
-      //initialize web3 contracts
-      user = web3.eth.accounts[0];
-      cropContract = web3.eth.contract(CROPABI);
-      cropInstance = cropContract.at(cropAddress);
-      witContract = web3.eth.contract(WITABI);
-      witInstance = witContract.at(witAddress);
-      console.log("testCrop")
-      console.log(CROPABI)
-      console.log(cropContract)
-      console.log(cropInstance)
-      console.log("testWit")
-      console.log(WITABI)
-      console.log(witContract)
-      console.log(witInstance)
-      myEvent = witInstance.allEvents();
-      console.log(myEvent)
-      myEvent.watch(function(error, result){
-          console.log("on watch");
-          console.log(arguments);
-      });
-      myEvent2 = witInstance.allEvents({},{fromBlock: 0, toBlock: 'latest'});
-      console.log(myEvent2)
-      myEvent2.watch(function(error, result){
-          console.log("on watch2");
-          console.log(arguments);
-      });
-    } else {
-      console.log('No web3? You should consider trying MetaMask!')
-      // fallback - use your fallback strategy (local node / hosted node + in-dapp id mgmt / fail)
-      web3js = new Web3(new Web3.providers.HttpProvider("http://localhost:7545"));
-      //show relevant content depending on wether web3 is available or not
-      $('#web3-waiting').hide();
-      $('#no-web3').show();
-    }
-    // Now you can start your app & access web3 freely:
-  });
-
-  Template.body.onCreated(function() {
-    console.log('Template.body.onCreated');
-  });
-
-  Template.body.helpers({
-    // currentTemplate: function() {
-    //   return Session.get('curTemplate');
-    // },
-  });
-}
-
 //used for asynchronous web3 calls
 const promisify = (inner) =>
     new Promise((resolve, reject) =>
@@ -90,6 +17,119 @@ const promisify = (inner) =>
         })
     );
 
+//table entry constructor
+function Entry(r){
+  let a = r.args;
+  let s = r.transactionHash.substring(0,8) + "...";
+  let d1 = new Date(a.start.c[0]).toISOString().substring(0,10);
+  let d2 = new Date(a.end.c[0]).toISOString().substring(0,10);
+
+  this.type = "bodyRow";
+  this.column = [
+      {type:"text",name:s}
+      ,{type:"text",name:d1}
+      ,{type:"text",name:d2}
+      ,{type:"num",name:a.weiContributing.c[0]}
+      ,{type:"num",name:a.weiAsking.c[0]}
+      ,{type:"text",name:a.location}
+      ,{type:"text",name:a.index}
+      ,{type:"num",name:a.threshold}
+      ,{type:"button",name:"Buy",button:"<button type='button' class='buyit'> buy </button>"}
+    ];
+}
+
+const witAddress  = "0xf25186b5081ff5ce73482ad761db0eb0d25abfbf";
+const cropAddress = "0x345ca3e014aaf5dca488057592ee47305d9b3e10";
+const testUser    = "0x627306090abaB3A6e1400e9345bC60c78a8BEf57";
+const testUser2   = "0xf17f52151EbEF6C7334FAD080c5704D77216b732";
+
+var user;
+var cropContract;
+var cropInstance;
+var witContract;
+var witInstance;
+
+var myEvent;
+var myEvent2;
+
+if (Meteor.isClient) {
+  Meteor.startup(async function() {
+    console.log('Meteor.startup');
+    // Checking if Web3 has been injected by the browser (Mist/MetaMask)
+    if (typeof web3 !== 'undefined') {
+      console.log("web3 from current provider: ",web3.currentProvider.constructor.name)
+      // Use Mist/MetaMask's provider
+      web3js = new Web3(web3.currentProvider);
+      //show relevant content depending on wether web3 is loaded or not
+      $('#web3-waiting').hide();
+      $('#web3-onload').show();
+      //initialize web3 contracts
+      try{
+        user = await promisify(cb => web3.eth.getAccounts(cb));
+        let s = "current user: " + user[0];
+        Session.set("activeUser",s);
+
+      } catch (error) {
+        console.log(error)
+        alert("User information was not loaded succesfully: " + error.message);
+      }
+      cropContract = web3.eth.contract(CROPABI);
+      cropInstance = cropContract.at(cropAddress);
+      witContract = web3js.eth.contract(WITABI);
+      witInstance = witContract.at(witAddress);
+      //add all entries to the sortable rows
+      witInstance.allEvents({fromBlock: 0, toBlock: 'latest'}).get(function(error, result){
+        let list = [];
+        let l = result.length;
+        for(var i = 0; i < l; i++){
+          if(result[i].event === "ProposalOffered") list.push(new Entry(result[i]));
+        }
+        $('.loader').hide();
+        $('.wrapper').removeClass('loading');
+        Session.set("openProtectionsFilteredData",list);
+      });
+      //add new entries as they are created
+      witInstance.allEvents().watch(function(error, result){
+        console.log("===> new proposal created")
+        let list = Session.get("openProtectionsFilteredData");
+        if(result.event === "ProposalOffered") list.push(new Entry(result));
+        Session.set("openProtectionsFilteredData",list);
+      });
+      // var filter = web3.eth.filter({fromBlock: 0, toBlock: 'latest'});
+      // filter.get(function(error, result){ console.log("A",error, result); });
+    } else {
+      console.log('No web3? You should consider trying MetaMask!')
+      // fallback - use your fallback strategy (local node / hosted node + in-dapp id mgmt / fail)
+      web3js = new Web3(new Web3.providers.HttpProvider("http://localhost:7545"));
+      //show relevant content depending on wether web3 is available or not
+      $('#web3-waiting').hide();
+      $('#no-web3').show();
+    }
+    // Now you can start your app & access web3 freely:
+  });
+
+  // Template.body.onCreated(function() {
+  //   console.log('Template.body.onCreated');
+  // });
+
+  // Template.body.helpers({
+  //   currentTemplate: function() {
+  //     return Session.get('curTemplate');
+  //   },
+  // });
+}
+
+////////////////////////////////////////////
+// ACTIVE USER
+////////////////////////////////////////////
+Session.set("activeUser","");
+
+// populate open protections table
+Template.user.helpers({
+  activeUser: function(){
+    return [{name: Session.get("activeUser")}];
+  }
+});
 
 ////////////////////////////////////////////
 // FUNCTIONS RELATED TO THE TAB LAYOUT
@@ -181,8 +221,8 @@ Template.headerRow.events({
       //sort array based on the click header
       if(t.innerText === "TOKEN HASH") colIndex = 0;
       if(t.innerText === "TERM (MO)") colIndex = 1;
-      if(t.innerText === "PAYOUT (ETH)") colIndex = 2;
-      if(t.innerText === "COST (ETH)") colIndex = 3;
+      if(t.innerText === "PAYOUT (WEI)") colIndex = 2;
+      if(t.innerText === "COST (WEI)") colIndex = 3;
       if(t.innerText === "LOCATION") colIndex = 4;
       if(t.innerText === "INDEX") colIndex = 5;
       if(t.innerText === "THRESHOLD (%)") colIndex = 6;
@@ -228,42 +268,41 @@ function sortArray(array,i,d){
 // FUNCTIONS RELATED TO "OPEN PROTECTIONS"
 ////////////////////////////////////////////
 
-//tables should display as loading until data is available
-Template.openProtectionsTable.onCreated(function(){
-
-  setTimeout(function(){
-    $('.wrapper').removeClass('loading');
-    $('.loader').hide();
-    Session.set("openProtectionsFilteredData",[
-      {
-        type: "bodyRow"
-        ,column: [
-          {type:"text",name:"#123456789"}
-          ,{type:"num",name:"2"}
-          ,{type:"num",name:"2"}
-          ,{type:"num",name:"5"}
-          ,{type:"text",name:"US corn belt"}
-          ,{type:"text",name:"Index"}
-          ,{type:"num",name:"10"}
-          ,{type:"button",name:"Buy",button:"<button type='button' class='buyit'> buy </button>"}
-        ]
-      },
-      {
-        type: "bodyRow"
-        ,column: [
-          {type:"text",name:"#285937365"}
-          ,{type:"num",name:"5"}
-          ,{type:"num",name:"6"}
-          ,{type:"num",name:"2"}
-          ,{type:"text",name:"US corn belt"}
-          ,{type:"text",name:"Index"}
-          ,{type:"num",name:"9"}
-          ,{type:"button",name:"Fund",button:"<button type='button' class='fund'> fund </button>"}
-        ]
-      }
-    ]);
-  }, 500);
-});
+// //tables should display as loading until data is available
+// Template.openProtectionsTable.onCreated(function(){
+//   setTimeout(function(){
+//     $('.wrapper').removeClass('loading');
+//     $('.loader').hide();
+//     Session.set("openProtectionsFilteredData",[
+//       {
+//         type: "bodyRow"
+//         ,column: [
+//           {type:"text",name:"#123456789"}
+//           ,{type:"num",name:"2"}
+//           ,{type:"num",name:"2"}
+//           ,{type:"num",name:"5"}
+//           ,{type:"text",name:"US corn belt"}
+//           ,{type:"text",name:"Index"}
+//           ,{type:"num",name:"10"}
+//           ,{type:"button",name:"Buy",button:"<button type='button' class='buyit'> buy </button>"}
+//         ]
+//       },
+//       {
+//         type: "bodyRow"
+//         ,column: [
+//           {type:"text",name:"#285937365"}
+//           ,{type:"num",name:"5"}
+//           ,{type:"num",name:"6"}
+//           ,{type:"num",name:"2"}
+//           ,{type:"text",name:"US corn belt"}
+//           ,{type:"text",name:"Index"}
+//           ,{type:"num",name:"9"}
+//           ,{type:"button",name:"Fund",button:"<button type='button' class='fund'> fund </button>"}
+//         ]
+//       }
+//     ]);
+//   }, 500);
+// });
 
 // populate open protections table
 Template.openProtectionsTable.helpers({
@@ -273,9 +312,10 @@ Template.openProtectionsTable.helpers({
         type: "headerRow"
         ,column: [
           {name:"Token Hash"}
-          ,{name:"Term (mo)"}
-          ,{name:"Payout (eth)"}
-          ,{name:"Cost (eth)"}
+          ,{name:"Start"}
+          ,{name:"End"}
+          ,{name:"Payout (wei)"}
+          ,{name:"Cost (wei)"}
           ,{name:"Location"}
           ,{name:"Index"}
           ,{name:"Threshold (%)"}
@@ -290,9 +330,10 @@ Template.openProtectionsTable.helpers({
         type: "headerRow"
         ,column: [
           {name:"Token Hash"}
-          ,{name:"Term (mo)"}
-          ,{name:"Payout (eth)"}
-          ,{name:"Cost (eth)"}
+          ,{name:"Start"}
+          ,{name:"End"}
+          ,{name:"Payout (wei)"}
+          ,{name:"Cost (wei)"}
           ,{name:"Location"}
           ,{name:"Index"}
           ,{name:"Threshold (%)"}
@@ -329,14 +370,14 @@ Template.formNewProtection.helpers({
         ,id: "end-date"
       }
       ,{
-        title: "ETH Payout:"
-        ,tooltiptext: "The amount of ETH received by the contract buyer if the ___ are met."
+        title: "Payout (Wei):"
+        ,tooltiptext: "The amount of wei received by the contract buyer if the conditions are met."
         ,type: "number"
         ,name: "payout"
       }
       ,{
-        title: "ETH Cost:"
-        ,tooltiptext: "The amount of ETH received by the contract seller if the ___ are met."
+        title: "Cost (Wei):"
+        ,tooltiptext: "The amount of wei received by the contract seller if the conditions are met."
         ,type: "number"
         ,name: "cost"
       }
@@ -350,6 +391,14 @@ Template.formNewProtection.helpers({
           ,{
             value: "us-corn-belt"
             ,text: "US Corn Belt"
+          }
+          ,{
+            value: "india"
+            ,text: "India"
+          }
+          ,{
+            value: "canadian-prairies"
+            ,text: "Canadian Prairies"
           }
         ]
       }
@@ -376,6 +425,10 @@ Template.formNewProtection.helpers({
           ,{
             value: "10pct"
             ,text: "10% less than average"
+          }
+          ,{
+            value: "15pct"
+            ,text: "15% less than average"
           }
         ]
       }
@@ -412,8 +465,8 @@ Template.formNewProtection.events({
     const target = event.currentTarget;
     const startDate = target[0].value;
     const endDate = target[1].value;
-    const payout = target[2].value;
-    const cost = target[3].value;
+    const payout = parseInt(target[2].value);
+    const cost = parseInt(target[3].value);
     const location = target[4].value;
     const index = target[5].value;
     const threshold = target[6].value;
@@ -435,8 +488,8 @@ Template.formNewProtection.events({
       const confirmed = confirm ( "Please confirm your selection: \n\n"
         + "  Start Date: " + startDate + "\n"
         + "  End Date: " + endDate + "\n"
-        + "  ETH Payout: " + payout + "\n"
-        + "  ETH Cost: " + cost + "\n"
+        + "  Payout (Wei): " + payout + "\n"
+        + "  Cost (Wei): " + cost + "\n"
         + "  Location: " + location + "\n"
         + "  Index: " + index + "\n"
         + "  Threshold: " + threshold + "\n"
@@ -445,87 +498,49 @@ Template.formNewProtection.events({
 
       if(confirmed){
         //submit info
-        createProposal();
+        createProposal(startDate,endDate,payout,cost,location,index,threshold);
       }else{
         //let user continue to edit
       }
 
-      async function createProposal(){
-        //make ethereum call createWITProposal()
-        const ethPropose = 9000;
-        const ethAsk = 1000;
+      async function createProposal(startDate,endDate,ethPropose,ethAsk,location,index,threshold){
+        const d1 = (new Date(startDate)).getTime();
+        const d2 = (new Date(endDate)).getTime();
+        console.log(d1,d2)
 
-        const now = Math.round((new Date()).getTime() / 1000);
-        const one_month = 2629746000;
-        const one_month_from_now = now + one_month;
-        const two_months_from_now = now + (2 * one_month);
-
-        let wei, wei2, bb2, beforeBalance;
-        let checkAllowance, beforeAllowance;
-        let ap, approval;
-        let chkAl, afterAllowance1, afterAllowance2;
-        let createWit;
-        let sup, supply;
-        let cropBal, cropBal2, cropBalance, cropBalance2;
-        let aftBal, afterBalance;
-        let ownr, owner;
-        let bb3, beforeBalance2;
-        let createWit2;
-        let sup2, supply2;
-        let aftBal2, afterBalance2;
-        let ownr2, owner2;
-
-        wei = promisify(cb => web3.eth.getBalance(witAddress, cb))
-        wei2 = promisify(cb => web3.eth.getBalance(testUser, cb))
-        checkAllowance = promisify(cb => cropInstance.allowance(testUser,witAddress,cb))
-        ap = promisify(cb => cropInstance.approve(witAddress,ethPropose + ethAsk,{from: testUser},cb))
-        chkAl = promisify(cb => cropInstance.allowance(testUser,witAddress,cb))
-        createWit = promisify(cb => witInstance.createWITProposal(ethPropose, ethAsk, "rain", "one inch", "india", one_month_from_now, two_months_from_now, true, {value: ethPropose, from:testUser}, cb))
-        sup = promisify(cb => witInstance.totalSupply(cb))
-        cropBal = promisify(cb => cropInstance.balanceOf(testUser,cb))
-        cropBal2 = promisify(cb => cropInstance.balanceOf(testUser2,cb))
-        aftBal = promisify(cb => web3.eth.getBalance(witAddress, cb))
-        ownr = promisify(cb => witInstance.ownerOf(1, cb))
-        bb3 = promisify(cb => web3.eth.getBalance(witAddress,cb))
-        createWit2 = promisify(cb => witInstance.createWITAcceptance(1,{from: testUser, value:ethAsk},cb))
-        sup2 = promisify(cb => witInstance.totalSupply(cb))
-        aftBal2 = promisify(cb => web3.eth.getBalance(witAddress, cb))
-        ownr2 = promisify(cb => witInstance.ownerOf(2, cb))
         try {
-          beforeBalance = web3.fromWei(await wei, 'ether');
-          bb2 = web3.fromWei(await wei2, 'ether');
-          console.log("WIT Balance (beforeBalance): ",beforeBalance.toNumber())
-          console.log("User Balance: ",bb2.toNumber());
-          beforeAllowance = await checkAllowance;
-          console.log("beforeAllowance",beforeAllowance.toNumber(),0)
-          approval = await ap;
-          console.log("approval",approval)
-          // afterAllowance1 = await checkAllowance;
-          // console.log("afterAllowance1",afterAllowance1.toNumber(),ethPropose + ethAsk)
-          afterAllowance2 = await chkAl;
-          console.log("afterAllowance2",afterAllowance2.toNumber(),ethPropose + ethAsk)
-          await createWit;
-          supply = await sup;
-          console.log("supply",supply.toNumber(),1)
-          cropBalance = await web3.fromWei(await cropBal, 'ether');
-          cropBalance2 = await web3.fromWei(await cropBal2, 'ether');
-          console.log("CROP Balance testUser",cropBalance.toNumber())
-          console.log("CROP Balance testUser2",cropBalance2.toNumber())
-          afterBalance = await aftBal;
-          console.log("afterBalance",afterBalance.toNumber())
-          console.log("afterBalance-ethPropose === beforeBalance",afterBalance-ethPropose,beforeBalance.toNumber())
-          owner = await ownr;
-          console.log("owner",testUser,owner)
-          beforeBalance2 = await bb3;
-          console.log("WIT Balance (beforeBalance): ",beforeBalance.toNumber());
-          await createWit2;
-          supply2 = await sup2;
-          console.log("supply",supply2.toNumber(),2)
-          afterBalance2 = await aftBal2;
-          console.log("afterBalance2",afterBalance2.toNumber())
-          console.log("afterBalance2-ethAsk === beforeBalance2",afterBalance2-ethAsk,beforeBalance2.toNumber())
-          owner2 = await ownr2;
-          console.log("owner",owner2,testUser2)
+          // let beforeBalance = web3.fromWei(await promisify(cb => web3.eth.getBalance(witAddress, cb)), 'ether');
+          // let bb2 = web3.fromWei(await promisify(cb => web3.eth.getBalance(testUser, cb)), 'ether');
+          // console.log("WIT Balance (beforeBalance): ",beforeBalance.toNumber())
+          // console.log("User Balance: ",bb2.toNumber());
+          // let beforeAllowance = await promisify(cb => cropInstance.allowance(testUser,witAddress,cb));
+          // console.log("beforeAllowance",beforeAllowance.toNumber(),0)
+          // let approval = await promisify(cb => cropInstance.approve(witAddress,ethPropose + ethAsk,{from: testUser},cb));
+          // console.log("approval",approval)
+          // let afterAllowance2 = await promisify(cb => cropInstance.allowance(testUser,witAddress,cb));
+          // console.log("afterAllowance2",afterAllowance2.toNumber(),ethPropose + ethAsk)
+          await promisify(cb => witInstance.createWITProposal(ethPropose, ethAsk, index, threshold, location, d1, d2, true, {value: ethPropose, from:testUser}, cb));
+          // let supply = await promisify(cb => witInstance.totalSupply(cb));
+          // console.log("supply",supply.toNumber(),1)
+          // let cropBalance = await web3.fromWei(await promisify(cb => cropInstance.balanceOf(testUser,cb)), 'ether');
+          // let cropBalance2 = await web3.fromWei(await promisify(cb => cropInstance.balanceOf(testUser2,cb)), 'ether');
+          // console.log("CROP Balance testUser",cropBalance.toNumber())
+          // console.log("CROP Balance testUser2",cropBalance2.toNumber())
+          // let afterBalance = await promisify(cb => web3.eth.getBalance(witAddress, cb));
+          // console.log("afterBalance",afterBalance.toNumber())
+          // console.log("afterBalance-ethPropose === beforeBalance",afterBalance-ethPropose,beforeBalance.toNumber())
+          // let owner = await promisify(cb => witInstance.ownerOf(1, cb));
+          // console.log("owner",testUser,owner)
+          // let beforeBalance2 = await promisify(cb => web3.eth.getBalance(witAddress,cb));
+          // console.log("WIT Balance (beforeBalance): ",beforeBalance.toNumber());
+          // await promisify(cb => witInstance.createWITAcceptance(1,{from: testUser, value:ethAsk},cb));
+          // let supply2 = await promisify(cb => witInstance.totalSupply(cb));
+          // console.log("supply",supply2.toNumber(),2)
+          // let afterBalance2 = await promisify(cb => web3.eth.getBalance(witAddress, cb));
+          // console.log("afterBalance2",afterBalance2.toNumber())
+          // console.log("afterBalance2-ethAsk === beforeBalance2",afterBalance2-ethAsk,beforeBalance2.toNumber())
+          // let owner2 = await promisify(cb => witInstance.ownerOf(supply2.toNumber(), cb));
+          // console.log("owner",owner2,testUser)
 
           //clear form if succesful
           target[0].value = "";
