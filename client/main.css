@@ -12,6 +12,20 @@ div#user {
   margin-left:2%;
 }
 
+strong#payout-amt {
+  margin-left:15px;
+}
+
+.buttonHolder{
+  margin-left:15%;
+}
+
+#create-request {
+  background-color: #d6e5ff;
+  color: #4286f4;
+}
+
+
 /* --------------------------------------------------------
   CSS FOR MAKING THE TABS LAYOUT
 -------------------------------------------------------- */

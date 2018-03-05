@@ -20,21 +20,42 @@ const promisify = (inner) =>
 //table entry constructor
 function Entry(r){
   let a = r.args;
-  let s = r.transactionHash.substring(0,8) + "...";
+  let l = r.transactionHash.length;
+  let s = r.transactionHash.substring(0,8) + "..." + r.transactionHash.substring(l-8,l)
   let d1 = new Date(a.start.c[0]).toISOString().substring(0,10);
   let d2 = new Date(a.end.c[0]).toISOString().substring(0,10);
+  let ask = a.weiAsking.c[0]
+  let propose = a.weiContributing.c[0]
 
+  //update for if the contract is for offered for sale or for funding
+  let b, b1;
+  let sellerContr, buyerContr;
+  if(propose < ask){
+    b = "Buy";
+    b1 = "<button type='button' class='buyit'> buy </button>";
+    sellerContr = ask;
+    buyerContr = propose;
+  }
+  if(ask < propose){
+    b = "Sell";
+    b1 = "<button type='button' class='sellit'> sell </button>";
+    sellerContr = propose;
+    buyerContr = ask;
+  }
+
+  //create the object
   this.type = "bodyRow";
   this.column = [
-      {type:"text",name:s}
+       {type:"num",name:r.blockNumber}
+      ,{type:"text",name:s}
       ,{type:"text",name:d1}
       ,{type:"text",name:d2}
-      ,{type:"num",name:a.weiContributing.c[0]}
-      ,{type:"num",name:a.weiAsking.c[0]}
+      ,{type:"num",name:buyerContr}
+      ,{type:"num",name:sellerContr}
       ,{type:"text",name:a.location}
       ,{type:"text",name:a.index}
       ,{type:"num",name:a.threshold}
-      ,{type:"button",name:"Buy",button:"<button type='button' class='buyit'> buy </button>"}
+      ,{type:"button",name:b,button:b1}
     ];
 }
 
@@ -49,8 +70,7 @@ var cropInstance;
 var witContract;
 var witInstance;
 
-var myEvent;
-var myEvent2;
+var lastBlock;
 
 if (Meteor.isClient) {
   Meteor.startup(async function() {
@@ -78,21 +98,31 @@ if (Meteor.isClient) {
       witContract = web3js.eth.contract(WITABI);
       witInstance = witContract.at(witAddress);
       //add all entries to the sortable rows
-      witInstance.allEvents({fromBlock: 0, toBlock: 'latest'}).get(function(error, result){
-        let list = [];
-        let l = result.length;
-        for(var i = 0; i < l; i++){
-          if(result[i].event === "ProposalOffered") list.push(new Entry(result[i]));
-        }
+      // let lastBlock = 0;
+      // witInstance.allEvents({fromBlock: 0, toBlock: 'latest'}).get(function(error, result){
+      //   console.log("===> all proposals",result)
+      //   let list = [];
+      //   let l = result.length;
+      //   for(var i = 0; i < l; i++){
+      //     if(result[i].event === "ProposalOffered"){
+      //       list.push(new Entry(result[i]));
+      //     }
+      //   }
+      //   $('.loader').hide();
+      //   $('.wrapper').removeClass('loading');
+      //   Session.set("openProtectionsFilteredData",list);
+      // });
+
+      //add new entries as they are created, only call once total list is populated
+      witInstance.allEvents({tokenID:5},{fromBlock: 0, toBlock: 'latest'}).watch(function(error, result){
         $('.loader').hide();
         $('.wrapper').removeClass('loading');
-        Session.set("openProtectionsFilteredData",list);
-      });
-      //add new entries as they are created
-      witInstance.allEvents().watch(function(error, result){
-        console.log("===> new proposal created")
         let list = Session.get("openProtectionsFilteredData");
-        if(result.event === "ProposalOffered") list.push(new Entry(result));
+        if(result.event === "ProposalOffered" && result.blockNumber !== lastBlock){
+          console.log("===> new proposal created",result)
+          list.push(new Entry(result));
+          lastBlock = result.blockNumber; //this is a hacky workaround, why is event being called more than once?
+        }
         Session.set("openProtectionsFilteredData",list);
       });
       // var filter = web3.eth.filter({fromBlock: 0, toBlock: 'latest'});
@@ -190,9 +220,22 @@ Template.sortableRows.events({
   },
   'click .buyit': function(e){
     alert("buy");
+
+    // let owner = await promisify(cb => witInstance.ownerOf(1, cb));
+    // console.log("owner",testUser,owner)
+    // let beforeBalance2 = await promisify(cb => web3.eth.getBalance(witAddress,cb));
+    // console.log("WIT Balance (beforeBalance): ",beforeBalance.toNumber());
+    // await promisify(cb => witInstance.createWITAcceptance(1,{from: testUser, value:ethAsk},cb));
+    // let supply2 = await promisify(cb => witInstance.totalSupply(cb));
+    // console.log("supply",supply2.toNumber(),2)
+    // let afterBalance2 = await promisify(cb => web3.eth.getBalance(witAddress, cb));
+    // console.log("afterBalance2",afterBalance2.toNumber())
+    // console.log("afterBalance2-ethAsk === beforeBalance2",afterBalance2-ethAsk,beforeBalance2.toNumber())
+    // let owner2 = await promisify(cb => witInstance.ownerOf(supply2.toNumber(), cb));
+    // console.log("owner",owner2,testUser)
   },
-  'click .fund': function(e){
-    alert("fund");
+  'click .sellit': function(e){
+    alert("sell");
   }
 });
 
@@ -216,23 +259,23 @@ Template.headerRow.events({
     let d = template.descending.get();
 
     if(t.parentElement.parentElement.parentElement.id === "openProtections"){
-      console.log("sort openProtections")
       array = Session.get("openProtectionsFilteredData");
       //sort array based on the click header
-      if(t.innerText === "TOKEN HASH") colIndex = 0;
-      if(t.innerText === "TERM (MO)") colIndex = 1;
-      if(t.innerText === "PAYOUT (WEI)") colIndex = 2;
-      if(t.innerText === "COST (WEI)") colIndex = 3;
-      if(t.innerText === "LOCATION") colIndex = 4;
-      if(t.innerText === "INDEX") colIndex = 5;
-      if(t.innerText === "THRESHOLD (%)") colIndex = 6;
-      if(t.innerText === "BUY/FUND") colIndex = 7;
+      if(t.innerText === "BLOCK NUMBER") colIndex = 0;
+      if(t.innerText === "TOKEN HASH") colIndex = 1;
+      if(t.innerText === "START") colIndex = 2;
+      if(t.innerText === "END") colIndex = 3;
+      if(t.innerText === "BUYER CONTRIBUTION (WEI)") colIndex = 4;
+      if(t.innerText === "SELLER CONTRIBUTION (WEI)") colIndex = 5;
+      if(t.innerText === "LOCATION") colIndex = 6;
+      if(t.innerText === "INDEX") colIndex = 7;
+      if(t.innerText === "THRESHOLD (%)") colIndex = 8;
+      if(t.innerText === "BUY/FUND") colIndex = 9;
       //set variable to new sorted array
       Session.set("openProtectionsFilteredData",sortArray(array,colIndex,d));
       template.descending.set(!d);
     }
     if(t.parentElement.parentElement.parentElement.id === "myProtections"){
-      console.log("sort myProtections")
       array = Session.get("myProtectionsFilteredData");
       //sort array based on the click header
       if(t.innerText === "SELLER") colIndex = 0;
@@ -306,34 +349,35 @@ function sortArray(array,i,d){
 
 // populate open protections table
 Template.openProtectionsTable.helpers({
-  filterData: function() {
-    return [
-      {
-        type: "headerRow"
-        ,column: [
-          {name:"Token Hash"}
-          ,{name:"Start"}
-          ,{name:"End"}
-          ,{name:"Payout (wei)"}
-          ,{name:"Cost (wei)"}
-          ,{name:"Location"}
-          ,{name:"Index"}
-          ,{name:"Threshold (%)"}
-          ,{name:"Buy/Fund"}
-        ]
-      }
-    ];
-  },
+  // filterData: function() {
+  //   return [
+  //     {
+  //       type: "headerRow"
+  //       ,column: [
+  //         {name:"Token Hash"}
+  //         ,{name:"Start"}
+  //         ,{name:"End"}
+  //         ,{name:"Payout (wei)"}
+  //         ,{name:"Cost (wei)"}
+  //         ,{name:"Location"}
+  //         ,{name:"Index"}
+  //         ,{name:"Threshold (%)"}
+  //         ,{name:"Buy/Fund"}
+  //       ]
+  //     }
+  //   ];
+  // },
   headerData: function() {
     return [
       {
         type: "headerRow"
         ,column: [
-          {name:"Token Hash"}
+          {name:"Block Number"}
+          ,{name:"Token Hash"}
           ,{name:"Start"}
           ,{name:"End"}
-          ,{name:"Payout (wei)"}
-          ,{name:"Cost (wei)"}
+          ,{name:"Buyer Contribution (wei)"}
+          ,{name:"Seller Contribution (wei)"}
           ,{name:"Location"}
           ,{name:"Index"}
           ,{name:"Threshold (%)"}
@@ -370,16 +414,24 @@ Template.formNewProtection.helpers({
         ,id: "end-date"
       }
       ,{
-        title: "Payout (Wei):"
-        ,tooltiptext: "The amount of wei received by the contract buyer if the conditions are met."
+        title: "Buyer Contribution (Wei):"
+        ,tooltiptext: "The amount of wei contributed by the contract buyer."
         ,type: "number"
-        ,name: "payout"
+        ,name: "buyer"
+        ,id: "buyer-contrib"
       }
       ,{
-        title: "Cost (Wei):"
-        ,tooltiptext: "The amount of wei received by the contract seller if the conditions are met."
+        title: "Seller Contribution (Wei):"
+        ,tooltiptext: "The amount of wei contributed by the contract seller."
         ,type: "number"
-        ,name: "cost"
+        ,name: "seller"
+        ,id: "seller-contrib"
+      }
+      ,{
+        title: "Total Payout (Wei):"
+        ,tooltiptext: "The total amount of payout received by one of the parties when the outcome is evaluated."
+        ,type: "payout"
+        ,id: "payout-amt"
       }
       ,{
         title: "Location:"
@@ -399,6 +451,14 @@ Template.formNewProtection.helpers({
           ,{
             value: "canadian-prairies"
             ,text: "Canadian Prairies"
+          }
+          ,{
+            value: "ukraine"
+            ,text: "Ukraine"
+          }
+          ,{
+            value: "brazil"
+            ,text: "Brazil"
           }
         ]
       }
@@ -423,18 +483,22 @@ Template.formNewProtection.helpers({
         ,article: "a"
         ,elOptions:[
           ,{
-            value: "10pct"
+            value: "-10"
             ,text: "10% less than average"
           }
           ,{
-            value: "15pct"
+            value: "-15"
             ,text: "15% less than average"
+          }
+          ,{
+            value: "15"
+            ,text: "15% more than average"
           }
         ]
       }
       ,{
-        title: "Buy or Sell:"
-        ,tooltiptext: "Are you offering to sell this contract or are you looking to buy this contract?"
+        title: " Do you want to buy or sell?"
+        ,tooltiptext: "Are you offering to sell this protection or are you looking to buy this protection?"
         ,type: "toggle"
       }
     ];
@@ -453,9 +517,10 @@ Template.elNewProtection.helpers({
 // Dealing with submittal of form
 Template.formNewProtection.events({
   'input .date-picker'(event) {
-    var target = event.currentTarget;
-    capDate(target);
-    console.log("input")
+    capDate(event.currentTarget);
+  },
+  'input .contribution'(event) {
+    capVal(event.currentTarget);
   },
   'submit .new-protection'(event) {
     // Prevent default browser form submit
@@ -465,20 +530,20 @@ Template.formNewProtection.events({
     const target = event.currentTarget;
     const startDate = target[0].value;
     const endDate = target[1].value;
-    const payout = parseInt(target[2].value);
-    const cost = parseInt(target[3].value);
+    const buyerContr = parseInt(target[2].value);
+    const sellerContr = parseInt(target[3].value);
     const location = target[4].value;
     const index = target[5].value;
     const threshold = target[6].value;
     const buySell = target[7].checked ? "Buy" : "Sell";
 
     //check if info is missing
-    if(startDate === "" || endDate === "" || parseFloat(payout) === 0 || parseFloat(cost) === 0 || location === "" || index === "" || threshold === ""){
+    if(startDate === "" || endDate === "" || parseFloat(buyerContr) === 0 || parseFloat(sellerContr) === 0 || location === "" || index === "" || threshold === ""){
       var s = "Please complete form: \n";
       if(startDate === "") s += "  Start Date \n";
       if(endDate === "") s += "  End Date \n";
-      if(parseFloat(payout) === 0) s += "  Payout Date \n";
-      if(parseFloat(cost) === 0) s += "  Cost Date \n";
+      if(parseFloat(buyerContr) === 0) s += "  Buyer Contribution \n";
+      if(parseFloat(sellerContr) === 0) s += "  Seller Contribution \n";
       if(location === "") s += "  Location Date \n";
       if(index === "") s += "  Index Date \n";
       if(threshold === "") s += "  Threshold Date \n";
@@ -488,8 +553,8 @@ Template.formNewProtection.events({
       const confirmed = confirm ( "Please confirm your selection: \n\n"
         + "  Start Date: " + startDate + "\n"
         + "  End Date: " + endDate + "\n"
-        + "  Payout (Wei): " + payout + "\n"
-        + "  Cost (Wei): " + cost + "\n"
+        + "  Buyer Contribution (Wei): " + buyerContr + "\n"
+        + "  Seller Contribution (Wei): " + sellerContr + "\n"
         + "  Location: " + location + "\n"
         + "  Index: " + index + "\n"
         + "  Threshold: " + threshold + "\n"
@@ -498,49 +563,47 @@ Template.formNewProtection.events({
 
       if(confirmed){
         //submit info
-        createProposal(startDate,endDate,payout,cost,location,index,threshold);
+        createProposal(startDate,endDate,buyerContr,sellerContr,location,index,threshold,buySell);
       }else{
         //let user continue to edit
       }
 
-      async function createProposal(startDate,endDate,ethPropose,ethAsk,location,index,threshold){
+      async function createProposal(startDate,endDate,buyerContr,sellerContr,location,index,threshold,buySell){
         const d1 = (new Date(startDate)).getTime();
         const d2 = (new Date(endDate)).getTime();
-        console.log(d1,d2)
+
+        let ethPropose = 0;
+        let ethAsk = 0;
+
+        if(buySell = "Buy"){
+          ethPropose = buyerContr;
+          ethAsk = sellerContr;
+        }
+        if(buySell = "Sell"){
+          ethPropose = sellerContr;
+          ethAsk = buyerContr;
+        }
+
 
         try {
-          // let beforeBalance = web3.fromWei(await promisify(cb => web3.eth.getBalance(witAddress, cb)), 'ether');
-          // let bb2 = web3.fromWei(await promisify(cb => web3.eth.getBalance(testUser, cb)), 'ether');
-          // console.log("WIT Balance (beforeBalance): ",beforeBalance.toNumber())
-          // console.log("User Balance: ",bb2.toNumber());
-          // let beforeAllowance = await promisify(cb => cropInstance.allowance(testUser,witAddress,cb));
-          // console.log("beforeAllowance",beforeAllowance.toNumber(),0)
-          // let approval = await promisify(cb => cropInstance.approve(witAddress,ethPropose + ethAsk,{from: testUser},cb));
-          // console.log("approval",approval)
-          // let afterAllowance2 = await promisify(cb => cropInstance.allowance(testUser,witAddress,cb));
-          // console.log("afterAllowance2",afterAllowance2.toNumber(),ethPropose + ethAsk)
-          await promisify(cb => witInstance.createWITProposal(ethPropose, ethAsk, index, threshold, location, d1, d2, true, {value: ethPropose, from:testUser}, cb));
-          // let supply = await promisify(cb => witInstance.totalSupply(cb));
-          // console.log("supply",supply.toNumber(),1)
-          // let cropBalance = await web3.fromWei(await promisify(cb => cropInstance.balanceOf(testUser,cb)), 'ether');
-          // let cropBalance2 = await web3.fromWei(await promisify(cb => cropInstance.balanceOf(testUser2,cb)), 'ether');
-          // console.log("CROP Balance testUser",cropBalance.toNumber())
-          // console.log("CROP Balance testUser2",cropBalance2.toNumber())
-          // let afterBalance = await promisify(cb => web3.eth.getBalance(witAddress, cb));
-          // console.log("afterBalance",afterBalance.toNumber())
-          // console.log("afterBalance-ethPropose === beforeBalance",afterBalance-ethPropose,beforeBalance.toNumber())
-          // let owner = await promisify(cb => witInstance.ownerOf(1, cb));
-          // console.log("owner",testUser,owner)
-          // let beforeBalance2 = await promisify(cb => web3.eth.getBalance(witAddress,cb));
-          // console.log("WIT Balance (beforeBalance): ",beforeBalance.toNumber());
-          // await promisify(cb => witInstance.createWITAcceptance(1,{from: testUser, value:ethAsk},cb));
-          // let supply2 = await promisify(cb => witInstance.totalSupply(cb));
-          // console.log("supply",supply2.toNumber(),2)
-          // let afterBalance2 = await promisify(cb => web3.eth.getBalance(witAddress, cb));
-          // console.log("afterBalance2",afterBalance2.toNumber())
-          // console.log("afterBalance2-ethAsk === beforeBalance2",afterBalance2-ethAsk,beforeBalance2.toNumber())
-          // let owner2 = await promisify(cb => witInstance.ownerOf(supply2.toNumber(), cb));
-          // console.log("owner",owner2,testUser)
+          let supplyStart = await promisify(cb => witInstance.totalSupply(cb));
+          let beforeBalance = await promisify(cb => web3.eth.getBalance(witAddress, cb));
+          let beforeAllowance = await promisify(cb => cropInstance.allowance(user[0],witAddress,cb));
+          let approval = await promisify(cb => cropInstance.approve(witAddress,ethPropose + ethAsk,{from: user[0]},cb));
+          let afterAllowance = await promisify(cb => cropInstance.allowance(user[0],witAddress,cb));
+          await promisify(cb => witInstance.createWITProposal(ethPropose, ethAsk, index, threshold, location, d1, d2, true, {value: ethPropose, from:user[0]}, cb));
+          let supply = await promisify(cb => witInstance.totalSupply(cb));
+          let afterBalance = await promisify(cb => web3.eth.getBalance(witAddress, cb));
+
+          console.log("before allowance: ",beforeAllowance.toNumber(),0)
+          console.log("allowance approved",approval)
+          console.log("after allowance: ",afterAllowance.toNumber(),ethPropose + ethAsk)
+
+          console.log("Supply of WIT increased?",supply.toNumber(),supplyStart.toNumber()+1)
+
+          console.log("beforeBalance",beforeBalance.toNumber())
+          console.log("afterBalance",afterBalance.toNumber())
+          console.log("afterBalance-ethPropose === beforeBalance",afterBalance-ethPropose,beforeBalance.toNumber())
 
           //clear form if succesful
           target[0].value = "";
@@ -551,9 +614,13 @@ Template.formNewProtection.events({
           target[5].value = "";
           target[6].value = "";
           target[7].value = "";
+          $('#end-date')[0].min = "";
+          $('#start-date')[0].max = "";
+          $('#seller-contrib')[0].min = 0;
+          $('#payout-amt').html(0);
         } catch (error) {
           console.log(error)
-          alert("Transaction was not succesful: " + error.message);
+          alert("Transaction was not succesful, a common source of errors is insufficient gas. \n " + error.message);
         }
       }
     }
@@ -573,6 +640,16 @@ function capDate(target){
   if(id === 'end-date'){
     if(date !== "") $('#start-date')[0].max = date;
   }
+}
+
+function capVal(target){
+  //change properties of the other date picker so that incorrect values can't be chosen
+  var num = parseInt(target.value);
+  var id = target.id;
+  if(id === 'buyer-contrib') $('#seller-contrib')[0].min = num + 100;
+  //show total payout
+  let v = parseInt($('#seller-contrib')[0].value) + parseInt($('#buyer-contrib')[0].value);
+  $('#payout-amt').html(v);
 }
 
 ////////////////////////////////////////////
