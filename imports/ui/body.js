@@ -97,24 +97,10 @@ if (Meteor.isClient) {
       cropInstance = cropContract.at(cropAddress);
       witContract = web3js.eth.contract(WITABI);
       witInstance = witContract.at(witAddress);
-      //add all entries to the sortable rows
-      // let lastBlock = 0;
-      // witInstance.allEvents({fromBlock: 0, toBlock: 'latest'}).get(function(error, result){
-      //   console.log("===> all proposals",result)
-      //   let list = [];
-      //   let l = result.length;
-      //   for(var i = 0; i < l; i++){
-      //     if(result[i].event === "ProposalOffered"){
-      //       list.push(new Entry(result[i]));
-      //     }
-      //   }
-      //   $('.loader').hide();
-      //   $('.wrapper').removeClass('loading');
-      //   Session.set("openProtectionsFilteredData",list);
-      // });
+      console.log(WITABI)
 
       //add new entries as they are created, only call once total list is populated
-      witInstance.allEvents({tokenID:5},{fromBlock: 0, toBlock: 'latest'}).watch(function(error, result){
+      witInstance.ProposalOffered(Session.get("filterCriteria"),{fromBlock: 0, toBlock: 'latest'}).watch(function(error, result){
         $('.loader').hide();
         $('.wrapper').removeClass('loading');
         let list = Session.get("openProtectionsFilteredData");
@@ -125,8 +111,6 @@ if (Meteor.isClient) {
         }
         Session.set("openProtectionsFilteredData",list);
       });
-      // var filter = web3.eth.filter({fromBlock: 0, toBlock: 'latest'});
-      // filter.get(function(error, result){ console.log("A",error, result); });
     } else {
       console.log('No web3? You should consider trying MetaMask!')
       // fallback - use your fallback strategy (local node / hosted node + in-dapp id mgmt / fail)
@@ -203,9 +187,8 @@ Template.navigation.helpers({
 ////////////////////////////////////////////
 // FUNCTIONS RELATED TO SORTABLE TABLES
 ////////////////////////////////////////////
-Session.set("openProtectionsFullData",[]);
+Session.set("filterCriteria",{});
 Session.set("openProtectionsFilteredData",[]);
-Session.set("myProtectionsFullData",[]);
 Session.set("myProtectionsFilteredData",[]);
 
 Template.sortableRows.helpers({
@@ -311,41 +294,56 @@ function sortArray(array,i,d){
 // FUNCTIONS RELATED TO "OPEN PROTECTIONS"
 ////////////////////////////////////////////
 
-// //tables should display as loading until data is available
-// Template.openProtectionsTable.onCreated(function(){
-//   setTimeout(function(){
-//     $('.wrapper').removeClass('loading');
-//     $('.loader').hide();
-//     Session.set("openProtectionsFilteredData",[
-//       {
-//         type: "bodyRow"
-//         ,column: [
-//           {type:"text",name:"#123456789"}
-//           ,{type:"num",name:"2"}
-//           ,{type:"num",name:"2"}
-//           ,{type:"num",name:"5"}
-//           ,{type:"text",name:"US corn belt"}
-//           ,{type:"text",name:"Index"}
-//           ,{type:"num",name:"10"}
-//           ,{type:"button",name:"Buy",button:"<button type='button' class='buyit'> buy </button>"}
-//         ]
-//       },
-//       {
-//         type: "bodyRow"
-//         ,column: [
-//           {type:"text",name:"#285937365"}
-//           ,{type:"num",name:"5"}
-//           ,{type:"num",name:"6"}
-//           ,{type:"num",name:"2"}
-//           ,{type:"text",name:"US corn belt"}
-//           ,{type:"text",name:"Index"}
-//           ,{type:"num",name:"9"}
-//           ,{type:"button",name:"Fund",button:"<button type='button' class='fund'> fund </button>"}
-//         ]
-//       }
-//     ]);
-//   }, 500);
-// });
+// input for filter
+Template.filter.helpers({
+  filterInput: function() {
+    return [
+      {
+        title: "Buyer Contribution (Wei):"
+        ,tooltiptext: "The amount of wei contributed by the contract buyer."
+        ,type: "number"
+        ,name: "buyer"
+        ,id: "buyer-filter"
+      }
+      ,{
+        title: "Seller Contribution (Wei):"
+        ,tooltiptext: "The amount of wei contributed by the contract seller."
+        ,type: "number"
+        ,name: "seller"
+        ,id: "seller-filter"
+      }
+    ];
+  }
+});
+
+Template.elFilter.helpers({
+  isEqual: function (a, b) {
+    return a === b;
+  }
+});
+
+// Dealing with submittal of form
+Template.filter.events({
+  'input .filter'(event) {
+    let a = $('#buyer-filter')[0].value;
+    let b = $('#seller-filter')[0].value;
+    let obj = {};
+    if(a > 0) obj.weiAsking = parseInt(a);
+    if(b > 0) obj.weiContributing = parseInt(b);
+    console.log(obj)
+    Session.set("filterCriteria",obj);
+    witInstance.ProposalOffered(obj,{fromBlock: 0, toBlock: 'latest'}).get(function(error, result){
+      let list = [], l = result.length;
+      for(var i = 0; i < l; i++){
+        if(result[i].event === "ProposalOffered"){
+          console.log("===> new el filtered list",result[i])
+          list.push(new Entry(result[i]));
+        }
+      }
+      Session.set("openProtectionsFilteredData",list);
+    });
+  }
+});
 
 // populate open protections table
 Template.openProtectionsTable.helpers({

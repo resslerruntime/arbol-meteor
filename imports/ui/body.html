@@ -45,6 +45,8 @@
 
     <!-- "OPEN PROTECTIONS" TAB -->
     {{#tabContent slug="open"}}
+      Filter:
+      {{> filter}}
       All open protections:
       {{> openProtectionsTable}}
     {{/tabContent}}
@@ -98,6 +100,30 @@
 </template>
 
 <!-- TEMPLATES FOR "OPEN PROTECTIONS" -->
+
+<template name="filter">
+  <table>
+    {{#each filterInput}}
+      {{> elFilter}}
+    {{/each}}
+  </table>
+</template>
+
+<template name="elFilter">
+  <tr>
+    <td>
+      <div class="tooltip">
+        {{title}}
+        <span class="tooltiptext">{{tooltiptext}}</span>
+      </div>
+    </td>
+    <td>
+      {{#if isEqual type "number"}}
+        <input type="{{type}}" id={{id}} name={{name}} class="filter" step="100" value="0" min="0">
+      {{/if}}
+    </td>
+  </tr>
+</template>
 
 <template name="openProtectionsTable">
   <div class="wrapper loading">
