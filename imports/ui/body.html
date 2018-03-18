@@ -46,9 +46,17 @@
 
     <!-- "OPEN PROTECTIONS" TAB -->
     {{#tabContent slug="open"}}
-      Filter:
-      {{> filter}}
-      All open protections:
+      <table>
+        <tr>
+          <td>Filter:</td>
+          <td>Loaded Tokens:</td>
+        </tr>
+        <tr>
+          <td>{{> filter}}</td>
+          <td>{{> tokens}}</td>
+        </tr>
+      </table>
+      All open protections (sort ascending/descending will only affect loaded data):
       {{> openProtectionsTable}}
     {{/tabContent}}
 
@@ -126,13 +134,34 @@
   </tr>
 </template>
 
+<template name="tokens">
+  <table>
+    {{#each tokensInput}}
+      {{> elTokens}}
+    {{/each}}
+  </table>
+</template>
+
+<template name="elTokens">
+  <tr>
+    <td>
+      <div class="tooltip">
+        {{title}}
+        <span class="tooltiptext">{{tooltiptext}}</span>
+      </div>
+    </td>
+    <td>
+      {{#if isEqual type "number"}}
+        <input type="{{type}}" id={{id}} name={{name}} class="tokens fresh" step="1" value="0" min="1" disabled>
+      {{/if}}
+    </td>
+  </tr>
+</template>
+
 <template name="openProtectionsTable">
   <div class="wrapper loading">
     <table id="openProtections" class="tablesorter">
       <thead>
-        {{#each filterData}}
-          {{> filterRow}}
-        {{/each}}
         {{#each headerData}}
           {{> headerRow}}
         {{/each}}
@@ -143,7 +172,15 @@
         {{/each}}
       </tbody>
     </table>
+    {{> pagination}}
     <div class="loader"></div>
+  </div>
+</template>
+
+<template name="pagination">
+  <div id="pagination-buttons">
+    <input type="button" id="back" value="Back">
+    <input type="button" id="forward" value="Forward">
   </div>
 </template>
 
@@ -151,6 +188,7 @@
 
 <template name="formNewProtection">
   <form class="new-protection">
+    <input type="button" id="createRandom" value="Fill Form Randomly">
     <table>
       {{#each formNewProtection}}
         {{> elNewProtection}}
@@ -178,14 +216,14 @@
       {{else if isEqual type "payout"}}
         <div><strong id={{id}}>0</strong></div>
       {{else if isEqual type "select"}}
-        <select name={{name}}>
+        <select id={{id}} name={{name}}>
           <option value="" selected disabled hidden>Select {{article}} {{name}}</option>
           {{#each elOptions}}
             <option value={{value}}>{{text}}</option>
           {{/each}}
         </select>
       {{else if isEqual type "toggle"}}
-        <label class="buy-sell"><input type="checkbox" id="toggle-buy-sell"><div class="slider round"><span class="buy">BUY</span><span class="sell">SELL</span></div></label>
+        <label class="buy-sell"><input type="checkbox" id={{id}}><div class="slider round"><span class="buy">BUY</span><span class="sell">SELL</span></div></label>
       {{/if}}
     </td>
   </tr>
