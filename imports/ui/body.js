@@ -17,7 +17,7 @@ const promisify = (inner) =>
         })
     );
 
-//table entry constructor
+//table entry constructor open protections
 function Entry(r){
   let a = r.args;
   let l = r.transactionHash.length;
@@ -31,19 +31,20 @@ function Entry(r){
   let b, b1;
   let sellerContr, buyerContr;
   if(propose < ask){
-    b = "Buy";
-    b1 = "<button type='button' class='buyit'> buy </button>";
+    b = "Sell";
+    b1 = "<button type='button' class='sellit'> sell </button>";
     sellerContr = ask;
     buyerContr = propose;
   }
   if(ask < propose){
-    b = "Sell";
-    b1 = "<button type='button' class='sellit'> sell </button>";
+    b = "Buy";
+    b1 = "<button type='button' class='buyit'> buy </button>";
     sellerContr = propose;
     buyerContr = ask;
   }
 
   //create the object
+  this.id = a.tokenID;
   this.type = "bodyRow";
   this.column = [
        {type:"num",name:r.blockNumber}
@@ -55,6 +56,55 @@ function Entry(r){
       ,{type:"text",name:a.location}
       ,{type:"text",name:a.index}
       ,{type:"num",name:a.threshold}
+      ,{type:"button",name:b,button:b1}
+    ];
+}
+//table entry constructor my protections
+function MyEntry(r,a,bool){
+  let l = r.transactionHash.length;
+  let s = r.transactionHash.substring(0,8) + "..." + r.transactionHash.substring(l-8,l)
+  let d1 = new Date(a.start.c[0]).toISOString().substring(0,10);
+  let d2 = new Date(a.end.c[0]).toISOString().substring(0,10);
+  let ask = a.weiAsking.c[0]
+  let propose = a.weiContributing.c[0]
+
+  //update for if the contract is for offered for sale or for funding
+  let b = "Buy";
+  let b1 = "<button type='button' class='action'> action </button>";
+
+  let sellerContr, buyerContr;
+  if(propose < ask){
+    sellerContr = ask;
+    buyerContr = propose;
+  }
+  if(ask < propose){
+    sellerContr = propose;
+    buyerContr = ask;
+  }
+
+  let o;
+  if(bool){
+    if(propose < ask) o = "you are the <strong>buyer</strong>";
+    if(ask < propose) o = "you are the <strong>seller</strong>";
+  }else{
+    if(propose < ask) o = "you are the <strong>seller</strong>";
+    if(ask < propose) o = "you are the <strong>buyer</strong>";
+  }
+
+  //create the object
+  this.type = "bodyRow";
+  this.column = [
+       {type:"num",name:r.blockNumber}
+      ,{type:"text",name:s}
+      ,{type:"text",name:o}
+      ,{type:"text",name:d1}
+      ,{type:"text",name:d2}
+      ,{type:"num",name:buyerContr}
+      ,{type:"num",name:sellerContr}
+      ,{type:"text",name:a.location}
+      ,{type:"text",name:a.index}
+      ,{type:"num",name:a.threshold}
+      ,{type:"text",name:"open"}
       ,{type:"button",name:b,button:b1}
     ];
 }
@@ -71,6 +121,8 @@ var witContract;
 var witInstance;
 
 var lastBlock;
+var lastBlock2;
+var lastBlock3;
 
 if (Meteor.isClient) {
   Meteor.startup(async function() {
@@ -84,15 +136,54 @@ if (Meteor.isClient) {
       $('#web3-waiting').hide();
       $('#web3-onload').show();
       //initialize web3 contracts
+      Session.set("activeUser","current user: no current user- log into metamask");
       try{
         user = await promisify(cb => web3.eth.getAccounts(cb));
-        let s = "current user: " + user[0];
+        let s;
+        if(user[0]) s = "current user: " + user[0];
         Session.set("activeUser",s);
-
       } catch (error) {
         console.log(error)
         alert("User information was not loaded succesfully: " + error.message);
       }
+
+      //TODO check for subsequent account activity, lockout screen if no metamask user is signed in
+      // setInterval(async function(){
+      //   try{
+      //     user = await promisify(cb => web3.eth.getAccounts(cb));
+      //     let s;
+      //     if(user[0]) s = "current user: " + user[0];
+      //     else s = "current user: no current user- log into metamask";
+      //     Session.set("activeUser",s);
+      //   } catch (error) {
+      //     console.log(error)
+      //     alert("User information was not loaded succesfully: " + error.message);
+      //   }
+      // }, 5000);
+
+      //check for network use correct deployed addresses
+      web3.version.getNetwork((err, netId) => {
+        switch (netId) {
+          case "1":
+            console.log('This is mainnet')
+            break
+          case "2":
+            console.log('This is the deprecated Morden test network.')
+            break
+          case "3":
+            console.log('This is the ropsten test network.')
+            break
+          case "4":
+            console.log('This is the Rinkeby test network.')
+            break
+          case "42":
+            console.log('This is the Kovan test network.')
+            break
+          default:
+            console.log('This is an unknown network.')
+        }
+      })
+
       cropContract = web3.eth.contract(CROPABI);
       cropInstance = cropContract.at(cropAddress);
       witContract = web3js.eth.contract(WITABI);
@@ -101,15 +192,61 @@ if (Meteor.isClient) {
 
       //add new entries as they are created, only call once total list is populated
       witInstance.ProposalOffered(Session.get("filterCriteria"),{fromBlock: 0, toBlock: 'latest'}).watch(function(error, result){
-        $('.loader').hide();
-        $('.wrapper').removeClass('loading');
-        let list = Session.get("openProtectionsFilteredData");
-        if(result.event === "ProposalOffered" && result.blockNumber !== lastBlock){
+        if(result.blockNumber !== lastBlock){
+          $('.loader').hide();
+          $('.wrapper').removeClass('loading');
+          let list = Session.get("openProtectionsFilteredData");
           console.log("===> new proposal created",result)
           list.push(new Entry(result));
           lastBlock = result.blockNumber; //this is a hacky workaround, why is event being called more than once?
+          Session.set("openProtectionsFilteredData",list);
         }
-        Session.set("openProtectionsFilteredData",list);
+      });
+      //add new entries as they are created, only call once total list is populated
+      witInstance.ProposalOffered({},{fromBlock: 0, toBlock: 'latest'}).watch(async function(error, result){
+        try{
+          let id = result.args.tokenID;
+          let owner = await promisify(cb => witInstance.ownerOf(id, cb));
+          if(result.blockNumber !== lastBlock2 && owner === user[0]){
+            let list = Session.get("myProtectionsFilteredData");
+            list.push(new MyEntry(result,result.args,true));
+            lastBlock2 = result.blockNumber; //this is a hacky workaround, why is event being called more than once?
+            Session.set("myProtectionsFilteredData",list);
+          }
+        } catch (error) {
+          console.log(error)
+          alert("My Protections data failed to load: " + error.message);
+        }
+      });
+      //do something as new proposal is accepted
+      witInstance.ProposalAccepted({},{fromBlock: 0, toBlock: 'latest'}).watch(async function(error, result){
+        try{
+          let outerResult = result;
+          let id = result.args.tokenIDAccepter;
+          let idp = result.args.tokenIDProposer;
+          let owner = await promisify(cb => witInstance.ownerOf(id, cb));
+          if(result.blockNumber !== lastBlock3 && owner === user[0]){
+            //get contract information for associated proposal
+            witInstance.ProposalOffered({tokenID:idp},{fromBlock: 0, toBlock: 'latest'}).watch(function(error, result){
+              console.log("===> proposal accepted",outerResult,result)
+              let list = Session.get("myProtectionsFilteredData");
+              list.push(new MyEntry(outerResult,result.args,false));
+              Session.set("myProtectionsFilteredData",list);
+            });
+            lastBlock3 = result.blockNumber; //this is a hacky workaround, why is event being called more than once?
+            //check the open protections to see if they should be removed
+            let list = Session.get("openProtectionsFilteredData");
+            var l = list.length;
+            while(l--){
+              console.log(list[l].id.c[0],idp.c[0])
+              if(list[l].id === idp) list.splice(l,1);
+            }
+            Session.set("openProtectionsFilteredData",list);
+          }
+        } catch (error) {
+          console.log(error)
+          alert("My Protections data failed to load: " + error.message);
+        }
       });
     } else {
       console.log('No web3? You should consider trying MetaMask!')
@@ -202,25 +339,37 @@ Template.sortableRows.events({
     alert("action");
   },
   'click .buyit': function(e){
-    alert("buy");
-
-    // let owner = await promisify(cb => witInstance.ownerOf(1, cb));
-    // console.log("owner",testUser,owner)
-    // let beforeBalance2 = await promisify(cb => web3.eth.getBalance(witAddress,cb));
-    // console.log("WIT Balance (beforeBalance): ",beforeBalance.toNumber());
-    // await promisify(cb => witInstance.createWITAcceptance(1,{from: testUser, value:ethAsk},cb));
-    // let supply2 = await promisify(cb => witInstance.totalSupply(cb));
-    // console.log("supply",supply2.toNumber(),2)
-    // let afterBalance2 = await promisify(cb => web3.eth.getBalance(witAddress, cb));
-    // console.log("afterBalance2",afterBalance2.toNumber())
-    // console.log("afterBalance2-ethAsk === beforeBalance2",afterBalance2-ethAsk,beforeBalance2.toNumber())
-    // let owner2 = await promisify(cb => witInstance.ownerOf(supply2.toNumber(), cb));
-    // console.log("owner",owner2,testUser)
+    acceptProposal("buy");
   },
   'click .sellit': function(e){
-    alert("sell");
+    acceptProposal("action");
   }
 });
+
+async function acceptProposal(action){
+  console.log("fn: acceptProposal")
+  let ethAsk = 100;
+
+  try {
+    let supply = await promisify(cb => witInstance.totalSupply(cb));
+    console.log("supply",supply.toNumber())
+    let owner = await promisify(cb => witInstance.ownerOf(supply, cb));
+    console.log("owner",user[0],owner)
+    let beforeBalance = await promisify(cb => web3.eth.getBalance(witAddress,cb));
+    console.log("WIT Balance (beforeBalance): ",beforeBalance.toNumber());
+    await promisify(cb => witInstance.createWITAcceptance(supply.toNumber(),{from: testUser, value:ethAsk},cb));
+    let supply2 = await promisify(cb => witInstance.totalSupply(cb));
+    console.log("supply",supply2.toNumber(),supply.toNumber()+1)
+    let afterBalance = await promisify(cb => web3.eth.getBalance(witAddress, cb));
+    console.log("afterBalance2",afterBalance.toNumber())
+    console.log("afterBalance2-ethAsk === beforeBalance2",afterBalance.toNumber()-ethAsk,beforeBalance.toNumber())
+    let owner2 = await promisify(cb => witInstance.ownerOf(supply2.toNumber(), cb));
+    console.log("owner",owner2,testUser2)
+  } catch (error) {
+    console.log(error)
+    alert("Transaction was not succesful, a common source of errors is insufficient gas. \n " + error.message);
+  }
+}
 
 Template.headerRow.onCreated(function(){
   this.descending = new ReactiveVar(false);
@@ -261,17 +410,18 @@ Template.headerRow.events({
     if(t.parentElement.parentElement.parentElement.id === "myProtections"){
       array = Session.get("myProtectionsFilteredData");
       //sort array based on the click header
-      if(t.innerText === "SELLER") colIndex = 0;
-      if(t.innerText === "BUYER") colIndex = 1;
-      if(t.innerText === "START") colIndex = 2;
-      if(t.innerText === "END") colIndex = 3;
-      if(t.innerText === "PAYOUT") colIndex = 4;
-      if(t.innerText === "COST") colIndex = 5;
-      if(t.innerText === "LOCATION") colIndex = 6;
-      if(t.innerText === "INDEX") colIndex = 7;
-      if(t.innerText === "THRESHOLD") colIndex = 5;
-      if(t.innerText === "STATUS") colIndex = 6;
-      if(t.innerText === "ACTION") colIndex = 7;
+      if(t.innerText === "BLOCK NUMBER") colIndex = 0;
+      if(t.innerText === "TOKEN HASH") colIndex = 1;
+      if(t.innerText === "OWNERSHIP") colIndex = 2;
+      if(t.innerText === "START") colIndex = 3;
+      if(t.innerText === "END") colIndex = 4;
+      if(t.innerText === "BUYER CONTRIBUTION (WEI)") colIndex = 5;
+      if(t.innerText === "SELLER CONTRIBUTION (WEI)") colIndex = 6;
+      if(t.innerText === "LOCATION") colIndex = 7;
+      if(t.innerText === "INDEX") colIndex = 8;
+      if(t.innerText === "THRESHOLD (%)") colIndex = 9;
+      if(t.innerText === "THRESHOLD (%)") colIndex = 10;
+      if(t.innerText === "ACTION") colIndex = 11;
       sortArray(array,colIndex,d);
       //set variable to new sorted array
       Session.set("myProtectionsFilteredData",sortArray(array,colIndex,d));
@@ -654,44 +804,6 @@ function capVal(target){
 // FUNCTIONS RELATED TO "MY PROTECTIONS"
 ////////////////////////////////////////////
 
-//tables should display as loading until data is available
-Template.myProtectionsTable.onCreated(function(){
-  Session.set("myProtectionsFilteredData",[
-    {
-      type: "bodyRow"
-      ,column: [
-        {type:"text",name:"#325927593"}
-        ,{type:"text",name:"#56425673"}
-        ,{type:"text",name:"01-02-2018"}
-        ,{type:"text",name:"03-04-2018"}
-        ,{type:"text",name:"7$"}
-        ,{type:"text",name:"8$"}
-        ,{type:"text",name:"Alberta"}
-        ,{type:"text",name:"index"}
-        ,{type:"text",name:"10%"}
-        ,{type:"text",name:"frozen"}
-        ,{type:"button",name:"action",button:"<button type='button' class='action'> action </button>"}
-      ]
-    },
-    {
-      type: "bodyRow"
-      ,column: [
-        {type:"text",name:"#539503827"}
-        ,{type:"text",name:"#56425673"}
-        ,{type:"text",name:"07-02-2018"}
-        ,{type:"text",name:"09-09-2018"}
-        ,{type:"text",name:"1$"}
-        ,{type:"text",name:"10$"}
-        ,{type:"text",name:"Saskatchewan"}
-        ,{type:"text",name:"index"}
-        ,{type:"text",name:"10%"}
-        ,{type:"text",name:"evaluating"}
-        ,{type:"button",name:"action",button:"<button type='button' class='action'> action </button>"}
-      ]
-    }
-  ]);
-});
-
 // populate open protections table
 Template.myProtectionsTable.helpers({
   headerData: function() {
@@ -699,15 +811,16 @@ Template.myProtectionsTable.helpers({
       {
         type: "headerRow"
         ,column: [
-          {name:"Seller"}
-          ,{name:"Buyer"}
+          {name:"Block Number"}
+          ,{name:"Token Hash"}
+          ,{name:"Ownership"}
           ,{name:"Start"}
           ,{name:"End"}
-          ,{name:"Payout"}
-          ,{name:"Cost"}
+          ,{name:"Buyer Contribution (wei)"}
+          ,{name:"Seller Contribution (wei)"}
           ,{name:"Location"}
           ,{name:"Index"}
-          ,{name:"Threshold"}
+          ,{name:"Threshold (%)"}
           ,{name:"Status"}
           ,{name:"Action"}
         ]

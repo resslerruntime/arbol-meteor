@@ -3,6 +3,7 @@
 <body>
   <div class="container">
     <header>
+      <img src="/images/green_circle_line1.png" alt="Arbol">
       <h1>A R B O L</h1>
     </header>
   </div>
@@ -10,7 +11,7 @@
   <div id="web3-waiting">
     <h3>Waiting for Web3 to load.</h3>
   </div>
-  <div id="no-web3" style="display:none">
+  <div id="no-web3" style="display:none" class="container">
     <h3>No Web3, consider using MetaMask: </h3>
     <a href="https://metamask.io/">
       <img src="/images/metamask-link.png" alt="Download MetaMask" height="120">
@@ -87,7 +88,7 @@
       {{#each column}}
         <td>
           {{#if isEqual type "text"}}
-            {{name}}
+            {{{name}}}
           {{else if isEqual type "num"}}
             {{name}}
           {{else if isEqual type "button"}}
