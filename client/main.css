@@ -25,6 +25,11 @@ strong#payout-amt {
   color: #4286f4;
 }
 
+.disabled-div {
+    pointer-events: none;
+    opacity: 0.4;
+}
+
 /* --------------------------------------------------------
   CSS FOR MAKING LOGO
 -------------------------------------------------------- */
@@ -238,6 +243,15 @@ input:checked + .slider .sell
     background-color: #4286f4;
   }
 
+  .wrapper {
+    min-height: 465px;
+  }
+
   /* --------------------------------------------------------
-    CSS FOR DROPDOWN FILTER
+    CSS FOR PAGINATION
   -------------------------------------------------------- */
+  .pager-btns {
+    position: absolute;
+    /* top: 675px; */
+    left: 25%;
+  }

@@ -24,23 +24,24 @@ function Entry(r){
   let s = r.transactionHash.substring(0,8) + "..." + r.transactionHash.substring(l-8,l)
   let d1 = new Date(a.start.c[0]).toISOString().substring(0,10);
   let d2 = new Date(a.end.c[0]).toISOString().substring(0,10);
-  let ask = a.weiAsking.c[0];
-  let propose = a.weiContributing.c[0];
+  let ask = a.weiAsking.toNumber();
+  let propose = a.weiContributing.toNumber();
 
   //update for if the contract is for offered for sale or for funding
   let b, b1;
   let sellerContr, buyerContr;
-  if(propose < ask){
+  let v = toEth(ask)+","+a.tokenID.toNumber();
+  if(propose > ask){
     b = "Buy";
-    b1 = "<button type='button' class='buyit'> buy </button>";
-    sellerContr = ask;
-    buyerContr = propose;
+    b1 = "<button type='button' class='buyit' value='" + v + "'> buy </button>";
+    sellerContr = toEth(propose);
+    buyerContr = toEth(ask);
   }
-  if(ask < propose){
+  if(ask > propose){
     b = "Sell";
-    b1 = "<button type='button' class='sellit'> sell </button>";
-    sellerContr = propose;
-    buyerContr = ask;
+    b1 = "<button type='button' class='sellit' value='" + v + "'> sell </button>";
+    sellerContr = toEth(ask);
+    buyerContr = toEth(propose);
   }
 
   //create the object
@@ -59,42 +60,64 @@ function Entry(r){
       ,{type:"button",name:b,button:b1}
     ];
 }
+
 //table entry constructor my protections
-function MyEntry(r,a,bool){
+//bool if you proposed the protection = true, if you accepted the protection = false
+function MyEntry(r,a,id,bool){
   let l = r.transactionHash.length;
-  let s = r.transactionHash.substring(0,8) + "..." + r.transactionHash.substring(l-8,l)
+  let s = r.transactionHash.substring(0,8) + "..." + r.transactionHash.substring(l-8,l);
   let d1 = new Date(a.start.c[0]).toISOString().substring(0,10);
   let d2 = new Date(a.end.c[0]).toISOString().substring(0,10);
-  let ask = a.weiAsking.c[0]
-  let propose = a.weiContributing.c[0]
+  let ask = a.weiAsking.toNumber();
+  let propose = a.weiContributing.toNumber();
 
-  //update for if the contract is for offered for sale or for funding
-  let b = "Buy";
-  let b1 = "<button type='button' class='action'> action </button>";
-
+  //update for if the contract is offered for sale or for funding
   let sellerContr, buyerContr;
   if(propose < ask){
-    sellerContr = ask;
-    buyerContr = propose;
+    sellerContr = toEth(ask);
+    buyerContr = toEth(propose);
   }
   if(ask < propose){
-    sellerContr = propose;
-    buyerContr = ask;
+    sellerContr = toEth(propose);
+    buyerContr = toEth(ask);
   }
 
   let o;
   if(bool){
-    if(propose < ask) o = "you are the <strong>buyer</strong>";
-    if(ask < propose) o = "you are the <strong>seller</strong>";
+    if(propose > ask) o = "you are the <strong>buyer</strong>";
+    if(ask > propose) o = "you are the <strong>seller</strong>";
   }else{
     if(propose < ask) o = "you are the <strong>seller</strong>";
     if(ask < propose) o = "you are the <strong>buyer</strong>";
   }
 
+  let status = "";
+  let now = new Date().getTime();
+  let start = new Date(a.start.c[0]).getTime();
+  let end = new Date(a.end.c[0]).getTime();
+  let b = "";
+  let b1 = "<button type='button' class='action'> Cancel and Redeem </button>";
+
+  if(r.args !== a){
+    if(now < start) status = "Partnered, Waiting to Start";
+    if(now >= start && now <= end){
+      status = "In Term";
+      b1 = "Waiting...";
+    }
+    if(now > end){
+      status = "Waiting for Evaluation";
+      b1 = "<button type='button' class='action'> Evaluate and Complete </button>";
+    }
+  }else{
+    if(now < start) status = "Open";
+    if(now >= start) status = "Stale";
+  }
+
+
   //create the object
   this.type = "bodyRow";
   this.column = [
-       {type:"num",name:r.blockNumber}
+       {type:"num",name:id}
       ,{type:"text",name:s}
       ,{type:"text",name:o}
       ,{type:"text",name:d1}
@@ -104,7 +127,7 @@ function MyEntry(r,a,bool){
       ,{type:"text",name:a.location}
       ,{type:"text",name:a.index}
       ,{type:"num",name:a.threshold}
-      ,{type:"text",name:"open"}
+      ,{type:"text",name:status}
       ,{type:"button",name:b,button:b1}
     ];
 }
@@ -115,16 +138,15 @@ const testUser    = "0x627306090abaB3A6e1400e9345bC60c78a8BEf57";
 const testUser2   = "0xf17f52151EbEF6C7334FAD080c5704D77216b732";
 
 var user;
+var pastUser = -1;
 var cropContract;
 var cropInstance;
 var witContract;
 var witInstance;
 
-var latestToken;
+var latestToken = -1;
 var lastToken;
-var lastBlock = 0;
-var lastBlock2;
-var lastBlock3;
+var acceptedList = [];
 
 if (Meteor.isClient) {
   Meteor.startup(async function() {
@@ -134,68 +156,45 @@ if (Meteor.isClient) {
       console.log("web3 from current provider: ",web3.currentProvider.constructor.name)
       // Use Mist/MetaMask's provider
       web3js = new Web3(web3.currentProvider);
+
       //show relevant content depending on wether web3 is loaded or not
       $('#web3-waiting').hide();
       $('#web3-onload').show();
+
       //initialize web3 contracts
       Session.set("activeUser","current user: no current user- log into metamask");
-      try{
-        user = await promisify(cb => web3.eth.getAccounts(cb));
-        let s;
-        if(user[0]) s = "current user: " + user[0];
-        Session.set("activeUser",s);
-      } catch (error) {
-        console.log(error)
-        alert("User information was not loaded succesfully: " + error.message);
-      }
+      resetSessionVars();
 
-      //TODO check for subsequent account activity, lockout screen if no metamask user is signed in
-      // setInterval(async function(){
-      //   try{
-      //     user = await promisify(cb => web3.eth.getAccounts(cb));
-      //     let s;
-      //     if(user[0]) s = "current user: " + user[0];
-      //     else s = "current user: no current user- log into metamask";
-      //     Session.set("activeUser",s);
-      //   } catch (error) {
-      //     console.log(error)
-      //     alert("User information was not loaded succesfully: " + error.message);
-      //   }
-      // }, 5000);
-
-      //check for network use correct deployed addresses
-      web3.version.getNetwork((err, netId) => {
-        switch (netId) {
-          case "1":
-            console.log('This is mainnet')
-            break
-          case "2":
-            console.log('This is the deprecated Morden test network.')
-            break
-          case "3":
-            console.log('This is the ropsten test network.')
-            break
-          case "4":
-            console.log('This is the Rinkeby test network.')
-            break
-          case "42":
-            console.log('This is the Kovan test network.')
-            break
-          default:
-            console.log('This is an unknown network.')
+      // check for subsequent account activity, lockout screen if no metamask user is signed in
+      setInterval(async function(){
+        try{
+          user = await promisify(cb => web3.eth.getAccounts(cb));
+          if(user[0] !== pastUser[0]){
+            console.log("_-_-_- CHANGE IN USER _-_-_-")
+            let s;
+            if(user[0]){
+               s = "current user: " + user[0];
+               Session.set("activeUser",s);
+               $("#web3-onload").removeClass("disabled-div");
+               loadData();
+            } else {
+              s = "current user: no current user- log into metamask";
+              Session.set("activeUser",s);
+              $("#web3-onload").addClass("disabled-div");
+              $('.loader').show();
+              $('.wrapper').addClass('loading');
+              $('#open-pager-btns').hide();
+              $('#my-pager-btns').hide();
+              resetSessionVars();
+              resetGlobalVariables();
+            }
+          }
+          pastUser = user;
+        } catch (error) {
+          console.log(error)
+          alert("User information was not loaded succesfully: " + error.message);
         }
-      })
-
-      cropContract = web3.eth.contract(CROPABI);
-      cropInstance = cropContract.at(cropAddress);
-      witContract = web3js.eth.contract(WITABI);
-      witInstance = witContract.at(witAddress);
-
-      //populate lists
-      openProtectionsLatestToken();
-      myProtectionsMyProposals();
-      myProtectionsAcceptedProposals();
-
+      }, 1000);
     } else {
       console.log('No web3? You should consider trying MetaMask!')
       // fallback - use your fallback strategy (local node / hosted node + in-dapp id mgmt / fail)
@@ -218,13 +217,99 @@ if (Meteor.isClient) {
   // });
 }
 
-//get the block number for the latest block and token ID
-//add new entries as they are created, only call once total list is populated
-function openProtectionsLatestToken(){
-  witInstance.ProposalOffered(Session.get("filterCriteria"),{fromBlock: 'latest', toBlock: 'latest'}).watch(function(error, result){
+//begin the process of loading all the data
+function loadData(){
+  //check for network use correct deployed addresses
+  web3.version.getNetwork((err, netId) => {
+    switch (netId) {
+      case "1":
+        console.log('This is mainnet')
+        break
+      case "2":
+        console.log('This is the deprecated Morden test network.')
+        break
+      case "3":
+        console.log('This is the ropsten test network.')
+        break
+      case "4":
+        console.log('This is the Rinkeby test network.')
+        break
+      case "42":
+        console.log('This is the Kovan test network.')
+        break
+      default:
+        console.log('This is an unknown network.')
+    }
+  })
+
+  cropContract = web3.eth.contract(CROPABI);
+  cropInstance = cropContract.at(cropAddress);
+  witContract = web3js.eth.contract(WITABI);
+  witInstance = witContract.at(witAddress);
+
+  //populate lists
+  latestProposals();
+  latestAcceptances();
+}
+
+function resetGlobalVariables(){
+  opPagination = 0;
+  myPagination = 0;
+  latestToken = -1;
+  lastToken = -1;
+  acceptedList = [];
+  let fst = $('#first-token-filter');
+  let lst = $('#last-token-filter');
+  fst.addClass('fresh');
+  lst.addClass('fresh');
+  watchLatestProposal.stopWatching();
+  watchLatestAcceptance.stopWatching();
+}
+
+//get the token ID for the latest protection
+//add new entries as they are created
+var watchLatestProposal = -1;
+function latestProposals(){
+  console.log("fn: latestProposals");
+  watchLatestProposal = witInstance.ProposalOffered(Session.get("filterCriteria"),{fromBlock: 'latest', toBlock: 'latest'}).watch(function(error, result){
+    let id = result.args.tokenID.toNumber();
+    startTraverse(id,function(){
+      console.log("===> get latest",id,latestToken,id !== latestToken);
+      addToken(result);
+      checkProposal(result);
+    });
+  });
+}
+
+//get the token ID for the latest acceptance
+//add new acceptances to myProposals as they are created and remove from open proposals
+var watchLatestAcceptance = -1;
+function latestAcceptances(){
+  //do something as new proposal is accepted
+  watchLatestAcceptance = witInstance.ProposalAccepted({},{fromBlock: 'latest', toBlock: 'latest'}).watch(function(error, result){
+    let id = result.args.tokenIDAccepter.toNumber();
+    let idp = result.args.tokenIDProposer.toNumber();
+    startTraverse(id,function(){
+      console.log("===> latest accepted",id)
+      addAcceptance(result);
+    });
+    if(latestToken != -1){
+      removeToken(idp);
+      // updateStatus(idp);
+    }
+  });
+}
+
+function startTraverse(id,cb){
+  if(id !== latestToken){
     $('.loader').hide();
     $('.wrapper').removeClass('loading');
-    latestToken = result.args.tokenID;
+    latestToken = id;
+
+    //execute callback from latest __ function
+    cb();
+
+    //deal with token ID filtering
     let fst = $('#first-token-filter');
     let lst = $('#last-token-filter');
     if(fst.hasClass('fresh')){
@@ -234,39 +319,79 @@ function openProtectionsLatestToken(){
       fst.removeClass('fresh');
       lst.removeClass('fresh');
       opPagination = 0;
-      openProtectionsOpenProposals();
+      pastProtections();
     }else{
       let lv = lst.val();
       if(latestToken > lv) lst.val(latestToken);
     }
     capToken();
-    checkToken(result);
-    if(result.blockNumber !== lastBlock){
-      addToken(result,"front");
-      lastBlock = result.blockNumber;
-    }
-  });
+  }
 }
 
 //populate open protections with open proposals
 //only get data as necessary, used recursively
-function openProtectionsOpenProposals(){
+var watchProposal = -1;
+var watchAcceptance = -1;
+function pastProtections(){
+  console.log("fn: pastProtections",lastToken)
   let thisToken = lastToken - 1;
-  let f = Session.get("filterCriteria");
-  f.tokenID = thisToken;
-  witInstance.ProposalOffered(f,{fromBlock: 0, toBlock: 'latest'}).watch(function(error, result){
-    // clearTimeout(timeout);
-    addToken(result,"end");
-    lastToken = thisToken;
-    $('#first-token-filter').val(thisToken);
-    capToken();
-    let l = Session.get("openProtectionsFilteredData").length;
-    if(l < bin*(1+opPagination) && thisToken > 0) openProtectionsOpenProposals();
-  });
-  //check to see if current ID is in fact an accepted token not an original and continue token traverse
-  witInstance.ProposalAccepted(f,{fromBlock: 0, toBlock: 'latest'}).watch(function(error, result){
-    if(result.args.tokenIDAccepter === thisToken) openProtectionsOpenProposals();
-  });
+  if(thisToken > 0){
+    //check to see if current ID is an open protection
+    let f = Session.get("filterCriteria");
+    f.tokenID = thisToken;
+    if(watchProposal !== -1) watchProposal.stopWatching();
+    watchProposal = witInstance.ProposalOffered(f,{fromBlock: 0, toBlock: 'latest'}).watch(function(error, result){
+      lastToken = thisToken;
+      //only add token if it hasn't been accepted
+      addToken(result);
+      $('#first-token-filter').val(thisToken);
+      capToken();
+      //are we at the end of the list?
+      managePage(thisToken);
+    });
+
+    //check to see if current ID is an accepted protection
+    let e = {tokenIDAccepter:thisToken};
+    if(watchAcceptance !== -1) watchAcceptance.stopWatching();
+    watchAcceptance = witInstance.ProposalAccepted(e,{fromBlock: 0, toBlock: 'latest'}).watch(function(error, result){
+      lastToken = thisToken;
+      //add previously accepted protections to myProtections
+      addAcceptance(result);
+      //continue traverse
+      managePage(thisToken);
+    });
+  }
+  if(thisToken === 0){
+    console.log("clear watch events");
+    //clear watch events
+    watchAcceptance.stopWatching();
+    watchProposal.stopWatching();
+    console.log(watchAcceptance)
+  }
+}
+
+//have you loaded enough data for the current page?
+function managePage(thisToken){
+  let l = Session.get("openProtectionsData").length;
+  let ll = Session.get("myProtectionsData").length;
+  if(l >= bin && thisToken > 1){
+    $('#open-pager-btns').show();
+  }
+  if(l < bin){
+    $('#open-pager-btns').hide();
+  }
+  if(ll >= bin && thisToken > 1){
+    $('#my-pager-btns').show();
+  }
+  if(ll < bin){
+    $('#my-pager-btns').hide();
+  }
+  if(l < bin*(1+opPagination) || ll < bin*(1+myPagination)){
+    pastProtections();
+  }else{
+    watchAcceptance.stopWatching();
+    watchProposal.stopWatching();
+  }
 }
 
 //limit the token filter that can be used
@@ -278,91 +403,188 @@ function capToken(){
 }
 
 //check token, debug function
-async function checkToken(result){
+async function checkProposal(result){
   console.log("===> new proposal created",result)
   try{
     let supply = await promisify(cb => witInstance.totalSupply(cb));
     let afterBalance = await promisify(cb => web3.eth.getBalance(witAddress, cb));
-    let afterAllowance = await promisify(cb => cropInstance.allowance(user[0],witAddress,cb));
-    let ask = result.args.weiAsking.c[0];
-    let propose = result.args.weiContributing.c[0];
-    console.log("after allowance: ",afterAllowance.toNumber(),propose + ask)
+    afterBalance = toEth(afterBalance.toNumber())
+    let propose = toEth(result.args.weiContributing.toNumber());
     console.log("WIT supply",supply.toNumber())
-    console.log("afterBalance",afterBalance.toNumber())
+    console.log("afterBalance",afterBalance)
     console.log("afterBalance-ethPropose === beforeBalance",afterBalance-propose)
   }catch(error){
 
   }
 }
 
-//add token to list
-function addToken(result,pos){
-  //only show entries whose starting dates haven't passed
-  if(new Date(result.args.start.c[0]) - new Date() > 0){
-    let list = Session.get("openProtectionsFilteredData");
-    if(pos === "front") list.unshift(new Entry(result));
-    if(pos === "end") list.push(new Entry(result));
-    Session.set("openProtectionsFilteredData",list);
-    let pageList = paginateData(list,opPagination);
-    if(pageList.length > 0) Session.set("openProtectionsPaginatedData",pageList);
-    else opPagination -= 1;
+//check acceptance
+async function checkAcceptance(result){
+  console.log("===> new acceptance",result)
+  try{
+    let supply2 = await promisify(cb => witInstance.totalSupply(cb));
+    let afterBalance = await promisify(cb => web3.eth.getBalance(witAddress, cb));
+    let owner2 = await promisify(cb => witInstance.ownerOf(supply2.toNumber(), cb));
+
+    console.log("supply",supply2.toNumber())
+    console.log("afterBalance2",afterBalance.toNumber())
+    // console.log("afterBalance2-ethAsk === beforeBalance2",afterBalance.toNumber()-ask)
+    console.log("owner",owner2,testUser2)
+  }catch(error){
+
   }
 }
 
-//populate my protections with my proposals
-function myProtectionsMyProposals(){
-  //add new entries as they are created, only call once total list is populated
-  witInstance.ProposalOffered({},{fromBlock: 0, toBlock: 'latest'}).watch(async function(error, result){
-    try{
-      let id = result.args.tokenID;
-      let owner = await promisify(cb => witInstance.ownerOf(id, cb));
-      if(result.blockNumber !== lastBlock2 && owner === user[0]){
-        let list = Session.get("myProtectionsFilteredData");
-        list.push(new MyEntry(result,result.args,true));
-        lastBlock2 = result.blockNumber; //this is a hacky workaround, why is event being called more than once?
-        Session.set("myProtectionsFilteredData",list);
+//check transfer, debug function
+async function checkTransfer(){
+  witInstance.Transfer({},{fromBlock: 'latest', toBlock: 'latest'}).watch(async function(error, result){
+    if(result.event === "Transfer"){
+      console.log("===> transfer",result)
+      try{
+        let afterAllowance = await promisify(cb => cropInstance.allowance(user[0],witAddress,cb));
+        let ask = toEth(result.args.weiAsking.toNumber());
+        let propose = toEth(result.args.weiContributing.c[0]);
+        console.log("after allowance: ",afterAllowance.toNumber(),propose + ask)
+      }catch(error){
+
       }
-    } catch (error) {
-      console.log(error)
-      alert("My Protections data failed to load: " + error.message);
     }
   });
 }
 
-//populate my protections with accepted proposals
-function myProtectionsAcceptedProposals(){
-  //do something as new proposal is accepted
-  witInstance.ProposalAccepted({},{fromBlock: 0, toBlock: 'latest'}).watch(async function(error, result){
-    try{
-      let outerResult = result;
-      let id = result.args.tokenIDAccepter;
-      let idp = result.args.tokenIDProposer;
-      let owner = await promisify(cb => witInstance.ownerOf(id, cb));
-      if(result.blockNumber !== lastBlock3 && owner === user[0]){
-        //get contract information for associated proposal
-        witInstance.ProposalOffered({tokenID:idp},{fromBlock: 0, toBlock: 'latest'}).watch(function(error, result){
-          console.log("===> proposal accepted",outerResult,result)
-          let list = Session.get("myProtectionsFilteredData");
-          list.push(new MyEntry(outerResult,result.args,false));
-          Session.set("myProtectionsFilteredData",list);
-        });
-        lastBlock3 = result.blockNumber; //this is a hacky workaround, why is event being called more than once?
-        //check the open protections to see if they should be removed
-        // let list = Session.get("openProtectionsFilteredData");
-        // var l = list.length;
-        // while(l--){
-        //   console.log(list[l].id.c[0],idp.c[0])
-        //   if(list[l].id === idp) list.splice(l,1);
-        // }
-        Session.set("openProtectionsFilteredData",list);
+//add token to list
+async function addToken(result){
+  let id = result.args.tokenID;
+
+  if(acceptedList.indexOf(id.toNumber()) === -1){
+    //TODO reinstate date filter
+    //only show entries whose starting dates haven't passed
+    //if(new Date(result.args.start.c[0]) - new Date() > 0){
+    if(true){
+      //add to open protections
+      let list = Session.get("openProtectionsData");
+      list.push(new Entry(result));
+      list = sortArray(list,Session.get("sortIndex"),Session.get("descending"));
+      Session.set("openProtectionsData",list);
+      let pageList = paginateData(list,opPagination);
+      if(pageList.length > 0){
+        Session.set("openProtectionsPaginatedData",pageList);
+      }else{
+        if(opPagination > 0) opPagination -= 1;
       }
-    } catch (error) {
-      console.log(error)
-      alert("My Protections data failed to load: " + error.message);
     }
-  });
+  }
+
+  //add to my protections
+  try{
+    let owner = await promisify(cb => witInstance.ownerOf(id, cb));
+    if(owner === user[0]){
+      let list = Session.get("myProtectionsData");
+      list.push(new MyEntry(result,result.args,id.toNumber(),true));
+      list = sortArray(list,Session.get("mySortIndex"),Session.get("descending"));
+      list = updateStatus(list,id.toNumber());
+      Session.set("myProtectionsData",list);
+      let pageList = paginateData(list,myPagination);
+      if(pageList.length > 0){
+        Session.set("myProtectionsPaginatedData",pageList);
+      }else{
+        if(myPagination > 0) myPagination -= 1;
+      }
+    }
+  }catch(error){
+    console.log(error);
+  }
 }
 
+function removeToken(id){
+  //add to open protections
+  let list = Session.get("openProtectionsData");
+  let index = findIndex(list,function(el){return el.column[0].name === id;})
+  list.splice(index,1);
+  list = sortArray(list,Session.get("sortIndex"),Session.get("descending"));
+  Session.set("openProtectionsData",list);
+  let pageList = paginateData(list,opPagination);
+  if(pageList.length > 0){
+    Session.set("openProtectionsPaginatedData",pageList);
+  }else{
+    if(opPagination > 0) opPagination -= 1;
+  }
+}
+
+function updateStatus(list,id){
+  //only update status for those that are accepted
+  if(acceptedList.indexOf(id) !== -1){
+    let index = findIndex(list,function(el){return el.column[0].name === id;});
+    if(index !== -1){
+      let el = list[index].column;
+
+      let status = "";
+      let now = new Date().getTime();
+      let start = new Date(el[3].name).getTime();
+      let end = new Date(el[4].name).getTime();
+      let b1 = "<button type='button' class='action'> Cancel and Redeem </button>";
+
+      if(now < start) status = "Partnered, Waiting to Start";
+      if(now >= start && now <= end){
+        status = "In Term";
+        b1 = "Waiting...";
+      }
+      if(now > end){
+        status = "Waiting for Evaluation";
+        b1 = "<button type='button' class='action'> Evaluate and Complete </button>";
+      }
+
+      el[10].name = status;
+      el[11].button = b1;
+    }
+  }
+  return list;
+}
+
+function findIndex(array,cb){
+  let l = array.length;
+  while(l--){
+    if(cb(array[l])) return l;
+  }
+  return -1;
+}
+
+//add acceptance to my protections
+async function addAcceptance(result){
+  try{
+    let outerResult = result;
+    let idObj = result.args.tokenIDAccepter;
+    let idpObj = result.args.tokenIDProposer;
+    let id = idObj.toNumber();
+    let idp = idpObj.toNumber();
+
+    //prevent previous tokens from being added to list
+    acceptedList.push(idp);
+    console.log("===> proposal accepted",result,id)
+
+    let owner = await promisify(cb => witInstance.ownerOf(idObj, cb));
+    if(owner === user[0]){
+      //get contract information for associated proposal
+      witInstance.ProposalOffered({tokenID:idpObj},{fromBlock: 0, toBlock: 'latest'}).watch(function(error, result){
+        let list = Session.get("myProtectionsData");
+        list.push(new MyEntry(outerResult,result.args,id,false));
+        Session.set("myProtectionsData",list);
+      });
+    }
+  } catch (error) {
+    console.log(error)
+    alert("My Protections data failed to load: " + error.message);
+  }
+}
+
+//conversion
+function toEth(n){
+  return n/Math.pow(10,18);
+}
+
+function toWei(n){
+  return n*Math.pow(10,18);
+}
 
 ////////////////////////////////////////////
 // ACTIVE USER
@@ -418,11 +640,17 @@ Template.navigation.helpers({
 ////////////////////////////////////////////
 // FUNCTIONS RELATED TO SORTABLE TABLES
 ////////////////////////////////////////////
-Session.set("filterCriteria",{});
-Session.set("openProtectionsFilteredData",[]);
-Session.set("myProtectionsFilteredData",[]);
-Session.set("openProtectionsPaginatedData",[]);
-Session.set("myProtectionsPaginatedData",[]);
+function resetSessionVars(){
+  Session.set("filterCriteria",{});
+  Session.set("openProtectionsData",[]);
+  Session.set("myProtectionsData",[]);
+  Session.set("openProtectionsPaginatedData",[]);
+  Session.set("myProtectionsPaginatedData",[]);
+  Session.set("sortIndex",0);
+  Session.set("descending",true);
+  Session.set("mySortIndex",0);
+  Session.set("myDescending",true);
+}
 
 Template.sortableRows.helpers({
   isEqual: function (a, b) {
@@ -435,41 +663,36 @@ Template.sortableRows.events({
     alert("action");
   },
   'click .buyit': function(e){
-    acceptProposal("buy");
+    acceptProposal(e.target.value);
   },
   'click .sellit': function(e){
-    acceptProposal("action");
+    acceptProposal(e.target.value);
   }
 });
 
-async function acceptProposal(action){
-  console.log("fn: acceptProposal")
-  let ethAsk = 100;
+async function acceptProposal(v){
+  let vals = v.split(",");
+  let ethAsk = vals[0]
+  let id = vals[1];
 
   try {
     let supply = await promisify(cb => witInstance.totalSupply(cb));
-    console.log("supply",supply.toNumber())
-    let owner = await promisify(cb => witInstance.ownerOf(supply, cb));
-    console.log("owner",user[0],owner)
+    let owner = await promisify(cb => witInstance.ownerOf(id, cb));
     let beforeBalance = await promisify(cb => web3.eth.getBalance(witAddress,cb));
-    console.log("WIT Balance (beforeBalance): ",beforeBalance.toNumber());
-    await promisify(cb => witInstance.createWITAcceptance(supply.toNumber(),{from: testUser, value:ethAsk},cb));
-    let supply2 = await promisify(cb => witInstance.totalSupply(cb));
-    console.log("supply",supply2.toNumber(),supply.toNumber()+1)
-    let afterBalance = await promisify(cb => web3.eth.getBalance(witAddress, cb));
-    console.log("afterBalance2",afterBalance.toNumber())
-    console.log("afterBalance2-ethAsk === beforeBalance2",afterBalance.toNumber()-ethAsk,beforeBalance.toNumber())
-    let owner2 = await promisify(cb => witInstance.ownerOf(supply2.toNumber(), cb));
-    console.log("owner",owner2,testUser2)
+    beforeBalance = toEth(beforeBalance.toNumber());
+
+    console.log("====> new WIT acceptance");
+    console.log("WIT Balance (beforeBalance): ",beforeBalance);
+    console.log("owner",user[0],owner);
+    console.log("supply",supply.toNumber());
+    console.log("ethAsk", ethAsk);
+    console.log("proposal token ID", id);
+    //TODO don't let user accept their own proposal
+
+    await promisify(cb => witInstance.createWITAcceptance(id,{from: user[0], value:toWei(ethAsk)},cb));
   } catch (error) {
-    console.log(error)
-    alert("Transaction was not succesful, a common source of errors is insufficient gas. \n " + error.message);
   }
 }
-
-Template.headerRow.onCreated(function(){
-  this.descending = new ReactiveVar(false);
-});
 
 Template.headerRow.events({
   'mouseenter th': function(e){
@@ -484,48 +707,53 @@ Template.headerRow.events({
     //sort the json based on the header
     let array = [];
     let colIndex = 0;
-    let d = template.descending.get();
-
     if(t.parentElement.parentElement.parentElement.id === "openProtections"){
-      array = Session.get("openProtectionsFilteredData");
+      let d = Session.get("descending");
+      array = Session.get("openProtectionsData");
       //sort array based on the click header
       if(t.innerText === "TOKEN NUMBER") colIndex = 0;
       if(t.innerText === "TOKEN HASH") colIndex = 1;
       if(t.innerText === "START") colIndex = 2;
       if(t.innerText === "END") colIndex = 3;
-      if(t.innerText === "BUYER CONTRIBUTION (WEI)") colIndex = 4;
-      if(t.innerText === "SELLER CONTRIBUTION (WEI)") colIndex = 5;
+      if(t.innerText === "BUYER CONTRIBUTION (ETH)") colIndex = 4;
+      if(t.innerText === "SELLER CONTRIBUTION (ETH)") colIndex = 5;
       if(t.innerText === "LOCATION") colIndex = 6;
       if(t.innerText === "INDEX") colIndex = 7;
       if(t.innerText === "THRESHOLD (%)") colIndex = 8;
-      if(t.innerText === "BUY/FUND") colIndex = 9;
+      if(t.innerText === "BUY/SELL") colIndex = 9;
+      Session.set("sortIndex",colIndex);
       //set variable to new sorted array
       let list = sortArray(array,colIndex,d);
-      Session.set("openProtectionsFilteredData",list);
+      Session.set("openProtectionsData",list);
       opPagination = 0;
       let pageList = paginateData(list,0);
       Session.set("openProtectionsPaginatedData",pageList);
-      template.descending.set(!d);
+      Session.set("descending",!d);
     }
     if(t.parentElement.parentElement.parentElement.id === "myProtections"){
-      array = Session.get("myProtectionsFilteredData");
+      let d = Session.get("myDescending");
+      array = Session.get("myProtectionsData");
       //sort array based on the click header
       if(t.innerText === "BLOCK NUMBER") colIndex = 0;
       if(t.innerText === "TOKEN HASH") colIndex = 1;
       if(t.innerText === "OWNERSHIP") colIndex = 2;
       if(t.innerText === "START") colIndex = 3;
       if(t.innerText === "END") colIndex = 4;
-      if(t.innerText === "BUYER CONTRIBUTION (WEI)") colIndex = 5;
-      if(t.innerText === "SELLER CONTRIBUTION (WEI)") colIndex = 6;
+      if(t.innerText === "BUYER CONTRIBUTION (ETH)") colIndex = 5;
+      if(t.innerText === "SELLER CONTRIBUTION (ETH)") colIndex = 6;
       if(t.innerText === "LOCATION") colIndex = 7;
       if(t.innerText === "INDEX") colIndex = 8;
       if(t.innerText === "THRESHOLD (%)") colIndex = 9;
       if(t.innerText === "THRESHOLD (%)") colIndex = 10;
       if(t.innerText === "ACTION") colIndex = 11;
-      sortArray(array,colIndex,d);
+      Session.set("mySortIndex",colIndex);
       //set variable to new sorted array
-      Session.set("myProtectionsFilteredData",sortArray(array,colIndex,d));
-      template.descending.set(!d);
+      let list = sortArray(array,colIndex,d);
+      Session.set("myProtectionsData",list);
+      myPagination = 0;
+      let pageList = paginateData(list,0);
+      Session.set("myProtectionsPaginatedData",pageList);
+      Session.set("myDescending",!d);
     }
   }
 });
@@ -547,26 +775,52 @@ function sortArray(array,i,d){
 //TODO grey out back and forward button as appropriate
 // Paginate through all the data
 var opPagination = 0;
-Template.pagination.events({
-  'click #forward'(e){
+Template.openPagination.events({
+  'click #open-forward'(e){
+    console.log("forward")
     opPagination += 1;
     let fv = $('#first-token-filter').val();
-    let list = Session.get("openProtectionsFilteredData");
+    let list = Session.get("openProtectionsData");
     let l = list.length;
     if(fv > 1 && l < (opPagination+1)*bin){
-      openProtectionsOpenProposals();
+      pastProtections();
     }else{
-      Session.set("openProtectionsFilteredData",list);
+      Session.set("openProtectionsData",list);
       let pageList = paginateData(list,opPagination);
       if(pageList.length > 0) Session.set("openProtectionsPaginatedData",pageList);
-      else opPagination -= 1;
+      else if(opPagination > 0) opPagination -= 1;
     }
   },
-  'click #back'(e){
+  'click #open-back'(e){
     if(opPagination > 0) opPagination -= 1;
-    let fullList = Session.get("openProtectionsFilteredData");
+    let fullList = Session.get("openProtectionsData");
     let pageList = paginateData(fullList,opPagination);
     Session.set("openProtectionsPaginatedData",pageList);
+  }
+});
+
+var myPagination = 0;
+Template.myPagination.events({
+  'click #my-forward'(e){
+    console.log(myPagination)
+    myPagination += 1;
+    let fv = $('#first-token-filter').val();
+    let list = Session.get("myProtectionsData");
+    let l = list.length;
+    if(fv > 1 && l < (myPagination+1)*bin){
+      pastProtections();
+    }else{
+      Session.set("myProtectionsData",list);
+      let pageList = paginateData(list,myPagination);
+      if(pageList.length > 0) Session.set("myProtectionsPaginatedData",pageList);
+      else if(myPagination > 0) myPagination -= 1;
+    }
+  },
+  'click #my-back'(e){
+    if(myPagination > 0) myPagination -= 1;
+    let fullList = Session.get("myProtectionsData");
+    let pageList = paginateData(fullList,myPagination);
+    Session.set("myProtectionsPaginatedData",pageList);
   }
 });
 
@@ -594,15 +848,15 @@ Template.filter.helpers({
   filterInput: function() {
     return [
       {
-        title: "Buyer Contribution (Wei):"
-        ,tooltiptext: "The amount of wei contributed by the contract buyer."
+        title: "Buyer Contribution (Eth):"
+        ,tooltiptext: "The amount of Eth contributed by the contract buyer."
         ,type: "number"
         ,name: "buyer"
         ,id: "buyer-filter"
       }
       ,{
-        title: "Seller Contribution (Wei):"
-        ,tooltiptext: "The amount of wei contributed by the contract seller."
+        title: "Seller Contribution (Eth):"
+        ,tooltiptext: "The amount of Eth contributed by the contract seller."
         ,type: "number"
         ,name: "seller"
         ,id: "seller-filter"
@@ -622,26 +876,25 @@ Template.elFilter.helpers({
 //we need to purge filtered data list and start again?
 //maybe we need separate lists one for any sort of filter other than token ID, which gets purged etc...
 Template.filter.events({
-  'input .filter'(event) {
-    let a = $('#buyer-filter')[0].value;
-    let b = $('#seller-filter')[0].value;
-    let obj = {};
-    if(a > 0) obj.weiAsking = parseInt(a);
-    if(b > 0) obj.weiContributing = parseInt(b);
-    Session.set("filterCriteria",obj);
-    witInstance.ProposalOffered(obj,{fromBlock: 0, toBlock: 'latest'}).get(function(error, result){
-      let list = [], l = result.length;
-      for(var i = 0; i < l; i++){
-        if(result[i].event === "ProposalOffered"){
-          list.push(new Entry(result[i]));
-        }
-      }
-      Session.set("openProtectionsFilteredData",list);
-      opPagination = 0;
-      let pageList = paginateData(list,0);
-      Session.set("openProtectionsPaginatedData",pageList);
-    });
-  }
+  // 'input .filter'(event) {
+  //   let a = $('#buyer-filter')[0].value;
+  //   let b = $('#seller-filter')[0].value;
+  //   let obj = {};
+  //   if(a > 0) obj.weiAsking = parseInt(a);
+  //   if(b > 0) obj.weiContributing = parseInt(b);
+  //   Session.set("filterCriteria",obj);
+  //   witInstance.ProposalOffered(obj,{fromBlock: 0, toBlock: 'latest'}).get(function(error, result){
+  //     console.log("here",result);
+  //     let list = [], l = result.length;
+  //     for(var i = 0; i < l; i++){
+  //       list.push(new Entry(result[i]));
+  //     }
+  //     Session.set("openProtectionsData",list);
+  //     opPagination = 0;
+  //     let pageList = paginateData(list,0);
+  //     Session.set("openProtectionsPaginatedData",pageList);
+  //   });
+  // }
 });
 
 // input for filter
@@ -674,7 +927,7 @@ Template.elTokens.helpers({
 
 // Dealing with submittal of form
 Template.tokens.events({
-  'input .tokens'(event) {
+  // 'input .tokens'(event) {
     // let a = $('#buyer-filter')[0].value;
     // let b = $('#seller-filter')[0].value;
     // let obj = {};
@@ -688,12 +941,12 @@ Template.tokens.events({
     //       list.push(new Entry(result[i]));
     //     }
     //   }
-    //   Session.set("openProtectionsFilteredData",list);
+    //   Session.set("openProtectionsData",list);
     //   opPagination = 0;
     //   let pageList = paginateData(list,0);
     //   Session.set("openProtectionsPaginatedData",pageList);
     // });
-  }
+  // }
 });
 
 ////////////////////////////////////////////
@@ -711,12 +964,12 @@ Template.openProtectionsTable.helpers({
           ,{name:"Token Hash"}
           ,{name:"Start"}
           ,{name:"End"}
-          ,{name:"Buyer Contribution (wei)"}
-          ,{name:"Seller Contribution (wei)"}
+          ,{name:"Buyer Contribution (Eth)"}
+          ,{name:"Seller Contribution (Eth)"}
           ,{name:"Location"}
           ,{name:"Index"}
           ,{name:"Threshold (%)"}
-          ,{name:"Buy/Fund"}
+          ,{name:"BUY/SELL"}
         ]
       }
     ];
@@ -732,16 +985,22 @@ Template.openProtectionsTable.helpers({
 
 Template.formNewProtection.events({
   'click #createRandom': function(e){
-    let amt1 = Math.round(Math.random()*10+1)*100;
-    let amt2 = Math.round(Math.random()*10+1)*100;
+    let amt1 = Math.round(Math.random()+1);
+    let amt2 = Math.round(Math.random()+1);
     $('#seller-contrib')[0].value = amt1 + amt2;
     $('#buyer-contrib')[0].value = amt1;
     $('#payout-amt').html(2*amt1 + amt2);
 
-    let amt3 = Math.random()*1000000000;
-    let amt4 = Math.random()*1000000000;
-    let d1 = new Date().getTime() + amt3;
-    let d2 = new Date().getTime() + amt3 + amt4;
+    let amt3 = Math.random()*10000000000;
+    let amt4 = Math.random()*10000000000;
+    let amt5 = Math.random()*10000000000;
+    let amt6 = Math.random()*10000000000;
+    while((amt3 - amt4) > (amt5 - amt6)){
+      amt5 = Math.random()*10000000000;
+      amt6 = Math.random()*10000000000;
+    }
+    let d1 = new Date().getTime() + amt3 - amt4;
+    let d2 = new Date().getTime() + amt5 - amt6;
     $('#start-date')[0].value = new Date(d1).toISOString().substring(0,10);
     $('#end-date')[0].value = new Date(d2).toISOString().substring(0,10);
 
@@ -777,21 +1036,21 @@ Template.formNewProtection.helpers({
         ,id: "end-date"
       }
       ,{
-        title: "Buyer Contribution (Wei):"
-        ,tooltiptext: "The amount of wei contributed by the contract buyer."
+        title: "Buyer Contribution (Eth):"
+        ,tooltiptext: "The amount of Eth contributed by the contract buyer."
         ,type: "number"
         ,name: "buyer"
         ,id: "buyer-contrib"
       }
       ,{
-        title: "Seller Contribution (Wei):"
-        ,tooltiptext: "The amount of wei contributed by the contract seller."
+        title: "Seller Contribution (Eth):"
+        ,tooltiptext: "The amount of Eth contributed by the contract seller."
         ,type: "number"
         ,name: "seller"
         ,id: "seller-contrib"
       }
       ,{
-        title: "Total Payout (Wei):"
+        title: "Total Payout (Eth):"
         ,tooltiptext: "The total amount of payout received by one of the parties when the outcome is evaluated."
         ,type: "payout"
         ,id: "payout-amt"
@@ -872,9 +1131,10 @@ Template.formNewProtection.helpers({
   }
 });
 
+//TODO add min date back in after testing status
 Template.elNewProtection.helpers({
   minDate: function() {
-    return new Date().toISOString().substring(0,10);
+    // return new Date().toISOString().substring(0,10);
   },
   isEqual: function (a, b) {
     return a === b;
@@ -920,8 +1180,8 @@ Template.formNewProtection.events({
       const confirmed = confirm ( "Please confirm your selection: \n\n"
         + "  Start Date: " + startDate + "\n"
         + "  End Date: " + endDate + "\n"
-        + "  Buyer Contribution (Wei): " + buyerContr + "\n"
-        + "  Seller Contribution (Wei): " + sellerContr + "\n"
+        + "  Buyer Contribution (Eth): " + buyerContr + "\n"
+        + "  Seller Contribution (Eth): " + sellerContr + "\n"
         + "  Location: " + location + "\n"
         + "  Index: " + index + "\n"
         + "  Threshold: " + threshold + "\n"
@@ -943,24 +1203,25 @@ Template.formNewProtection.events({
         let ethAsk = 0;
 
         if(buySell === "Buy"){
-          ethPropose = buyerContr;
-          ethAsk = sellerContr;
+          ethPropose = toWei(buyerContr);
+          ethAsk = toWei(sellerContr);
         }
         if(buySell === "Sell"){
-          ethPropose = sellerContr;
-          ethAsk = buyerContr;
+          ethPropose = toWei(sellerContr);
+          ethAsk = toWei(buyerContr);
         }
 
         try {
           let supply = await promisify(cb => witInstance.totalSupply(cb));
           let beforeBalance = await promisify(cb => web3.eth.getBalance(witAddress, cb));
+          beforeBalance = toEth(beforeBalance.toNumber());
           let beforeAllowance = await promisify(cb => cropInstance.allowance(user[0],witAddress,cb));
           await promisify(cb => cropInstance.approve(witAddress, ethPropose + ethAsk, {from: user[0]},cb));
           await promisify(cb => witInstance.createWITProposal(ethPropose, ethAsk, index, threshold, location, d1, d2, true, {value: ethPropose, from:user[0]}, cb));
 
           console.log("===== CREATE WIT PROPOSAL =====")
-          console.log("before allowance: ",beforeAllowance.toNumber())
-          console.log("beforeBalance",beforeBalance.toNumber())
+          // console.log("before allowance: ",beforeAllowance.toNumber())
+          console.log("beforeBalance",beforeBalance)
           console.log("WIT supply",supply.toNumber())
 
           //clear form if succesful
@@ -1004,7 +1265,7 @@ function capVal(target){
   //change properties of the other date picker so that incorrect values can't be chosen
   var num = parseInt(target.value);
   var id = target.id;
-  if(id === 'buyer-contrib') $('#seller-contrib')[0].min = num + 100;
+  if(id === 'buyer-contrib') $('#seller-contrib')[0].min = num + 1;
   //show total payout
   let v = parseInt($('#seller-contrib')[0].value) + parseInt($('#buyer-contrib')[0].value);
   $('#payout-amt').html(v);
@@ -1026,8 +1287,8 @@ Template.myProtectionsTable.helpers({
           ,{name:"Ownership"}
           ,{name:"Start"}
           ,{name:"End"}
-          ,{name:"Buyer Contribution (wei)"}
-          ,{name:"Seller Contribution (wei)"}
+          ,{name:"Buyer Contribution (Eth)"}
+          ,{name:"Seller Contribution (Eth)"}
           ,{name:"Location"}
           ,{name:"Index"}
           ,{name:"Threshold (%)"}
@@ -1038,6 +1299,6 @@ Template.myProtectionsTable.helpers({
     ];
   },
   bodyData: function(){
-    return Session.get("myProtectionsFilteredData");
+    return Session.get("myProtectionsPaginatedData");
   }
 });

@@ -17,7 +17,7 @@
       <img src="/images/metamask-link.png" alt="Download MetaMask" height="120">
     </a>
   </div>
-  <div id="web3-onload" style="display:none">
+  <div id="web3-onload" class="disabled-div" style="display:none">
     {{> navigation}}
   </div>
 </body>
@@ -46,7 +46,7 @@
 
     <!-- "OPEN PROTECTIONS" TAB -->
     {{#tabContent slug="open"}}
-      <table>
+      <table style="display:none">
         <tr>
           <td>Filter:</td>
           <td>Loaded Tokens:</td>
@@ -62,7 +62,7 @@
 
     <!-- "CREATE A PROTECTION" TAB -->
     {{#tabContent slug="create"}}
-      Select the options for the protection you want to create. Make sure you have enough Wei in your wallet, and if you are selling a protection, make sure you have enough ARBOL in your wallet as well.
+      Select the options for the protection you want to create. Make sure you have enough Eth in your wallet, and if you are selling a protection, make sure you have enough ARBOL in your wallet as well.
       {{> formNewProtection}}
     {{/tabContent}}
 
@@ -75,8 +75,6 @@
 </template>
 
 <!-- TEMPLATES FOR SORTABLE TABLE -->
-<template name="filterRow">
-</template>
 
 <template name="headerRow">
   <tr>
@@ -128,7 +126,7 @@
     </td>
     <td>
       {{#if isEqual type "number"}}
-        <input type="{{type}}" id={{id}} name={{name}} class="filter" step="100" value="0" min="0">
+        <input type="{{type}}" id={{id}} name={{name}} class="filter" step="1" value="0" min="0">
       {{/if}}
     </td>
   </tr>
@@ -160,7 +158,7 @@
 
 <template name="openProtectionsTable">
   <div class="wrapper loading">
-    <table id="openProtections" class="tablesorter">
+    <table id="openProtections" class="table-sorter">
       <thead>
         {{#each headerData}}
           {{> headerRow}}
@@ -172,16 +170,14 @@
         {{/each}}
       </tbody>
     </table>
-    {{> pagination}}
     <div class="loader"></div>
   </div>
+  <div id="open-pager-btns" class="pager-btns" style="display:none"> {{> openPagination}}</div>
 </template>
 
-<template name="pagination">
-  <div id="pagination-buttons">
-    <input type="button" id="back" value="Back">
-    <input type="button" id="forward" value="Forward">
-  </div>
+<template name="openPagination">
+    <input type="button" id="open-back" value="Back">
+    <input type="button" id="open-forward" value="Forward">
 </template>
 
 <!-- TEMPLATES FOR "CREATE A PROTECTION FORM" -->
@@ -212,7 +208,7 @@
       {{#if isEqual type "date"}}
         <input type="{{type}}" id={{id}} name={{name}} class="date-picker" min={{minDate}}>
       {{else if isEqual type "number"}}
-        <input type="{{type}}" id={{id}} name={{name}} class="contribution" step="100" value="0" min="0">
+        <input type="{{type}}" id={{id}} name={{name}} class="contribution" step="1" value="0" min="0">
       {{else if isEqual type "payout"}}
         <div><strong id={{id}}>0</strong></div>
       {{else if isEqual type "select"}}
@@ -232,16 +228,25 @@
 <!-- TEMPLATES FOR "MY PROTECTIONS" -->
 
 <template name="myProtectionsTable">
-  <table id="myProtections" class="tablesorter">
-    <thead>
-      {{#each headerData}}
-        {{> headerRow}}
-      {{/each}}
-    </thead>
-    <tbody>
-      {{#each bodyData}}
-        {{> sortableRows}}
-      {{/each}}
-    </tbody>
-  </table>
+  <div class="wrapper loading">
+    <table id="myProtections" class="table-sorter">
+      <thead>
+        {{#each headerData}}
+          {{> headerRow}}
+        {{/each}}
+      </thead>
+      <tbody>
+        {{#each bodyData}}
+          {{> sortableRows}}
+        {{/each}}
+      </tbody>
+    </table>
+    <div class="loader"></div>
+  </div>
+  <div id="my-pager-btns" class="pager-btns" style="display:none"> {{> myPagination}}</div>
+</template>
+
+<template name="myPagination">
+    <input type="button" id="my-back" value="Back">
+    <input type="button" id="my-forward" value="Forward">
 </template>
