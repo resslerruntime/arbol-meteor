@@ -37,7 +37,7 @@ function Entry(r){
     sellerContr = toEth(propose);
     buyerContr = toEth(ask);
   }
-  if(ask > propose){
+  if(propose < ask){
     b = "Sell";
     b1 = "<button type='button' class='sellit' value='" + v + "'> sell </button>";
     sellerContr = toEth(ask);
@@ -64,6 +64,7 @@ function Entry(r){
 //table entry constructor my protections
 //bool if you proposed the protection = true, if you accepted the protection = false
 function MyEntry(r,a,id,bool){
+  // console.log("fn: MyEntry",id)
   let l = r.transactionHash.length;
   let s = r.transactionHash.substring(0,8) + "..." + r.transactionHash.substring(l-8,l);
   let d1 = new Date(a.start.c[0]).toISOString().substring(0,10);
@@ -77,18 +78,18 @@ function MyEntry(r,a,id,bool){
     sellerContr = toEth(ask);
     buyerContr = toEth(propose);
   }
-  if(ask < propose){
+  if(propose > ask){
     sellerContr = toEth(propose);
     buyerContr = toEth(ask);
   }
 
   let o;
   if(bool){
-    if(propose > ask) o = "you are the <strong>buyer</strong>";
-    if(ask > propose) o = "you are the <strong>seller</strong>";
+    if(propose < ask) o = "you are the <strong>buyer</strong>";
+    if(propose > ask) o = "you are the <strong>seller</strong>";
   }else{
     if(propose < ask) o = "you are the <strong>seller</strong>";
-    if(ask < propose) o = "you are the <strong>buyer</strong>";
+    if(propose > ask) o = "you are the <strong>buyer</strong>";
   }
 
   let status = "";
@@ -112,7 +113,6 @@ function MyEntry(r,a,id,bool){
     if(now < start) status = "Open";
     if(now >= start) status = "Stale";
   }
-
 
   //create the object
   this.type = "bodyRow";
@@ -274,9 +274,9 @@ function latestProposals(){
   watchLatestProposal = witInstance.ProposalOffered(Session.get("filterCriteria"),{fromBlock: 'latest', toBlock: 'latest'}).watch(function(error, result){
     let id = result.args.tokenID.toNumber();
     startTraverse(id,function(){
-      console.log("===> get latest",id,latestToken,id !== latestToken);
+      console.log("===> latest: 'offered', id:",id,latestToken,id !== latestToken);
       addToken(result);
-      checkProposal(result);
+      // checkProposal(result);
     });
   });
 }
@@ -290,8 +290,9 @@ function latestAcceptances(){
     let id = result.args.tokenIDAccepter.toNumber();
     let idp = result.args.tokenIDProposer.toNumber();
     startTraverse(id,function(){
-      console.log("===> latest accepted",id)
+      console.log("===> latest: 'accepted', id:",id)
       addAcceptance(result);
+
     });
     if(latestToken != -1){
       removeToken(idp);
@@ -333,7 +334,8 @@ function startTraverse(id,cb){
 var watchProposal = -1;
 var watchAcceptance = -1;
 function pastProtections(){
-  console.log("fn: pastProtections",lastToken)
+ console.log("++++++++++++++++++++++++++++")
+  console.log("fn: pastProtections",lastToken-1)
   let thisToken = lastToken - 1;
   if(thisToken > 0){
     //check to see if current ID is an open protection
@@ -357,16 +359,16 @@ function pastProtections(){
       lastToken = thisToken;
       //add previously accepted protections to myProtections
       addAcceptance(result);
+
       //continue traverse
-      managePage(thisToken);
+      managePage(thisToken)
     });
   }
   if(thisToken === 0){
     console.log("clear watch events");
     //clear watch events
-    watchAcceptance.stopWatching();
-    watchProposal.stopWatching();
-    console.log(watchAcceptance)
+    if(watchAcceptance !== -1) watchAcceptance.stopWatching();
+    if(watchProposal !== -1) watchProposal.stopWatching();
   }
 }
 
@@ -463,6 +465,7 @@ async function addToken(result){
     if(true){
       //add to open protections
       let list = Session.get("openProtectionsData");
+      console.log("===> proposal offered, id:",id.toNumber())
       list.push(new Entry(result));
       list = sortArray(list,Session.get("sortIndex"),Session.get("descending"));
       Session.set("openProtectionsData",list);
@@ -560,15 +563,22 @@ async function addAcceptance(result){
 
     //prevent previous tokens from being added to list
     acceptedList.push(idp);
-    console.log("===> proposal accepted",result,id)
 
     let owner = await promisify(cb => witInstance.ownerOf(idObj, cb));
     if(owner === user[0]){
       //get contract information for associated proposal
       witInstance.ProposalOffered({tokenID:idpObj},{fromBlock: 0, toBlock: 'latest'}).watch(function(error, result){
+        console.log("===> proposal accepted, id:",id)
         let list = Session.get("myProtectionsData");
         list.push(new MyEntry(outerResult,result.args,id,false));
+        list = sortArray(list,Session.get("mySortIndex"),Session.get("descending"));
         Session.set("myProtectionsData",list);
+        let pageList = paginateData(list,myPagination);
+        if(pageList.length > 0){
+          Session.set("myProtectionsPaginatedData",pageList);
+        }else{
+          if(myPagination > 0) myPagination -= 1;
+        }
       });
     }
   } catch (error) {
