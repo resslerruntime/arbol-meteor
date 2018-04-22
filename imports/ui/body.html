@@ -184,15 +184,55 @@
 
 <template name="formNewProtection">
   <form class="new-protection">
+    <input type="submit" id="create-request" value="Create Request">
     <input type="button" id="createRandom" value="Fill Form Randomly">
     <table>
-      {{#each formNewProtection}}
-        {{> elNewProtection}}
-      {{/each}}
+      <tr>
+        <td>
+          <table>
+            {{#each formNewProtection}}
+              {{> elNewProtection}}
+            {{/each}}
+          </table>
+        </td>
+        <td>
+          <div class="tooltip"> Location: <span class="tooltiptext">"Select the geographic area covered by the contract."</span></div>
+          <span id="selected-region"> </span><br>
+          <select id="location" name="location" hidden>
+            <option value="us-corn-belt" selected>"US Corn Belt"</option>
+            <option value="us-soy-belt" selected>"US Soy Belt"</option>
+          </select>
+          <svg id="map" width="500" height="300">
+            <g id="outline"></g>
+            <g id="areas">
+              <path id="cornbelt" name="US Corn Belt" value="0" class="ag-areas" d="M200,175L300,175L300,100L200,100" stroke="blue" stroke-width="4" fill="blue"></path>
+              <path id="soybelt" name="US Soy Belt" value="1" class="ag-areas" d="M0,175L100,175L100,100L0,100" stroke="red" stroke-width="4" fill="red"></path>
+            </g>
+          </svg>
+        </td>
+        <td>
+          <table>
+            <tr>
+              <td>
+                <div class="tooltip"> From: <span class="tooltiptext">"The starting month of the contract."</span></div>
+              </td>
+              <td>
+                <input type="month" id="start-date" name="start-date" class="date-picker">
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <div class="tooltip"> To: <span class="tooltiptext">"The ending month of the contract."</span></div>
+              </td>
+              <td>
+                <input type="month" id="end-date" name="end-date" class="date-picker">
+              </td>
+            </tr>
+          </table>
+          <svg id="chart" width="400" height="300"></svg>
+        </td>
+      </tr>
     </table>
-    <div class="buttonHolder">
-      <input type="submit" id="create-request" value="Create Request">
-    </div>
   </form>
 </template>
 
@@ -205,19 +245,10 @@
       </div>
     </td>
     <td>
-      {{#if isEqual type "date"}}
-        <input type="{{type}}" id={{id}} name={{name}} class="date-picker" min={{minDate}}>
-      {{else if isEqual type "number"}}
-        <input type="{{type}}" id={{id}} name={{name}} class="contribution" step="1" value="0" min="0">
+      {{#if isEqual type "number"}}
+        <input type="{{type}}" id={{id}} name={{name}} class="contribution" step="1" value="0" min="0" style="width:80px">
       {{else if isEqual type "payout"}}
         <div><strong id={{id}}>0</strong></div>
-      {{else if isEqual type "select"}}
-        <select id={{id}} name={{name}}>
-          <option value="" selected disabled hidden>Select {{article}} {{name}}</option>
-          {{#each elOptions}}
-            <option value={{value}}>{{text}}</option>
-          {{/each}}
-        </select>
       {{else if isEqual type "toggle"}}
         <label class="buy-sell"><input type="checkbox" id={{id}}><div class="slider round"><span class="buy">BUY</span><span class="sell">SELL</span></div></label>
       {{/if}}
