@@ -196,8 +196,6 @@
           </table>
         </td>
         <td>
-          <div class="tooltip"> Location: <span class="tooltiptext">"Select the geographic area covered by the contract."</span></div>
-          <span id="selected-region"> </span><br>
           <select id="location" name="location" hidden>
             <option value="us-corn-belt" selected>"US Corn Belt"</option>
             <option value="us-soy-belt" selected>"US Soy Belt"</option>
@@ -208,8 +206,12 @@
               <path id="cornbelt" name="US Corn Belt" value="0" class="ag-areas" d="M200,175L300,175L300,100L200,100" stroke="blue" stroke-width="4" fill="blue"></path>
               <path id="soybelt" name="US Soy Belt" value="1" class="ag-areas" d="M0,175L100,175L100,100L0,100" stroke="red" stroke-width="4" fill="red"></path>
             </g>
-          </svg>
+          </svg><br>
+          <div class="tooltip"> Location: <span class="tooltiptext">"Select the geographic area covered by the contract."</span></div>
+          <span id="selected-region"> No region selected</span><br>
         </td>
+      </tr>
+      <tr>
         <td>
           <table>
             <tr>
@@ -228,7 +230,23 @@
                 <input type="month" id="end-date" name="end-date" class="date-picker">
               </td>
             </tr>
+            <tr>
+              <td>
+                <div class="tooltip"> Threshold: <span class="tooltiptext">"Choose payout threshold."</span></div>
+              </td>
+              <td>
+                <select id="threshold" name="threshold" >
+                  <option value="" hidden disabled selected>Select payout threshold</option>
+                  <option value="g10aa" >Greater than 10% above average</option>
+                  <option value="aa">Above average</option>
+                  <option value="ba">Below average</option>
+                  <option value="l10ba">Less than 10% below average</option>
+                </select>
+              </td>
+            </tr>
           </table>
+        </td>
+        <td>
           <svg id="chart" width="400" height="300"></svg>
         </td>
       </tr>

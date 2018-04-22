@@ -1085,7 +1085,7 @@ Template.elNewProtection.helpers({
 // Dealing with submittal of form
 Template.formNewProtection.events({
   'input .date-picker'(event) {
-    capDate(event.currentTarget);
+    // capDate(event.currentTarget);
     //update the data that is represented
     let s = +$('#start-date')[0].value.split("-")[1];
     let e = +$('#end-date')[0].value.split("-")[1];
@@ -1094,7 +1094,6 @@ Template.formNewProtection.events({
       DURATIONCODE = e - s + 1;
       currentHTTP += 1;
       let check = currentHTTP;
-      console.log(s,e,NOAACODE,MONTHCODE,DURATIONCODE)
       Meteor.call("glanceNOAA",NOAACODE,MONTHCODE,DURATIONCODE,function(error, results) {
         let obj = parseData(results);
         if(check === currentHTTP) upDateMonths(obj);
@@ -1337,7 +1336,7 @@ async function drawUSA(){
         pv = v;
       }else{
         //update the title
-        document.getElementById("selected-region").innerHTML = "";
+        document.getElementById("selected-region").innerHTML = "No region selected";
         //update the form
         let f = document.getElementById("location").selectedIndex = -1;
         d3.select(`path#${selectedRegion}`)
@@ -1435,6 +1434,7 @@ function drawMonths(){
 }
 
 function upDateMonths(o){
+  // console.log(o)
   let svg = d3.select("svg#chart")
     ,margin = {top: 20, right: 20, bottom: 30, left: 50}
     ,width = +svg.attr("width") - margin.left - margin.right
@@ -1481,6 +1481,7 @@ function upDateMonths(o){
 
 function parseData(results){
   let string = results.content;
+  console.log(string)
   let values = string.split("values");
   let array = values[1].split(/\n/g);
   let la = array.length;
@@ -1489,6 +1490,7 @@ function parseData(results){
     let n = array[la].split(",");
     if(n.length === 3 && a2.length < 10) a2.push(n);
   }
+  console.log(a2)
   let a3 = a2.map(d => parseFloat(d[1]));
   let sum = a3.reduce((a,c) => a + c);
   return {start:parseInt(a2[a2.length-1][0]),data:a3,avg:sum/10};
