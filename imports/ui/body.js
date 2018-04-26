@@ -1085,13 +1085,17 @@ Template.elNewProtection.helpers({
 // Dealing with submittal of form
 Template.formNewProtection.events({
   'input .date-picker'(event) {
-    // capDate(event.currentTarget);
+    capDate(event.currentTarget);
     //update the data that is represented
-    let s = +$('#start-date')[0].value.split("-")[1];
-    let e = +$('#end-date')[0].value.split("-")[1];
-    if(s <= e){
-      MONTHCODE = s;
+    let s = +$('#start-date')[0].value.split("-")[1]
+      ,sy = +$('#start-date')[0].value.split("-")[0];
+    let e = +$('#end-date')[0].value.split("-")[1]
+      ,ey = +$('#end-date')[0].value.split("-")[0];
+
+    if(s <= e && sy <= ey){
+      MONTHCODE = e;
       DURATIONCODE = e - s + 1;
+      console.log(MONTHCODE,DURATIONCODE)
       currentHTTP += 1;
       let check = currentHTTP;
       Meteor.call("glanceNOAA",NOAACODE,MONTHCODE,DURATIONCODE,function(error, results) {
@@ -1102,6 +1106,9 @@ Template.formNewProtection.events({
   },
   'input .contribution'(event) {
     capVal(event.currentTarget);
+  },
+  'input #threshold'(event) {
+    changeThreshold(event.currentTarget.value);
   },
   'submit .new-protection'(event) {
     // Prevent default browser form submit
@@ -1204,11 +1211,11 @@ function capDate(target){
   //change properties of the other date picker so that incorrect values can't be chosen
   var date = target.value;
   var id = target.id;
-  var now = new Date().toISOString().substring(0,10);
-
+  var now = new Date().toISOString().substring(0,7);
+  $('#start-date')[0].min = now;
   //if start is changed first, then put min on end Date
   if(id === 'start-date'){
-    if(date !== "") if(new Date(now) - new Date(date) <= 0) $('#end-date')[0].min = date;
+    if(date !== "") $('#end-date')[0].min = date;
   }
   if(id === 'end-date'){
     if(date !== "") $('#start-date')[0].max = date;
@@ -1271,9 +1278,10 @@ Template.myProtectionsTable.helpers({
 
 let selectedRegion = "none";
 let pv = 0;
-let cols = ["blue","red"];
+let cols = ["#47B98E","#DBB2B2"];
 let codesNOAA = [261,262];
 let currentHTTP = 0;
+
 async function drawUSA(){
   //<svg id="map" width="500" height="300">
   let svg = d3.select("svg#map");
@@ -1312,18 +1320,16 @@ async function drawUSA(){
 
     function handleClick(d, i) {
       let v = +d3.select(this).attr("value");
+      let region = d3.select(this).attr("class").split(" ")[1];
       //manage the coloration change
-      if(this.id !== selectedRegion){
+      if(region !== selectedRegion){
         //update the title
         document.getElementById("selected-region").innerHTML = d3.select(this).attr("name");
         //update the form
         document.getElementById("location").selectedIndex = v;
-        d3.select(this).attr("fill","orange")
-          .attr("stroke","orange");
         //make previous region go blank
-        d3.select(`path#${selectedRegion}`)
-          .attr("fill",cols[pv])
-          .attr("stroke",cols[pv]);
+        d3.selectAll(`path.${selectedRegion}`)
+          .attr("fill",cols[pv]);
 
         currentHTTP += 1;
         let check = currentHTTP;
@@ -1332,16 +1338,18 @@ async function drawUSA(){
           let obj = parseData(results);
           if(check === currentHTTP) upDateMonths(obj);
         });
-        selectedRegion = this.id;
+        console.log()
+        selectedRegion = region;
         pv = v;
+        d3.selectAll(`path.${selectedRegion}`)
+          .attr("fill","yellow");
       }else{
         //update the title
         document.getElementById("selected-region").innerHTML = "No region selected";
         //update the form
         let f = document.getElementById("location").selectedIndex = -1;
-        d3.select(`path#${selectedRegion}`)
-          .attr("fill",cols[v])
-          .attr("stroke",cols[v]);
+        d3.selectAll(`path.${selectedRegion}`)
+          .attr("fill",cols[v]);
         currentHTTP += 1;
         upDateMonths({start:2008,data:[0,0,0,0,0,0,0,0,0,0],avg:0});
         selectedRegion = "none";
@@ -1353,24 +1361,28 @@ async function drawUSA(){
   }
 }
 
+var svg, margin, width, height;
+var dataExtents, svgStart, svgEnd;
+var tenYrAvg;
+
 function drawMonths(){
-  let svg = d3.select("svg#chart")
-    ,margin = {top: 20, right: 20, bottom: 30, left: 50}
-    ,width = +svg.attr("width") - margin.left - margin.right
-    ,height = +svg.attr("height") - margin.top - margin.bottom;
+  svg = d3.select("svg#chart");
+  margin = {top: 20, right: 20, bottom: 30, left: 50};
+  width = +svg.attr("width") - margin.left - margin.right;
+  height = +svg.attr("height") - margin.top - margin.bottom;
 
   var data = [0,0,0,0,0,0,0,0,0,0];
-  let tenYrAvg = 0;
-  var b = d3.extent(data, function(d){return d;});
+  tenYrAvg = 0;
+  dataExtents = d3.extent(data, function(d){return d;});
 
-  var start = new Date(2007, 5, 1);
-  var end = new Date(2017, 5, 1);
+  svgStart = new Date(2007, 5, 1);
+  svgEnd = new Date(2017, 5, 1);
   var x = d3.scaleTime()
       .rangeRound([0, width])
-      .domain([start,end]);
+      .domain([svgStart,svgEnd]);
   var y = d3.scaleLinear()
       .rangeRound([height, 0])
-      .domain([0,b[1]]);
+      .domain([0,dataExtents[1]]);
 
   let g = svg.append("g")
     .attr("transform",`translate(${margin.left}+${margin.top})`);
@@ -1408,7 +1420,8 @@ function drawMonths(){
     .attr("height",d => height - y(d) + 1)
     .attr("fill","#b5ffc0")
     .attr("stroke","green")
-    .attr("stroke-width","4");
+    .attr("stroke-width","4")
+    .attr("opacity",1e-6);
 
   //xaxis
   g.append("g")
@@ -1429,27 +1442,24 @@ function drawMonths(){
     .attr("x1",width*0.025)
     .attr("x2",width*0.975)
     .attr("stroke","black")
-    .attr("stroke-width",2)
-    .attr("stroke-dasharray","4, 4");
+    .attr("stroke-width",4)
+    .attr("stroke-dasharray","12, 8")
+    .attr("opacity",1e-6);
 }
 
 function upDateMonths(o){
   // console.log(o)
-  let svg = d3.select("svg#chart")
-    ,margin = {top: 20, right: 20, bottom: 30, left: 50}
-    ,width = +svg.attr("width") - margin.left - margin.right
-    ,height = +svg.attr("height") - margin.top - margin.bottom;
+  dataExtents = d3.extent(o.data, function(d){return d;});
+  tenYrAvg = o.avg;
 
-  var b = d3.extent(o.data, function(d){return d;});
-
-  var start = new Date(o.start-1, 5, 1);
-  var end = new Date(o.start+9, 5, 1);
+  svgStart = new Date(o.start-1, 5, 1);
+  svgEnd = new Date(o.start+9, 5, 1);
   var x = d3.scaleTime()
       .rangeRound([0, width])
-      .domain([start,end]);
+      .domain([svgStart,svgEnd]);
   var y = d3.scaleLinear()
       .rangeRound([height, 0])
-      .domain([0,b[1]]);
+      .domain([0,dataExtents[1]]);
 
   //yaxis
   d3.selectAll("g.yaxis")
@@ -1466,7 +1476,8 @@ function upDateMonths(o){
     .attr("x",(d,i) => x(new Date(o.start + i, 0, 1)) - barWidth/2)
     .attr("height",d => height - y(d) + 1)
     .attr("fill",d => d >= o.avg ? "#b5ffc0" : "#fcc8b0")
-    .attr("stroke",d => d >= o.avg ? "green" : "red");
+    .attr("stroke",d => d >= o.avg ? "green" : "red")
+    .attr("opacity",1);
 
   //xaxis
   d3.selectAll("g.xaxis")
@@ -1476,7 +1487,41 @@ function upDateMonths(o){
   d3.selectAll("line.tenYrAvg")
     .transition().duration(1000)
     .attr("y1",function(d){return y(o.avg);})
-    .attr("y2",function(d){return y(o.avg);});
+    .attr("y2",function(d){return y(o.avg);})
+    .attr("opacity",1);
+}
+
+function changeThreshold(vs){
+  var ca_stroke = "green"
+    ,ca_fill = "#b5ffc0"
+    ,cb_stroke = "red"
+    ,cb_fill = "#fcc8b0";
+
+  if(vs === "ba" || vs === "l10ba"){
+    ca_stroke = "red";
+    ca_fill = "#fcc8b0";
+    cb_stroke = "green";
+    cb_fill = "#b5ffc0";
+  }
+
+  let pct = 1;
+  if(vs === "l10ba") pct = 0.9;
+  if(vs === "g10aa") pct = 1.1;
+
+  var y = d3.scaleLinear()
+      .rangeRound([height, 0])
+      .domain([0,dataExtents[1]]);
+
+  d3.selectAll("g.bars")
+    .selectAll("rect")
+    .transition().duration(1000)
+    .attr("fill", d => d >= tenYrAvg*pct ? ca_fill : cb_fill)
+    .attr("stroke", d => d >= tenYrAvg*pct ? ca_stroke : cb_stroke);
+
+  d3.selectAll("line.tenYrAvg")
+    .transition().duration(1000)
+    .attr("y1",function(d){return y(tenYrAvg*pct);})
+    .attr("y2",function(d){return y(tenYrAvg*pct);});
 }
 
 function parseData(results){
