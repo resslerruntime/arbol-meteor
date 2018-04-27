@@ -193,12 +193,43 @@
             {{#each formNewProtection}}
               {{> elNewProtection}}
             {{/each}}
+            <tr>
+              <td>
+                <div class="tooltip"> From: <span class="tooltiptext">"The starting month of the contract."</span></div>
+              </td>
+              <td>
+                <input type="month" id="start-date" name="start-date" class="date-picker">
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <div class="tooltip"> To: <span class="tooltiptext">"The ending month of the contract."</span></div>
+              </td>
+              <td>
+                <input type="month" id="end-date" name="end-date" class="date-picker">
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <div class="tooltip"> Threshold: <span class="tooltiptext">"Choose payout threshold."</span></div>
+              </td>
+              <td>
+                <select id="threshold" name="threshold" >
+                  <option value="" hidden disabled selected>Select payout threshold</option>
+                  <option value="g10aa" >Greater than 10% above average</option>
+                  <option value="aa">Above average</option>
+                  <option value="ba">Below average</option>
+                  <option value="l10ba">Less than 10% below average</option>
+                </select>
+              </td>
+            </tr>
           </table>
         </td>
         <td>
           <select id="location" name="location" hidden>
-            <option value="us-corn-belt" selected>"US Corn Belt"</option>
-            <option value="us-soy-belt" selected>"US Soy Belt"</option>
+            <option value="us-corn-belt">"US Corn Belt"</option>
+            <option value="us-soy-belt">"US Soy Belt"</option>
+            <option value="" selected></option>
           </select>
           <svg id="map" width="500" height="300">
             <g id="outline"></g>
@@ -314,44 +345,6 @@
           </svg><br>
           <div class="tooltip"> Location: <span class="tooltiptext">"Select the geographic area covered by the contract."</span></div>
           <span id="selected-region"> No region selected</span><br>
-        </td>
-      </tr>
-      <tr>
-        <td>
-          <table>
-            <tr>
-              <td>
-                <div class="tooltip"> From: <span class="tooltiptext">"The starting month of the contract."</span></div>
-              </td>
-              <td>
-                <input type="month" id="start-date" name="start-date" class="date-picker">
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <div class="tooltip"> To: <span class="tooltiptext">"The ending month of the contract."</span></div>
-              </td>
-              <td>
-                <input type="month" id="end-date" name="end-date" class="date-picker">
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <div class="tooltip"> Threshold: <span class="tooltiptext">"Choose payout threshold."</span></div>
-              </td>
-              <td>
-                <select id="threshold" name="threshold" >
-                  <option value="" hidden disabled selected>Select payout threshold</option>
-                  <option value="g10aa" >Greater than 10% above average</option>
-                  <option value="aa">Above average</option>
-                  <option value="ba">Below average</option>
-                  <option value="l10ba">Less than 10% below average</option>
-                </select>
-              </td>
-            </tr>
-          </table>
-        </td>
-        <td>
           <svg id="chart" width="400" height="300"></svg>
         </td>
       </tr>

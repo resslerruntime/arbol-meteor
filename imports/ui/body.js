@@ -151,9 +151,9 @@ var lastToken;
 var acceptedList = [];
 
 //data variables for NOAA calls
-let NOAACODE = 261;
-let MONTHCODE = 1;
-let DURATIONCODE = 1;
+let NOAACODE = -1;
+let MONTHCODE = -1;
+let DURATIONCODE = -1;
 
 if (Meteor.isClient) {
   Meteor.startup(async function() {
@@ -1022,19 +1022,34 @@ Template.formNewProtection.events({
     }
     let d1 = new Date().getTime() + amt3 - amt4;
     let d2 = new Date().getTime() + amt5 - amt6;
-    $('#start-date')[0].value = new Date(d1).toISOString().substring(0,10);
-    $('#end-date')[0].value = new Date(d2).toISOString().substring(0,10);
+    $('#start-date')[0].value = new Date(d1).toISOString().substring(0,7);
+    $('#end-date')[0].value = new Date(d2).toISOString().substring(0,7);
 
-    let a = Math.ceil(Math.random()*5);
-    let b = Math.ceil(Math.random()*3);
+    let a = Math.ceil(Math.random()*2);
+    let b = Math.ceil(Math.random()*4);
+    console.log("a",a,"b",b)
     $('#location option').eq(a).prop('selected', true);
+    $('#selected-region').html("add name");
     $('#index option').eq(1).prop('selected', true);
     $('#threshold option').eq(b).prop('selected', true);
 
-    // Check #x
+    // Check
     let bool = true;
     if(Math.random() > 0.5) bool = false;
     $('#toggle-buy-sell').prop("checked", bool);
+
+    // call NOAA
+    let s2 = +$('#start-date')[0].value.split("-")[1]
+      ,sy2 = +$('#start-date')[0].value.split("-")[0];
+    let e2 = +$('#end-date')[0].value.split("-")[1]
+      ,ey2 = +$('#end-date')[0].value.split("-")[0];
+
+    if(s2 <= e2 && sy2 <= ey2){
+      MONTHCODE = e2;
+      DURATIONCODE = e2 - s2 + 1;
+      NOAACODE = codesNOAA[a];
+      callNOAA();
+    }
   }
 });
 
@@ -1095,13 +1110,7 @@ Template.formNewProtection.events({
     if(s <= e && sy <= ey){
       MONTHCODE = e;
       DURATIONCODE = e - s + 1;
-      console.log(MONTHCODE,DURATIONCODE)
-      currentHTTP += 1;
-      let check = currentHTTP;
-      Meteor.call("glanceNOAA",NOAACODE,MONTHCODE,DURATIONCODE,function(error, results) {
-        let obj = parseData(results);
-        if(check === currentHTTP) upDateMonths(obj);
-      });
+      callNOAA();
     }
   },
   'input .contribution'(event) {
@@ -1114,27 +1123,29 @@ Template.formNewProtection.events({
     // Prevent default browser form submit
     event.preventDefault();
 
+    console.log(target)
     // Get value from form element
     const target = event.currentTarget;
-    const startDate = target[1].value;
-    const endDate = target[2].value;
-    const buyerContr = parseInt(target[3].value);
-    const sellerContr = parseInt(target[4].value);
+    const buyerContr = parseInt(target[2].value);
+    const sellerContr = parseInt(target[3].value);
+    const buySell = target[4].checked ? "Buy" : "Sell";
     const location = target[5].value;
-    const threshold = target[7].value;
-    const buySell = target[8].checked ? "Buy" : "Sell";
+    const startDate = target[6].value;
+    const endDate = target[7].value;
+    const threshold = target[8].value;
+
     const index = "rainfall";
 
     //check if info is missing
     if(startDate === "" || endDate === "" || parseFloat(buyerContr) === 0 || parseFloat(sellerContr) === 0 || location === "" || index === "" || threshold === ""){
-      var s = "Please complete form: \n";
+      var s = "Please complete missing elements: \n";
       if(startDate === "") s += "  Start Date \n";
       if(endDate === "") s += "  End Date \n";
       if(parseFloat(buyerContr) === 0) s += "  Buyer Contribution \n";
       if(parseFloat(sellerContr) === 0) s += "  Seller Contribution \n";
-      if(location === "") s += "  Location Date \n";
-      if(index === "") s += "  Index Date \n";
-      if(threshold === "") s += "  Threshold Date \n";
+      if(location === "") s += "  Location \n";
+      if(index === "") s += "  Index \n";
+      if(threshold === "") s += "  Threshold \n";
       alert(s);
     }else{
       //ask for confirmation
@@ -1159,6 +1170,8 @@ Template.formNewProtection.events({
       async function createProposal(startDate,endDate,buyerContr,sellerContr,location,index,threshold,buySell){
         const d1 = (new Date(startDate)).getTime();
         const d2 = (new Date(endDate)).getTime();
+
+        console.log(new Date(startDate),d1)
 
         let ethPropose = 0;
         let ethAsk = 0;
@@ -1186,10 +1199,9 @@ Template.formNewProtection.events({
           console.log("WIT supply",supply.toNumber())
 
           //clear form if succesful
-          target[1].value = "";
-          target[2].value = "";
+          target[2].value = 0;
           target[3].value = 0;
-          target[4].value = 0;
+          target[4].value = "";
           target[5].value = "";
           target[6].value = "";
           target[7].value = "";
@@ -1314,50 +1326,86 @@ async function drawUSA(){
       .attr("stroke-width",2)
       .attr("d", path(topojson.feature(us, us.objects.nation)));
 
+    d3.selectAll("path.cornbelt")
+      .attr("fill","none")
+      .attr("stroke-width",5)
+      .attr("stroke",cols[0]);
+    d3.selectAll("path.soybelt")
+      .attr("fill","none")
+      .attr("stroke-width",5)
+      .attr("stroke",cols[1]);
+
     svg.selectAll("g#areas")
       .selectAll("path.ag-areas")
+      .on("mouseover",handleMOver)
+      .on("mouseout",handleMOut)
       .on("click", handleClick);
 
-    function handleClick(d, i) {
+    function handleMOver(){
+      let v = +d3.select(this).attr("value");
+      let region = d3.select(this).attr("class").split(" ")[1];
+      if(region !== selectedRegion){
+        d3.selectAll(`path.${region}`)
+          .attr("fill",cols[v]);
+      }
+    }
+
+    function handleMOut(){
+      let v = +d3.select(this).attr("value");
+      let region = d3.select(this).attr("class").split(" ")[1];
+      if(region !== selectedRegion){
+        d3.selectAll(`path.${region}`)
+          .attr("fill","none");
+      }
+    }
+
+    function handleClick() {
       let v = +d3.select(this).attr("value");
       let region = d3.select(this).attr("class").split(" ")[1];
       //manage the coloration change
       if(region !== selectedRegion){
         //update the title
-        document.getElementById("selected-region").innerHTML = d3.select(this).attr("name");
+        $('#selected-region').html(d3.select(this).attr("name"));
         //update the form
         document.getElementById("location").selectedIndex = v;
         //make previous region go blank
         d3.selectAll(`path.${selectedRegion}`)
           .attr("fill",cols[pv]);
 
-        currentHTTP += 1;
-        let check = currentHTTP;
         NOAACODE = codesNOAA[v];
-        Meteor.call("glanceNOAA",NOAACODE,MONTHCODE,DURATIONCODE,function(error, results) {
-          let obj = parseData(results);
-          if(check === currentHTTP) upDateMonths(obj);
-        });
-        console.log()
+        callNOAA();
         selectedRegion = region;
         pv = v;
         d3.selectAll(`path.${selectedRegion}`)
           .attr("fill","yellow");
       }else{
         //update the title
-        document.getElementById("selected-region").innerHTML = "No region selected";
+        $('#selected-region').html("No region selected");
         //update the form
         let f = document.getElementById("location").selectedIndex = -1;
         d3.selectAll(`path.${selectedRegion}`)
           .attr("fill",cols[v]);
         currentHTTP += 1;
-        upDateMonths({start:2008,data:[0,0,0,0,0,0,0,0,0,0],avg:0});
+        clearChart();
         selectedRegion = "none";
+        NOAACODE = -1;
       }
     }
 
   }catch(error){
     console.log("Error retrieving NOAA data: ",error);
+  }
+}
+
+function callNOAA(){
+  currentHTTP += 1;
+  let check = currentHTTP;
+  console.log(NOAACODE,MONTHCODE,DURATIONCODE)
+  if(NOAACODE !== -1 && MONTHCODE !== -1 && DURATIONCODE !== -1){
+    Meteor.call("glanceNOAA",NOAACODE,MONTHCODE,DURATIONCODE,function(error, results) {
+      let obj = parseData(results);
+      if(check === currentHTTP) upDateMonths(obj);
+    });
   }
 }
 
@@ -1367,7 +1415,7 @@ var tenYrAvg;
 
 function drawMonths(){
   svg = d3.select("svg#chart");
-  margin = {top: 20, right: 20, bottom: 30, left: 50};
+  margin = {top: 20, right: 20, bottom: 45, left: 50};
   width = +svg.attr("width") - margin.left - margin.right;
   height = +svg.attr("height") - margin.top - margin.bottom;
 
@@ -1394,10 +1442,11 @@ function drawMonths(){
     .append("text")
     .attr("fill", "#000")
     .attr("transform", "rotate(-90)")
-    .attr("y", -30)
-    .attr("x", -70)
+    .attr("y", -40)
+    .attr("x", -35)
     .attr("dy", "0.71em")
     .attr("text-anchor", "end")
+    .attr("font-size","15px")
     .text("Monthly Precipitation (mm)");
 
   g.selectAll(".yaxis")
@@ -1421,6 +1470,7 @@ function drawMonths(){
     .attr("fill","#b5ffc0")
     .attr("stroke","green")
     .attr("stroke-width","4")
+    .attr("stroke-dasharray", d => `${barWidth},${barWidth}`)
     .attr("opacity",1e-6);
 
   //xaxis
@@ -1430,9 +1480,10 @@ function drawMonths(){
     .attr("transform", `translate(0,${height})`)
     .append("text")
     .attr("fill", "#000")
-    .attr("y", 30)
+    .attr("y", 40)
     .attr("x", 200)
     .attr("text-anchor", "end")
+    .attr("font-size","15px")
     .text("Year (mm)");
 
   g.append("line")
@@ -1477,6 +1528,7 @@ function upDateMonths(o){
     .attr("height",d => height - y(d) + 1)
     .attr("fill",d => d >= o.avg ? "#b5ffc0" : "#fcc8b0")
     .attr("stroke",d => d >= o.avg ? "green" : "red")
+    .attr("stroke-dasharray",d => `${barWidth + height - y(d) + 1},${barWidth}`)
     .attr("opacity",1);
 
   //xaxis
@@ -1524,9 +1576,45 @@ function changeThreshold(vs){
     .attr("y2",function(d){return y(tenYrAvg*pct);});
 }
 
+function clearChart(){
+  let o = {start:2008,data:[0,0,0,0,0,0,0,0,0,0],avg:0};
+  dataExtents = d3.extent(o.data, function(d){return d;});
+  tenYrAvg = o.avg;
+
+  svgStart = new Date(o.start-1, 5, 1);
+  svgEnd = new Date(o.start+9, 5, 1);
+  var x = d3.scaleTime()
+      .rangeRound([0, width])
+      .domain([svgStart,svgEnd]);
+  var y = d3.scaleLinear()
+      .rangeRound([height, 0])
+      .domain([0,dataExtents[1]]);
+
+  //yaxis
+  d3.selectAll("g.yaxis")
+    .transition().duration(1000)
+    .call(d3.axisLeft(y).ticks(4));
+
+  //draw bars
+  let barWidth = 25;
+  d3.selectAll("g.bars")
+    .selectAll("rect")
+    .data(o.data)
+    .transition().duration(1000)
+    .attr("y",d => y(d))
+    .attr("height",d => height - y(d) + 1)
+    .attr("stroke-dasharray", d => `${barWidth},${barWidth}`)
+    .attr("opacity",1e-6);
+
+  d3.selectAll("line.tenYrAvg")
+    .transition().duration(1000)
+    .attr("y1",function(d){return y(o.avg);})
+    .attr("y2",function(d){return y(o.avg);})
+    .attr("opacity",1e-6);
+}
+
 function parseData(results){
   let string = results.content;
-  console.log(string)
   let values = string.split("values");
   let array = values[1].split(/\n/g);
   let la = array.length;
@@ -1535,7 +1623,6 @@ function parseData(results){
     let n = array[la].split(",");
     if(n.length === 3 && a2.length < 10) a2.push(n);
   }
-  console.log(a2)
   let a3 = a2.map(d => parseFloat(d[1]));
   let sum = a3.reduce((a,c) => a + c);
   return {start:parseInt(a2[a2.length-1][0]),data:a3,avg:sum/10};
