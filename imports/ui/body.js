@@ -1290,8 +1290,8 @@ Template.myProtectionsTable.helpers({
 
 let selectedRegion = "none";
 let pv = 0;
-let cols = ["#47B98E","#DBB2B2"];
-let codesNOAA = [261,262];
+let cols = ["#47B98E","#DBB2B2","#49F2A9"];
+let codesNOAA = [261,262,255];
 let currentHTTP = 0;
 
 async function drawUSA(){
@@ -1320,7 +1320,7 @@ async function drawUSA(){
       .attr("d", path);
 
     g.append("path")
-      .attr("fill", "gray")
+      .attr("fill", "#cccccc")
       .attr("stroke", "black")
       .attr("stroke-linejoin", "round")
       .attr("stroke-width",2)
@@ -1329,11 +1329,18 @@ async function drawUSA(){
     d3.selectAll("path.cornbelt")
       .attr("fill","none")
       .attr("stroke-width",5)
-      .attr("stroke",cols[0]);
+      .attr("stroke",cols[0])
+      .attr("stroke-dasharray", "5,5");
     d3.selectAll("path.soybelt")
       .attr("fill","none")
       .attr("stroke-width",5)
-      .attr("stroke",cols[1]);
+      .attr("stroke",cols[1])
+      .attr("stroke-dasharray", "5,5");
+    d3.selectAll("path.redwinter")
+      .attr("fill","none")
+      .attr("stroke-width",5)
+      .attr("stroke",cols[2])
+      .attr("stroke-dasharray", "5,5");
 
     svg.selectAll("g#areas")
       .selectAll("path.ag-areas")
@@ -1370,7 +1377,7 @@ async function drawUSA(){
         document.getElementById("location").selectedIndex = v;
         //make previous region go blank
         d3.selectAll(`path.${selectedRegion}`)
-          .attr("fill",cols[pv]);
+          .attr("fill","none");
 
         NOAACODE = codesNOAA[v];
         callNOAA();
@@ -1400,7 +1407,6 @@ async function drawUSA(){
 function callNOAA(){
   currentHTTP += 1;
   let check = currentHTTP;
-  console.log(NOAACODE,MONTHCODE,DURATIONCODE)
   if(NOAACODE !== -1 && MONTHCODE !== -1 && DURATIONCODE !== -1){
     Meteor.call("glanceNOAA",NOAACODE,MONTHCODE,DURATIONCODE,function(error, results) {
       let obj = parseData(results);
@@ -1415,7 +1421,7 @@ var tenYrAvg;
 
 function drawMonths(){
   svg = d3.select("svg#chart");
-  margin = {top: 20, right: 20, bottom: 45, left: 50};
+  margin = {top: 20, right: 50, bottom: 45, left: 50};
   width = +svg.attr("width") - margin.left - margin.right;
   height = +svg.attr("height") - margin.top - margin.bottom;
 
@@ -1424,13 +1430,16 @@ function drawMonths(){
   dataExtents = d3.extent(data, function(d){return d;});
 
   svgStart = new Date(2007, 5, 1);
-  svgEnd = new Date(2017, 5, 1);
+  svgEnd = new Date(2017, 8, 1);
   var x = d3.scaleTime()
       .rangeRound([0, width])
       .domain([svgStart,svgEnd]);
   var y = d3.scaleLinear()
       .rangeRound([height, 0])
       .domain([0,dataExtents[1]]);
+  var ymm = d3.scaleLinear()
+      .rangeRound([height, 0])
+      .domain([0,dataExtents[1]*25.4]);
 
   let g = svg.append("g")
     .attr("transform",`translate(${margin.left}+${margin.top})`);
@@ -1447,16 +1456,24 @@ function drawMonths(){
     .attr("dy", "0.71em")
     .attr("text-anchor", "end")
     .attr("font-size","15px")
-    .text("Monthly Precipitation (mm)");
+    .text("Total Precipitation (inches)");
 
-  g.selectAll(".yaxis")
-    .selectAll(".tick")
-    .selectAll("line")
-    .attr("x1",width)
-    .attr("stroke-width",0.25);
+  g.append("g")
+    .call(d3.axisRight(ymm).ticks(4))
+    .attr("class","yaxis-mm")
+    .attr("transform",`translate(${width},0)`)
+    .append("text")
+    .attr("fill", "#000")
+    .attr("transform", "rotate(90)")
+    .attr("y", -50)
+    .attr("x", 200)
+    .attr("dy", "0.71em")
+    .attr("text-anchor", "end")
+    .attr("font-size","15px")
+    .text("Total Precipitation (mm)");
 
   //draw bars
-  let barWidth = 25;
+  let barWidth = width*0.5/10;
   g.append("g")
     .attr("class","bars")
     .selectAll("rect")
@@ -1481,10 +1498,10 @@ function drawMonths(){
     .append("text")
     .attr("fill", "#000")
     .attr("y", 40)
-    .attr("x", 200)
-    .attr("text-anchor", "end")
+    .attr("x", width/2 )
+    .attr("text-anchor", "middle")
     .attr("font-size","15px")
-    .text("Year (mm)");
+    .text("Year");
 
   g.append("line")
     .attr("class","tenYrAvg")
@@ -1500,31 +1517,41 @@ function drawMonths(){
 
 function upDateMonths(o){
   // console.log(o)
+  svg = d3.select("svg#chart");
+  margin = {top: 20, right: 50, bottom: 45, left: 50};
+  width = +svg.attr("width") - margin.left - margin.right;
+
   dataExtents = d3.extent(o.data, function(d){return d;});
   tenYrAvg = o.avg;
 
   svgStart = new Date(o.start-1, 5, 1);
-  svgEnd = new Date(o.start+9, 5, 1);
+  svgEnd = new Date(o.start+9, 8, 1);
   var x = d3.scaleTime()
       .rangeRound([0, width])
       .domain([svgStart,svgEnd]);
   var y = d3.scaleLinear()
       .rangeRound([height, 0])
       .domain([0,dataExtents[1]]);
+  var ymm = d3.scaleLinear()
+      .rangeRound([height, 0])
+      .domain([0,dataExtents[1]*25.4]);
 
   //yaxis
   d3.selectAll("g.yaxis")
     .transition().duration(1000)
     .call(d3.axisLeft(y).ticks(4));
 
+  d3.selectAll("g.yaxis-mm")
+    .transition().duration(1000)
+    .call(d3.axisRight(ymm).ticks(4));
+
   //draw bars
-  let barWidth = 25;
+  let barWidth = width*0.5/10;
   d3.selectAll("g.bars")
     .selectAll("rect")
     .data(o.data)
     .transition().duration(1000)
     .attr("y",d => y(d))
-    .attr("x",(d,i) => x(new Date(o.start + i, 0, 1)) - barWidth/2)
     .attr("height",d => height - y(d) + 1)
     .attr("fill",d => d >= o.avg ? "#b5ffc0" : "#fcc8b0")
     .attr("stroke",d => d >= o.avg ? "green" : "red")
@@ -1577,26 +1604,31 @@ function changeThreshold(vs){
 }
 
 function clearChart(){
+  svg = d3.select("svg#chart");
+  margin = {top: 20, right: 50, bottom: 45, left: 50};
+  width = +svg.attr("width") - margin.left - margin.right;
+
   let o = {start:2008,data:[0,0,0,0,0,0,0,0,0,0],avg:0};
   dataExtents = d3.extent(o.data, function(d){return d;});
   tenYrAvg = o.avg;
-
-  svgStart = new Date(o.start-1, 5, 1);
-  svgEnd = new Date(o.start+9, 5, 1);
-  var x = d3.scaleTime()
-      .rangeRound([0, width])
-      .domain([svgStart,svgEnd]);
   var y = d3.scaleLinear()
       .rangeRound([height, 0])
       .domain([0,dataExtents[1]]);
+  var ymm = d3.scaleLinear()
+      .rangeRound([height, 0])
+      .domain([0,dataExtents[1]*25.4]);
 
   //yaxis
   d3.selectAll("g.yaxis")
     .transition().duration(1000)
     .call(d3.axisLeft(y).ticks(4));
 
+  d3.selectAll("g.yaxis-mm")
+    .transition().duration(1000)
+    .call(d3.axisRight(ymm).ticks(4));
+
   //draw bars
-  let barWidth = 25;
+  let barWidth = width*0.5/10;
   d3.selectAll("g.bars")
     .selectAll("rect")
     .data(o.data)
