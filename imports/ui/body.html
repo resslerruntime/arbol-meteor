@@ -185,14 +185,43 @@
 <template name="formNewProtection">
   <form class="new-protection">
     <input type="submit" id="create-request" value="Create Request">
-    <input type="button" id="createRandom" value="Fill Form Randomly">
+    <input type="button" id="createRandom" value="Fill Form Randomly" style="display:none">
     <table>
       <tr>
         <td>
           <table>
-            {{#each formNewProtection}}
-              {{> elNewProtection}}
-            {{/each}}
+            <tr>
+              <td>
+                <div class="tooltip"> Buyer Contribution (Eth):<span class="tooltiptext">The amount of Eth contributed by the contract buyer.</span></div>
+              </td>
+              <td>
+                  <input type="number" id="buyer-contrib" name="buyer" class="contribution" step="1" value="0" min="0" style="width:80px">
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <div class="tooltip"> Seller Contribution (Eth): <span class="tooltiptext">The amount of Eth contributed by the contract seller.</span></div>
+              </td>
+              <td>
+                  <input type="number" id="seller-contrib" name="seller" class="contribution" step="1" value="0" min="0" style="width:80px">
+              </td>
+            </tr>
+            <tr>
+              <td>
+                  <div class="tooltip"> Total Payout (Eth): <span class="tooltiptext">The total amount of payout received by one of the parties when the outcome is evaluated.</span></div>
+              </td>
+              <td>
+                  <div><strong id="payout-amt">0</strong></div>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                  <div class="tooltip"> Do you want to buy or sell? <span class="tooltiptext"> Are you offering to sell this protection or are you looking to buy this protection?</span></div>
+              </td>
+              <td>
+                  <label class="buy-sell"><input type="checkbox" id="toggle-buy-sell" style="display:none"><div class="slider round"><span class="buy">BUY</span><span class="sell">SELL</span></div></label>
+              </td>
+            </tr>
             <tr>
               <td>
                 <div class="tooltip"> From: <span class="tooltiptext">"The starting month of the contract."</span></div>
@@ -216,10 +245,10 @@
               <td>
                 <select id="threshold" name="threshold" >
                   <option value="" hidden disabled selected>Select payout threshold</option>
-                  <option value="g10aa" >Greater than 10% above average</option>
-                  <option value="aa">Above average</option>
-                  <option value="ba">Below average</option>
-                  <option value="l10ba">Less than 10% below average</option>
+                  <option value="above-average-10pct" >Greater than 10% above average</option>
+                  <option value="above-average">Above average</option>
+                  <option value="below-average">Below average</option>
+                  <option value="below-average-10pct">Less than 10% below average</option>
                 </select>
               </td>
             </tr>
@@ -227,14 +256,15 @@
         </td>
         <td>
           <select id="location" name="location" hidden>
-            <option value="us-corn-belt">"US Corn Belt"</option>
-            <option value="us-soy-belt">"US Soy Belt"</option>
+            <option value="us-corn-belt"></option>
+            <option value="us-soy-belt"></option>
+            <option value="us-redwinter-belt"></option>
             <option value="" selected></option>
           </select>
           <svg id="map" width="500" height="300">
             <g id="outline"></g>
             <g id="areas">
-              <path name="US Red Winter Wheat Belt" value="2" class="ag-areas redwinter" transform="scale(0.5)" fill="#49F2A9" stroke="#000000" stroke-miterlimit="10" d="M477.137,386.646c-4.687-1.811-18.642-3.248-17.172,3.737
+              <path class="ag-areas us-redwinter-belt" transform="scale(0.5)" fill="#49F2A9" stroke="#000000" stroke-miterlimit="10" d="M477.137,386.646c-4.687-1.811-18.642-3.248-17.172,3.737
                 c-6.905-0.131-8.645-1.903-8.732,5.023c-0.093,7.416-0.805,6.414-5.947,8.362c0.176-0.066-6.281-2.007-7.342-2.313
                 c-2.942-0.849-7.092-0.428-5.999-4.433c-6.826-0.559-14.731-1.425-14.352-10.366c0.122-2.875,2.556-16.904,0.789-18.653
                 c-1.575,1.574-8.042-1.943-9.706-0.437c-1.114,1.01-0.373,8.135-0.45,9.817c-3.298-0.159-6.597-0.319-9.896-0.479
@@ -259,7 +289,7 @@
                 c0.007,2.582,2.146,2.738,4.798,1.963c0.901,3.252,0.374,5.356-2.928,4.922c0.015,1.51-0.432,3.547-0.047,4.916
                 c0.051,0.07,0.028,1.829,0.024,1.963c3.082,1.164,0.701,2.822,3.818,3.951c-0.254,4.912-5.68-0.367-8.315,1.936
                 C478.644,380.188,485.121,386.772,477.137,386.646"/>
-              <path name="US Soy Belt" value="1" class="ag-areas soybelt" transform="scale(0.5)" fill="#DBB2B2" stroke="#000000" stroke-miterlimit="10" d="M584.705,438.715c0.768,1.495-0.105,0.553,1.499,2.303
+              <path class="ag-areas us-soy-belt" transform="scale(0.5)" fill="#DBB2B2" stroke="#000000" stroke-miterlimit="10" d="M584.705,438.715c0.768,1.495-0.105,0.553,1.499,2.303
             		c-0.577,1.076-0.959,1.607-1.759,2.66c-1.127-0.542-1.024,0.852-1.013,0.847c0.286,0.146-0.843,3.357-0.29,3.651
             		c-1.859,1.862-2.145,2.465-3.408,4.839c-1.947-0.646-0.905,1.482-2.279,4.356c-1.229-0.146-1.842,7.033-4.187,8.129
             		c1.212,2.393,2.056,4.488-0.102,6.656c-2.563-4.547-6.206,12.88-8.545,15.426c-1.897-4.569-6.727-10.908-9.237-13.031
@@ -318,15 +348,15 @@
             		c-0.295,1.742-0.88,8.934-1.495,10.826c-0.926-0.257-3.533,6.794-3.077,7.458c-0.005-0.001,4.546,1.416,7.586,2.485
             		c-0.92,5.349-11.986,11.348-13.204,6.266c-0.828,0.421-2.14,0.963-3.077,1.549c0.047,0.993,0.093,1.987,0.14,2.98
             		c-1.309,0.394-1.218-0.492-1.869,0.801"/>
-              <path name="US Soy Belt" value="1" class="ag-areas soybelt" transform="scale(0.5)" fill="#DBB2B2" stroke="#000000" stroke-miterlimit="10" d="M820.914,352.107c3.23-0.191,12.319-1.06,11.505,5.394
+              <path class="ag-areas us-soy-belt" transform="scale(0.5)" fill="#DBB2B2" stroke="#000000" stroke-miterlimit="10" d="M820.914,352.107c3.23-0.191,12.319-1.06,11.505,5.394
                 c-0.271,2.151-7.587,6.931-8.916,9.159c-2.051,3.438-2.714,7.245-2.898,11.199c-2.73-1.066-4.856,0.272-7.878,0.381
                 c-3.154,0.113-1.656,0.955-4.986-0.04c-1.35-0.403-3.443-2.467-4.518-3.237c-5.432-3.894-14.815-7.38-11.646-14.303
                 c3.561,0.069,4.734-5.37,7.392-2.141c1.377,1.673,5.701-1.033,7.821-1.033c-7.424-3.629-2.336-13.584,2.245-9.583
                 C813.325,351.651,817.599,345.709,820.914,352.107z"/>
-              <path name="US Soy Belt" value="1" class="ag-areas soybelt" transform="scale(0.5)" fill="#DBB2B2" stroke="#000000" stroke-miterlimit="10" d="M843.564,255.894c4.238,3.652,5.256,3.627,6.856,9.9
+              <path class="ag-areas us-soy-belt" transform="scale(0.5)" fill="#DBB2B2" stroke="#000000" stroke-miterlimit="10" d="M843.564,255.894c4.238,3.652,5.256,3.627,6.856,9.9
                 c-2.637,0.615-5.286,1.151-7.946,1.651c-4.468,0.84-2.25-0.356-4.078-3.253c-2.364-3.747-2.829-10.076-4.038-14.389
                 c6.293-4.615,5.563,2.058,9.204,6.09"/>
-              <path name="US Corn Belt" value="0" class="ag-areas cornbelt" transform="scale(0.5)" fill="#47B98E" stroke="#000000" stroke-miterlimit="10" d="M633.252,298.892c1.022-1.105,1.34-0.544,1.34-2.227
+              <path class="ag-areas us-corn-belt" transform="scale(0.5)" fill="#47B98E" stroke="#000000" stroke-miterlimit="10" d="M633.252,298.892c1.022-1.105,1.34-0.544,1.34-2.227
             		c-6.666,0.556-11.338,0.228-18.123,0.632c0,4.646-2.962,3.205-7.467,3.555c1.428-7.519-2.674-5.981-8.236-5.511
             		c0.057,0.653,0.113,1.305,0.17,1.958c-3.641,0.271-8.139,1.31-10.716-0.573c-0.628-0.459,2.866-2.441-1.389-4.702
             		c-4.059-2.156-3.759,2.825-6.706,0.146c-2.523-2.294-0.237-6.538-3.939-9.274c-6.081-4.497-15.88-13.836-10.587-22.57
@@ -361,7 +391,7 @@
             		c0-0.501,0-1.001,0-1.502c-1.334-0.707-1.533,0.301-3.108-1.736c-1.965,0.846-4.895,5.466-5.367,4.717
             		c-1.329-2.104-6.525-2.529-8.097-2.951c0.535,4.263-2.038,3.245-5.119,1.532c0.057,1.08,0.114,3.716-1.36,3.303
             		c-3.54-0.991-0.367-3.257-1.128-4.892C627.57,306.388,632.121,302.042,633.252,298.892z"/>
-            	<path name="US Corn Belt" value="0" class="ag-areas cornbelt" transform="scale(0.5)" fill="#47B98E" stroke="#000000" stroke-miterlimit="10" d="M825.622,219.85c-2.11,3.454-9.487,4.271-10.017,4.932
+            	<path class="ag-areas us-corn-belt" transform="scale(0.5)" fill="#47B98E" stroke="#000000" stroke-miterlimit="10" d="M825.622,219.85c-2.11,3.454-9.487,4.271-10.017,4.932
             		c-3.519,4.398,3.511,6.64-1.1,10.239c6.827,1.726,10.998,12.153,18.522,3.394c2.021-2.352,4.39-0.882,6.768-3.311
             		c0.541-0.553-0.238-4.439-0.361-4.792c-0.355,0.137,4.569-1.759,3.23-1.759c0.37,0.602,0.74,1.204,1.11,1.806
             		c1.132-0.543,2.946-2.059,3.647-3.098c-2.039-1.379-7.054-4.593-7.438-6.441c-1.015-4.883-4.835,1.088-5.832,2.462
@@ -375,26 +405,6 @@
       </tr>
     </table>
   </form>
-</template>
-
-<template name="elNewProtection">
-  <tr>
-    <td>
-      <div class="tooltip">
-        {{title}}
-        <span class="tooltiptext">{{tooltiptext}}</span>
-      </div>
-    </td>
-    <td>
-      {{#if isEqual type "number"}}
-        <input type="{{type}}" id={{id}} name={{name}} class="contribution" step="1" value="0" min="0" style="width:80px">
-      {{else if isEqual type "payout"}}
-        <div><strong id={{id}}>0</strong></div>
-      {{else if isEqual type "toggle"}}
-        <label class="buy-sell"><input type="checkbox" id={{id}} style="display:none"><div class="slider round"><span class="buy">BUY</span><span class="sell">SELL</span></div></label>
-      {{/if}}
-    </td>
-  </tr>
 </template>
 
 <!-- TEMPLATES FOR "MY PROTECTIONS" -->

@@ -56,9 +56,9 @@ function Entry(r){
       ,{type:"text",name:d2}
       ,{type:"num",name:buyerContr}
       ,{type:"num",name:sellerContr}
-      ,{type:"text",name:a.location}
+      ,{type:"text",name:locationObj[a.location].text}
       ,{type:"text",name:a.index}
-      ,{type:"num",name:a.threshold}
+      ,{type:"num",name:threshObj[a.threshold].text}
       ,{type:"button",name:b,button:b1}
     ];
 }
@@ -126,9 +126,9 @@ function MyEntry(r,a,id,bool){
       ,{type:"text",name:d2}
       ,{type:"num",name:buyerContr}
       ,{type:"num",name:sellerContr}
-      ,{type:"text",name:a.location}
+      ,{type:"text",name:locationObj[a.location].text}
       ,{type:"text",name:a.index}
-      ,{type:"num",name:a.threshold}
+      ,{type:"num",name:threshObj[a.threshold].text}
       ,{type:"text",name:status}
       ,{type:"button",name:b,button:b1}
     ];
@@ -138,6 +138,26 @@ const witAddress  = "0xf25186b5081ff5ce73482ad761db0eb0d25abfbf";
 const cropAddress = "0x345ca3e014aaf5dca488057592ee47305d9b3e10";
 const testUser    = "0x627306090abaB3A6e1400e9345bC60c78a8BEf57";
 const testUser2   = "0xf17f52151EbEF6C7334FAD080c5704D77216b732";
+
+var threshObj = {
+  "above-average":{text:"> Average",val:1,caStroke:"green",caFill:"#b5ffc0",cbStroke:"red",cbFill:"#fcc8b0"}
+  ,"above-average-10pct":{text:"> 10% Above Avg",val:1.1,caStroke:"green",caFill:"#b5ffc0",cbStroke:"red",cbFill:"#fcc8b0"}
+  ,"below-average":{text:"< Average",val:1,caStroke:"red",caFill:"#fcc8b0",cbStroke:"green",cbFill:"#b5ffc0"}
+  ,"below-average-10pct":{text:"< 10% Below Avg",val:0.9,caStroke:"red",caFill:"#fcc8b0",cbStroke:"green",cbFill:"#b5ffc0"}
+};
+// NOAA codes:
+// Corn                   = 261
+// Cotton                 = 265
+// Hard Red Winter Wheat  = 255
+// Corn and Soybean       = 260
+// Soybean                = 262
+// Spring Wheat           = 250
+// Winter Wheat           = 256
+var locationObj = {
+  "us-corn-belt":{text:"US Corn Belt",noaaCode:261,col:"#47B98E"}
+  ,"us-soy-belt":{text:"US Soy Belt",noaaCode:262,col:"#DBB2B2"}
+  ,"us-redwinter-belt":{text:"US Red Winter Wheat Belt",noaaCode:255,col:"#49F2A9"}
+};
 
 var user;
 var pastUser = -1;
@@ -1004,8 +1024,132 @@ Template.openProtectionsTable.helpers({
 // FUNCTIONS RELATED TO "CREATE A PROTECTION"
 ////////////////////////////////////////////
 
+// Dealing with submittal of form
 Template.formNewProtection.events({
-  'click #createRandom': function(e){
+  'input .date-picker'(event) {
+    capDate(event.currentTarget);
+    //update the data that is represented
+    let s = +$('#start-date')[0].value.split("-")[1]
+      ,sy = +$('#start-date')[0].value.split("-")[0];
+    let e = +$('#end-date')[0].value.split("-")[1]
+      ,ey = +$('#end-date')[0].value.split("-")[0];
+
+    if(s <= e && sy <= ey){
+      MONTHCODE = e;
+      DURATIONCODE = e - s + 1;
+      callNOAA();
+    }
+  },
+  'input .contribution'(event) {
+    capVal(event.currentTarget);
+  },
+  'input #threshold'(event) {
+    changeThreshold(event.currentTarget.value);
+  },
+  'submit .new-protection'(event) {
+    // Prevent default browser form submit
+    event.preventDefault();
+
+    // Get value from form element
+    const target = event.currentTarget;
+    const buyerContr = parseInt(target[2].value);
+    const sellerContr = parseInt(target[3].value);
+    const buySell = target[4].checked ? "Buy" : "Sell";
+    const startDate = target[5].value;
+    const endDate = target[6].value;
+    const threshold = target[7].value;
+    const location = target[8].value;
+
+    const index = "Precipitation";
+
+    //TODO add red boxes to indicate missing values
+    //check if info is missing
+    if(startDate === "" || endDate === "" || parseFloat(buyerContr) === 0 || parseFloat(sellerContr) === 0 || location === "" || index === "" || threshold === ""){
+      var s = "Please complete missing elements: \n";
+      if(startDate === "") s += "  Start Date \n";
+      if(endDate === "") s += "  End Date \n";
+      if(parseFloat(buyerContr) === 0) s += "  Buyer Contribution \n";
+      if(parseFloat(sellerContr) === 0) s += "  Seller Contribution \n";
+      if(location === "") s += "  Location \n";
+      if(index === "") s += "  Index \n";
+      if(threshold === "") s += "  Threshold \n";
+      alert(s);
+    }else{
+      //ask for confirmation
+      const confirmed = confirm ( "Please confirm your selection: \n\n"
+        + "  Start Date: " + startDate + "\n"
+        + "  End Date: " + endDate + "\n"
+        + "  Buyer Contribution (Eth): " + buyerContr + "\n"
+        + "  Seller Contribution (Eth): " + sellerContr + "\n"
+        + "  Location: " + locationObj[location].text + "\n"
+        + "  Index: " + index + "\n"
+        + "  Threshold: " + threshObj[threshold].text + "\n"
+        + "  Buy or Sell: " + buySell + "\n"
+      );
+
+      if(confirmed){
+        //submit info
+        createProposal(startDate,endDate,buyerContr,sellerContr,location,index,threshold,buySell);
+      }else{
+        //let user continue to edit
+      }
+
+      async function createProposal(startDate,endDate,buyerContr,sellerContr,location,index,threshold,buySell){
+        const d1 = (new Date(startDate)).getTime();
+        const d2 = (new Date(endDate)).getTime();
+
+        let ethPropose = 0;
+        let ethAsk = 0;
+
+        if(buySell === "Buy"){
+          ethPropose = toWei(buyerContr);
+          ethAsk = toWei(sellerContr);
+        }
+        if(buySell === "Sell"){
+          ethPropose = toWei(sellerContr);
+          ethAsk = toWei(buyerContr);
+        }
+
+        try {
+          let supply = await promisify(cb => witInstance.totalSupply(cb));
+          let beforeBalance = await promisify(cb => web3.eth.getBalance(witAddress, cb));
+          beforeBalance = toEth(beforeBalance.toNumber());
+          let beforeAllowance = await promisify(cb => cropInstance.allowance(user[0],witAddress,cb));
+          await promisify(cb => cropInstance.approve(witAddress, ethPropose + ethAsk, {from: user[0]},cb));
+          await promisify(cb => witInstance.createWITProposal(ethPropose, ethAsk, index, threshold, location, d1, d2, true, {value: ethPropose, from:user[0]}, cb));
+
+          console.log("===== CREATE WIT PROPOSAL =====")
+          // console.log("before allowance: ",beforeAllowance.toNumber())
+          console.log("beforeBalance",beforeBalance)
+          console.log("WIT supply",supply.toNumber())
+
+          //clear form if succesful
+          target[2].value = 0;
+          target[3].value = 0;
+          target[4].value = "";
+          target[5].value = "";
+          target[6].value = "";
+          target[7].value = "";
+          target[8].value = "";
+          $('#end-date')[0].min = "";
+          $('#start-date')[0].max = "";
+          $('#seller-contrib')[0].min = 0;
+          $('#payout-amt').html(0);
+          //unselect region, reset text value
+          clearChart();
+          $('#selected-region').html("No region selected");
+          document.getElementById("location").selectedIndex = -1;
+          d3.selectAll(`path.${selectedRegion}`)
+            .attr("fill","none");
+          selectedRegion = "none";
+        } catch (error) {
+          console.log(error)
+          alert("Transaction was not succesful, a common source of errors is insufficient gas. \n " + error.message);
+        }
+      }
+    }
+  },
+  'click #createRandom'(e){
     let amt1 = Math.round(Math.random()+1);
     let amt2 = Math.round(Math.random()+1);
     $('#seller-contrib')[0].value = amt1 + amt2;
@@ -1049,172 +1193,6 @@ Template.formNewProtection.events({
       DURATIONCODE = e2 - s2 + 1;
       NOAACODE = codesNOAA[a];
       callNOAA();
-    }
-  }
-});
-
-// populate new protections form with table
-Template.formNewProtection.helpers({
-  formNewProtection: function() {
-    return [
-      {
-        title: "Buyer Contribution (Eth):"
-        ,tooltiptext: "The amount of Eth contributed by the contract buyer."
-        ,type: "number"
-        ,name: "buyer"
-        ,id: "buyer-contrib"
-      }
-      ,{
-        title: "Seller Contribution (Eth):"
-        ,tooltiptext: "The amount of Eth contributed by the contract seller."
-        ,type: "number"
-        ,name: "seller"
-        ,id: "seller-contrib"
-      }
-      ,{
-        title: "Total Payout (Eth):"
-        ,tooltiptext: "The total amount of payout received by one of the parties when the outcome is evaluated."
-        ,type: "payout"
-        ,id: "payout-amt"
-      }
-      ,{
-        title: " Do you want to buy or sell?"
-        ,tooltiptext: "Are you offering to sell this protection or are you looking to buy this protection?"
-        ,type: "toggle"
-        ,id: "toggle-buy-sell"
-      }
-    ];
-  }
-});
-
-//TODO add min date back in after testing status
-Template.elNewProtection.helpers({
-  minDate: function() {
-    // return new Date().toISOString().substring(0,10);
-  },
-  isEqual: function (a, b) {
-    return a === b;
-  }
-});
-
-// Dealing with submittal of form
-Template.formNewProtection.events({
-  'input .date-picker'(event) {
-    capDate(event.currentTarget);
-    //update the data that is represented
-    let s = +$('#start-date')[0].value.split("-")[1]
-      ,sy = +$('#start-date')[0].value.split("-")[0];
-    let e = +$('#end-date')[0].value.split("-")[1]
-      ,ey = +$('#end-date')[0].value.split("-")[0];
-
-    if(s <= e && sy <= ey){
-      MONTHCODE = e;
-      DURATIONCODE = e - s + 1;
-      callNOAA();
-    }
-  },
-  'input .contribution'(event) {
-    capVal(event.currentTarget);
-  },
-  'input #threshold'(event) {
-    changeThreshold(event.currentTarget.value);
-  },
-  'submit .new-protection'(event) {
-    // Prevent default browser form submit
-    event.preventDefault();
-
-    console.log(target)
-    // Get value from form element
-    const target = event.currentTarget;
-    const buyerContr = parseInt(target[2].value);
-    const sellerContr = parseInt(target[3].value);
-    const buySell = target[4].checked ? "Buy" : "Sell";
-    const location = target[5].value;
-    const startDate = target[6].value;
-    const endDate = target[7].value;
-    const threshold = target[8].value;
-
-    const index = "rainfall";
-
-    //check if info is missing
-    if(startDate === "" || endDate === "" || parseFloat(buyerContr) === 0 || parseFloat(sellerContr) === 0 || location === "" || index === "" || threshold === ""){
-      var s = "Please complete missing elements: \n";
-      if(startDate === "") s += "  Start Date \n";
-      if(endDate === "") s += "  End Date \n";
-      if(parseFloat(buyerContr) === 0) s += "  Buyer Contribution \n";
-      if(parseFloat(sellerContr) === 0) s += "  Seller Contribution \n";
-      if(location === "") s += "  Location \n";
-      if(index === "") s += "  Index \n";
-      if(threshold === "") s += "  Threshold \n";
-      alert(s);
-    }else{
-      //ask for confirmation
-      const confirmed = confirm ( "Please confirm your selection: \n\n"
-        + "  Start Date: " + startDate + "\n"
-        + "  End Date: " + endDate + "\n"
-        + "  Buyer Contribution (Eth): " + buyerContr + "\n"
-        + "  Seller Contribution (Eth): " + sellerContr + "\n"
-        + "  Location: " + location + "\n"
-        + "  Index: " + index + "\n"
-        + "  Threshold: " + threshold + "\n"
-        + "  Buy or Sell: " + buySell + "\n"
-      );
-
-      if(confirmed){
-        //submit info
-        createProposal(startDate,endDate,buyerContr,sellerContr,location,index,threshold,buySell);
-      }else{
-        //let user continue to edit
-      }
-
-      async function createProposal(startDate,endDate,buyerContr,sellerContr,location,index,threshold,buySell){
-        const d1 = (new Date(startDate)).getTime();
-        const d2 = (new Date(endDate)).getTime();
-
-        console.log(new Date(startDate),d1)
-
-        let ethPropose = 0;
-        let ethAsk = 0;
-
-        if(buySell === "Buy"){
-          ethPropose = toWei(buyerContr);
-          ethAsk = toWei(sellerContr);
-        }
-        if(buySell === "Sell"){
-          ethPropose = toWei(sellerContr);
-          ethAsk = toWei(buyerContr);
-        }
-
-        try {
-          let supply = await promisify(cb => witInstance.totalSupply(cb));
-          let beforeBalance = await promisify(cb => web3.eth.getBalance(witAddress, cb));
-          beforeBalance = toEth(beforeBalance.toNumber());
-          let beforeAllowance = await promisify(cb => cropInstance.allowance(user[0],witAddress,cb));
-          await promisify(cb => cropInstance.approve(witAddress, ethPropose + ethAsk, {from: user[0]},cb));
-          await promisify(cb => witInstance.createWITProposal(ethPropose, ethAsk, index, threshold, location, d1, d2, true, {value: ethPropose, from:user[0]}, cb));
-
-          console.log("===== CREATE WIT PROPOSAL =====")
-          // console.log("before allowance: ",beforeAllowance.toNumber())
-          console.log("beforeBalance",beforeBalance)
-          console.log("WIT supply",supply.toNumber())
-
-          //clear form if succesful
-          target[2].value = 0;
-          target[3].value = 0;
-          target[4].value = "";
-          target[5].value = "";
-          target[6].value = "";
-          target[7].value = "";
-          target[8].value = "";
-          $('#end-date')[0].min = "";
-          $('#start-date')[0].max = "";
-          $('#seller-contrib')[0].min = 0;
-          $('#payout-amt').html(0);
-        } catch (error) {
-          console.log(error)
-          alert("Transaction was not succesful, a common source of errors is insufficient gas. \n " + error.message);
-        }
-      }
     }
   },
 });
@@ -1279,23 +1257,11 @@ Template.myProtectionsTable.helpers({
 ////////////////////////////////////////////
 // JAVASCRIPT FOR D3
 ////////////////////////////////////////////
-// NOAA codes:
-// Corn                   = 261
-// Cotton                 = 265
-// Hard Red Winter Wheat  = 255
-// Corn and Soybean       = 260
-// Soybean                = 262
-// Spring Wheat           = 250
-// Winter Wheat           = 256
 
 let selectedRegion = "none";
-let pv = 0;
-let cols = ["#47B98E","#DBB2B2","#49F2A9"];
-let codesNOAA = [261,262,255];
 let currentHTTP = 0;
 
 async function drawUSA(){
-  //<svg id="map" width="500" height="300">
   let svg = d3.select("svg#map");
   let width = +svg.attr("width");
   let height = +svg.attr("height");
@@ -1313,34 +1279,33 @@ async function drawUSA(){
       .attr("transform", "scale(" + width/1000 + ")");
 
     g.append("path")
+      .attr("fill", "#efefef")
+      .attr("stroke", "black")
+      .attr("stroke-linejoin", "round")
+      .attr("stroke-width",2)
+      .attr("d", path(topojson.feature(us, us.objects.nation)));
+
+    g.append("path")
       .datum(topojson.mesh(us, us.objects.states, (a, b) => a !== b))
       .attr("fill", "none")
       .attr("stroke", "black")
       .attr("stroke-linejoin", "round")
       .attr("d", path);
 
-    g.append("path")
-      .attr("fill", "#cccccc")
-      .attr("stroke", "black")
-      .attr("stroke-linejoin", "round")
-      .attr("stroke-width",2)
-      .attr("d", path(topojson.feature(us, us.objects.nation)));
-
-    d3.selectAll("path.cornbelt")
-      .attr("fill","none")
-      .attr("stroke-width",5)
-      .attr("stroke",cols[0])
-      .attr("stroke-dasharray", "5,5");
-    d3.selectAll("path.soybelt")
-      .attr("fill","none")
-      .attr("stroke-width",5)
-      .attr("stroke",cols[1])
-      .attr("stroke-dasharray", "5,5");
-    d3.selectAll("path.redwinter")
-      .attr("fill","none")
-      .attr("stroke-width",5)
-      .attr("stroke",cols[2])
-      .attr("stroke-dasharray", "5,5");
+    let ra = ["us-corn-belt","us-soy-belt","us-redwinter-belt"]
+      ,ral = ra.length;
+    while(ral--){
+      var reg = ra[ral];
+      d3.selectAll(`path.${reg}`)
+        .attr("stroke-width",5)
+        .attr("stroke-miterlimit","1")
+        .attr("stroke",locationObj[reg].col)
+        .attr("fill","none")
+        .attr("stroke-dasharray", "20,5");
+        // .attr("stroke","none")
+        // .attr("fill",cols[0])
+        // .attr("fill-opacity", 0.5);
+    }
 
     svg.selectAll("g#areas")
       .selectAll("path.ag-areas")
@@ -1353,7 +1318,7 @@ async function drawUSA(){
       let region = d3.select(this).attr("class").split(" ")[1];
       if(region !== selectedRegion){
         d3.selectAll(`path.${region}`)
-          .attr("fill",cols[v]);
+          .attr("fill",locationObj[region].col);
       }
     }
 
@@ -1372,17 +1337,16 @@ async function drawUSA(){
       //manage the coloration change
       if(region !== selectedRegion){
         //update the title
-        $('#selected-region').html(d3.select(this).attr("name"));
+        $('#selected-region').html(locationObj[region].text);
         //update the form
-        document.getElementById("location").selectedIndex = v;
+        document.getElementById("location").value = region;
         //make previous region go blank
         d3.selectAll(`path.${selectedRegion}`)
           .attr("fill","none");
 
-        NOAACODE = codesNOAA[v];
-        callNOAA();
         selectedRegion = region;
-        pv = v;
+        NOAACODE = locationObj[selectedRegion].noaaCode;
+        callNOAA();
         d3.selectAll(`path.${selectedRegion}`)
           .attr("fill","yellow");
       }else{
@@ -1391,7 +1355,7 @@ async function drawUSA(){
         //update the form
         let f = document.getElementById("location").selectedIndex = -1;
         d3.selectAll(`path.${selectedRegion}`)
-          .attr("fill",cols[v]);
+          .attr("fill",locationObj[selectedRegion].col);
         currentHTTP += 1;
         clearChart();
         selectedRegion = "none";
@@ -1571,21 +1535,7 @@ function upDateMonths(o){
 }
 
 function changeThreshold(vs){
-  var ca_stroke = "green"
-    ,ca_fill = "#b5ffc0"
-    ,cb_stroke = "red"
-    ,cb_fill = "#fcc8b0";
-
-  if(vs === "ba" || vs === "l10ba"){
-    ca_stroke = "red";
-    ca_fill = "#fcc8b0";
-    cb_stroke = "green";
-    cb_fill = "#b5ffc0";
-  }
-
-  let pct = 1;
-  if(vs === "l10ba") pct = 0.9;
-  if(vs === "g10aa") pct = 1.1;
+  let o = threshObj[vs];
 
   var y = d3.scaleLinear()
       .rangeRound([height, 0])
@@ -1594,13 +1544,13 @@ function changeThreshold(vs){
   d3.selectAll("g.bars")
     .selectAll("rect")
     .transition().duration(1000)
-    .attr("fill", d => d >= tenYrAvg*pct ? ca_fill : cb_fill)
-    .attr("stroke", d => d >= tenYrAvg*pct ? ca_stroke : cb_stroke);
+    .attr("fill", d => d >= tenYrAvg*o.val ? o.caFill : o.cbFill)
+    .attr("stroke", d => d >= tenYrAvg*o.val ? o.caStroke : o.cbStroke);
 
   d3.selectAll("line.tenYrAvg")
     .transition().duration(1000)
-    .attr("y1",function(d){return y(tenYrAvg*pct);})
-    .attr("y2",function(d){return y(tenYrAvg*pct);});
+    .attr("y1",function(d){return y(tenYrAvg*o.val);})
+    .attr("y2",function(d){return y(tenYrAvg*o.val);});
 }
 
 function clearChart(){
