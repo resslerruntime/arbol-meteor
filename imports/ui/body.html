@@ -46,16 +46,6 @@
 
     <!-- "OPEN PROTECTIONS" TAB -->
     {{#tabContent slug="open"}}
-      <table style="display:none">
-        <tr>
-          <td>Filter:</td>
-          <td>Loaded Tokens:</td>
-        </tr>
-        <tr>
-          <td>{{> filter}}</td>
-          <td>{{> tokens}}</td>
-        </tr>
-      </table>
       All open protections (sort ascending/descending will only affect loaded data):
       {{> openProtectionsTable}}
     {{/tabContent}}
@@ -107,31 +97,6 @@
 </template>
 
 <!-- TEMPLATES FOR "OPEN PROTECTIONS" -->
-
-<template name="filter">
-  <table>
-    {{#each filterInput}}
-      {{> elFilter}}
-    {{/each}}
-  </table>
-</template>
-
-<template name="elFilter">
-  <tr>
-    <td>
-      <div class="tooltip">
-        {{title}}
-        <span class="tooltiptext">{{tooltiptext}}</span>
-      </div>
-    </td>
-    <td>
-      {{#if isEqual type "number"}}
-        <input type="{{type}}" id={{id}} name={{name}} class="filter" step="1" value="0" min="0">
-      {{/if}}
-    </td>
-  </tr>
-</template>
-
 <template name="tokens">
   <table>
     {{#each tokensInput}}
@@ -195,7 +160,7 @@
                 <div class="tooltip"> Buyer Contribution (Eth):<span class="tooltiptext">The amount of Eth contributed by the contract buyer.</span></div>
               </td>
               <td>
-                  <input type="number" id="buyer-contrib" name="buyer" class="contribution" step="1" value="0" min="0" style="width:80px">
+                  <input type="number" id="buyer-contrib" name="buyer" class="contribution" step="0.001" value="0" min="0" style="width:200px">
               </td>
             </tr>
             <tr>
@@ -203,7 +168,7 @@
                 <div class="tooltip"> Seller Contribution (Eth): <span class="tooltiptext">The amount of Eth contributed by the contract seller.</span></div>
               </td>
               <td>
-                  <input type="number" id="seller-contrib" name="seller" class="contribution" step="1" value="0" min="0" style="width:80px">
+                  <input type="number" id="seller-contrib" name="seller" class="contribution" step="0.001" value="0" min="0" style="width:200px">
               </td>
             </tr>
             <tr>

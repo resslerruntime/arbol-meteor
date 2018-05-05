@@ -1,6 +1,7 @@
 import { Template } from 'meteor/templating';
 import * as d3 from "d3";
 import topojson from "topojson";
+import BN from 'bn.js';
 import './body.html';
 
 ////////////////////////////////////////////
@@ -19,8 +20,47 @@ const promisify = (inner) =>
         })
     );
 
+//data objects for display
+var threshObj = {
+  "above-average":{text:"> Average",above:true,val:1,caStroke:"green",caFill:"#b5ffc0",cbStroke:"red",cbFill:"#fcc8b0"}
+  ,"above-average-10pct":{text:"> 10% Above Avg",above:true,val:1.1,caStroke:"green",caFill:"#b5ffc0",cbStroke:"red",cbFill:"#fcc8b0"}
+  ,"below-average":{text:"< Average",above:false,val:1,caStroke:"red",caFill:"#fcc8b0",cbStroke:"green",cbFill:"#b5ffc0"}
+  ,"below-average-10pct":{text:"< 10% Below Avg",above:false,val:0.9,caStroke:"red",caFill:"#fcc8b0",cbStroke:"green",cbFill:"#b5ffc0"}
+};
+var locationObj = {
+      // NOAA codes:
+      // Corn                   = 261
+      // Cotton                 = 265
+      // Hard Red Winter Wheat  = 255
+      // Corn and Soybean       = 260
+      // Soybean                = 262
+      // Spring Wheat           = 250
+      // Winter Wheat           = 256
+      "us-corn-belt":{text:"US Corn Belt",noaaCode:"261",col:"#47B98E"}
+      ,"us-soy-belt":{text:"US Soy Belt",noaaCode:"262",col:"#DBB2B2"}
+      ,"us-redwinter-belt":{text:"US Red Winter Wheat Belt",noaaCode:"255",col:"#49F2A9"}
+    };
+
+function locationText(num){
+  for (var prop in locationObj) {
+    let el = locationObj[prop];
+    if(num === el.noaaCode) return el.text;
+  }
+  return "?";
+}
+
+function thresholdText(num){
+  for (var prop in threshObj) {
+    let el = threshObj[prop];
+    if(parseInt(num)/10000 === el.val) return el.text;
+  }
+  return "?";
+}
+
 //table entry constructor open protections
-function Entry(r){
+//event ProposalOffered(uint indexed WITID, uint aboveID, uint belowID, uint indexed weiContributing,  uint indexed weiAsking, address evaluator, uint thresholdPPTTH, bytes32 location, uint start, uint end, bool makeStale);
+function Entry(r,owner){
+  console.log(r)
   let a = r.args;
   let l = r.transactionHash.length;
   let s = r.transactionHash.substring(0,8) + "..." + r.transactionHash.substring(l-8,l)
@@ -28,37 +68,49 @@ function Entry(r){
   let d2 = new Date(a.end.c[0]).toISOString().substring(0,10);
   let ask = a.weiAsking.toNumber();
   let propose = a.weiContributing.toNumber();
+  let id = a.WITID.toNumber();
 
   //update for if the contract is for offered for sale or for funding
-  let b, b1;
   let sellerContr, buyerContr;
-  let v = toEth(ask)+","+a.tokenID.toNumber();
+  let b= "", b1 ="";
+  let v = toEth(ask)+","+a.WITID.toNumber();
   if(propose > ask){
-    b = "Buy";
-    b1 = "<button type='button' class='buyit' value='" + v + "'> buy </button>";
     sellerContr = toEth(propose);
     buyerContr = toEth(ask);
+    b = "Buy";
+    b1 = "<button type='button' class='buyit' value='" + v + "'> buy </button>";
   }
   if(propose < ask){
-    b = "Sell";
-    b1 = "<button type='button' class='sellit' value='" + v + "'> sell </button>";
     sellerContr = toEth(ask);
     buyerContr = toEth(propose);
+    b = "Sell";
+    b1 = "<button type='button' class='sellit' value='" + v + "'> sell </button>";
+  }
+  //if the current use is the owner of the proposal don't give them the option to purchase the proposal
+  if(owner === user[0]){
+    b = "Owner";
+    b1 = `<button type='button' onClick='alert("You are the owner of this proposal.")'> owner </button>`;
+  }
+
+  //get threshold text
+  let thresh = thresholdText(a.thresholdPPM.toNumber());
+  if(a.WITID.toNumber() === a.belowID.toNumber() && a.thresholdPPM.toNumber() === 10000){
+    thresh = threshObj["below-average"].text;
   }
 
   //create the object
-  this.id = a.tokenID;
+  this.id = a.WITID;
   this.type = "bodyRow";
   this.column = [
-       {type:"num",name:a.tokenID.c[0]}
+       {type:"num",name:id}
       ,{type:"text",name:s}
       ,{type:"text",name:d1}
       ,{type:"text",name:d2}
       ,{type:"num",name:buyerContr}
       ,{type:"num",name:sellerContr}
-      ,{type:"text",name:locationObj[a.location].text}
-      ,{type:"text",name:a.index}
-      ,{type:"num",name:threshObj[a.threshold].text}
+      ,{type:"text",name:locationText(bytes32ToNumString(a.location))}
+      ,{type:"text",name:"Rainfall"}
+      ,{type:"text",name:thresh}
       ,{type:"button",name:b,button:b1}
     ];
 }
@@ -99,8 +151,9 @@ function MyEntry(r,a,id,bool){
   let start = new Date(a.start.c[0]).getTime();
   let end = new Date(a.end.c[0]).getTime();
   let b = "";
-  let b1 = "<button type='button' class='action'> Cancel and Redeem </button>";
+  let b1 = "<button type='button' class='action cancelit'> Cancel and Redeem </button>";
 
+  //TODO add in "make stale = false" functionality
   if(r.args !== a){
     if(now < start) status = "Partnered, Waiting to Start";
     if(now >= start && now <= end){
@@ -109,11 +162,17 @@ function MyEntry(r,a,id,bool){
     }
     if(now > end){
       status = "Waiting for Evaluation";
-      b1 = "<button type='button' class='action'> Evaluate and Complete </button>";
+      b1 = `<button type='button' class='action evaluateit' value=${id}> Evaluate and Complete </button>`;
     }
   }else{
     if(now < start) status = "Open";
     if(now >= start) status = "Stale";
+  }
+
+  //get threshold text
+  let thresh = thresholdText(a.thresholdPPM.toNumber());
+  if(a.WITID.toNumber() === a.belowID.toNumber() && a.thresholdPPM.toNumber() === 10000){
+    thresh = threshObj["below-average"].text;
   }
 
   //create the object
@@ -126,48 +185,20 @@ function MyEntry(r,a,id,bool){
       ,{type:"text",name:d2}
       ,{type:"num",name:buyerContr}
       ,{type:"num",name:sellerContr}
-      ,{type:"text",name:locationObj[a.location].text}
-      ,{type:"text",name:a.index}
-      ,{type:"num",name:threshObj[a.threshold].text}
+      ,{type:"text",name:locationText(bytes32ToNumString(a.location))}
+      ,{type:"text",name:"Rainfall"}
+      ,{type:"text",name:thresh}
       ,{type:"text",name:status}
       ,{type:"button",name:b,button:b1}
     ];
 }
 
-const witAddress  = "0xf25186b5081ff5ce73482ad761db0eb0d25abfbf";
-const cropAddress = "0x345ca3e014aaf5dca488057592ee47305d9b3e10";
-const testUser    = "0x627306090abaB3A6e1400e9345bC60c78a8BEf57";
-const testUser2   = "0xf17f52151EbEF6C7334FAD080c5704D77216b732";
-
-var threshObj = {
-  "above-average":{text:"> Average",val:1,caStroke:"green",caFill:"#b5ffc0",cbStroke:"red",cbFill:"#fcc8b0"}
-  ,"above-average-10pct":{text:"> 10% Above Avg",val:1.1,caStroke:"green",caFill:"#b5ffc0",cbStroke:"red",cbFill:"#fcc8b0"}
-  ,"below-average":{text:"< Average",val:1,caStroke:"red",caFill:"#fcc8b0",cbStroke:"green",cbFill:"#b5ffc0"}
-  ,"below-average-10pct":{text:"< 10% Below Avg",val:0.9,caStroke:"red",caFill:"#fcc8b0",cbStroke:"green",cbFill:"#b5ffc0"}
-};
-// NOAA codes:
-// Corn                   = 261
-// Cotton                 = 265
-// Hard Red Winter Wheat  = 255
-// Corn and Soybean       = 260
-// Soybean                = 262
-// Spring Wheat           = 250
-// Winter Wheat           = 256
-var locationObj = {
-  "us-corn-belt":{text:"US Corn Belt",noaaCode:261,col:"#47B98E"}
-  ,"us-soy-belt":{text:"US Soy Belt",noaaCode:262,col:"#DBB2B2"}
-  ,"us-redwinter-belt":{text:"US Red Winter Wheat Belt",noaaCode:255,col:"#49F2A9"}
-};
-
 var user;
 var pastUser = -1;
-var cropContract;
-var cropInstance;
-var witContract;
-var witInstance;
+var arbolAddress, arbolContract, arbolInstance;
+var witAddress, witContract, witInstance;
+var noaaAddress;
 
-var latestToken = -1;
-var lastToken;
 var acceptedList = [];
 
 //data variables for NOAA calls
@@ -180,9 +211,9 @@ if (Meteor.isClient) {
     console.log('Meteor.startup');
     // Checking if Web3 has been injected by the browser (Mist/MetaMask)
     if (typeof web3 !== 'undefined') {
-      console.log("web3 from current provider: ",web3.currentProvider.constructor.name)
+      console.log("web3 from current provider: ", web3.currentProvider.constructor.name)
       // Use Mist/MetaMask's provider
-      web3js = new Web3(web3.currentProvider);
+      web3 = new Web3(web3.currentProvider);
 
       //show relevant content depending on wether web3 is loaded or not
       $('#web3-waiting').hide();
@@ -198,6 +229,14 @@ if (Meteor.isClient) {
           user = await promisify(cb => web3.eth.getAccounts(cb));
           if(user[0] !== pastUser[0]){
             console.log("_-_-_- CHANGE IN USER _-_-_-")
+            //reset and reload everything for new user
+            $("#web3-onload").addClass("disabled-div");
+            $('.loader').show();
+            $('.wrapper').addClass('loading');
+            $('#open-pager-btns').hide();
+            $('#my-pager-btns').hide();
+            resetSessionVars();
+            resetGlobalVariables();
             let s;
             if(user[0]){
                s = "current user: " + user[0];
@@ -207,19 +246,11 @@ if (Meteor.isClient) {
             } else {
               s = "current user: no current user- log into metamask";
               Session.set("activeUser",s);
-              $("#web3-onload").addClass("disabled-div");
-              $('.loader').show();
-              $('.wrapper').addClass('loading');
-              $('#open-pager-btns').hide();
-              $('#my-pager-btns').hide();
-              resetSessionVars();
-              resetGlobalVariables();
             }
           }
           pastUser = user;
         } catch (error) {
           console.log(error)
-          alert("User information was not loaded succesfully: " + error.message);
         }
       }, 1000);
 
@@ -229,29 +260,20 @@ if (Meteor.isClient) {
     } else {
       console.log('No web3? You should consider trying MetaMask!')
       // fallback - use your fallback strategy (local node / hosted node + in-dapp id mgmt / fail)
-      web3js = new Web3(new Web3.providers.HttpProvider("http://localhost:7545"));
+      web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:7545"));
       //show relevant content depending on wether web3 is available or not
       $('#web3-waiting').hide();
       $('#no-web3').show();
     }
     // Now you can start your app & access web3 freely:
   });
-
-  // Template.body.onCreated(function() {
-  //   console.log('Template.body.onCreated');
-  // });
-
-  // Template.body.helpers({
-  //   currentTemplate: function() {
-  //     return Session.get('curTemplate');
-  //   },
-  // });
 }
 
 //begin the process of loading all the data
 function loadData(){
   //check for network use correct deployed addresses
   web3.version.getNetwork((err, netId) => {
+    console.log("netID",netId)
     switch (netId) {
       case "1":
         console.log('This is mainnet')
@@ -264,260 +286,126 @@ function loadData(){
         break
       case "4":
         console.log('This is the Rinkeby test network.')
+        witAddress  = "0xc7452fa89d06effce274410c9a47f3257dd3b4e9";
+        arbolAddress = "0x6b1eb69a46cdb5b58f98cf89c027abc403ef8ef4";
+        noaaAddress = "0x1ff5b606f10e15afef9f4e76ca03533bd2aa8217";
         break
       case "42":
         console.log('This is the Kovan test network.')
         break
       default:
         console.log('This is an unknown network.')
+        //ganache-cli
+        witAddress  = "0x96ef5ac933b4a16e68651f03fdc0cd4cb2b80204";
+        arbolAddress = "0x390e418f238841bae8b7525b14111c2b9bc30452";
+        //ganache gui
     }
+    arbolContract = web3.eth.contract(ARBOLABI);
+    arbolInstance = arbolContract.at(arbolAddress);
+    witContract = web3.eth.contract(WITABI);
+    witInstance = witContract.at(witAddress);
+
+    //populate lists
+    latestProposals();
+    latestAcceptances();
   })
-
-  cropContract = web3.eth.contract(CROPABI);
-  cropInstance = cropContract.at(cropAddress);
-  witContract = web3js.eth.contract(WITABI);
-  witInstance = witContract.at(witAddress);
-
-  //populate lists
-  latestProposals();
-  latestAcceptances();
 }
 
 function resetGlobalVariables(){
   opPagination = 0;
   myPagination = 0;
-  latestToken = -1;
-  lastToken = -1;
   acceptedList = [];
-  let fst = $('#first-token-filter');
-  let lst = $('#last-token-filter');
-  fst.addClass('fresh');
-  lst.addClass('fresh');
-  watchLatestProposal.stopWatching();
-  watchLatestAcceptance.stopWatching();
+  if(watchLatestProposal !== -1) watchLatestProposal.stopWatching();
+  if(watchLatestAcceptance !== -1) watchLatestAcceptance.stopWatching();
+  if(watchLatestEvaluation !== -1) watchLatestEvaluation.stopWatching();
 }
 
-//get the token ID for the latest protection
-//add new entries as they are created
+//TODO only add token if it hasn't been accepted
+//get all proposals, add new entries as they are created
 var watchLatestProposal = -1;
 function latestProposals(){
   console.log("fn: latestProposals");
-  watchLatestProposal = witInstance.ProposalOffered(Session.get("filterCriteria"),{fromBlock: 'latest', toBlock: 'latest'}).watch(function(error, result){
-    let id = result.args.tokenID.toNumber();
-    startTraverse(id,function(){
-      console.log("===> latest: 'offered', id:",id,latestToken,id !== latestToken);
-      addToken(result);
-      // checkProposal(result);
-    });
-  });
-}
-
-//get the token ID for the latest acceptance
-//add new acceptances to myProposals as they are created and remove from open proposals
-var watchLatestAcceptance = -1;
-function latestAcceptances(){
-  //do something as new proposal is accepted
-  watchLatestAcceptance = witInstance.ProposalAccepted({},{fromBlock: 'latest', toBlock: 'latest'}).watch(function(error, result){
-    let id = result.args.tokenIDAccepter.toNumber();
-    let idp = result.args.tokenIDProposer.toNumber();
-    startTraverse(id,function(){
-      console.log("===> latest: 'accepted', id:",id)
-      addAcceptance(result);
-
-    });
-    if(latestToken != -1){
-      removeToken(idp);
-      // updateStatus(idp);
-    }
-  });
-}
-
-function startTraverse(id,cb){
-  if(id !== latestToken){
+  watchLatestProposal = witInstance.ProposalOffered({},{fromBlock: 0, toBlock: 'latest'}).watch(function(error, result){
+    let id = result.args.WITID.toNumber();
+    console.log("===> latest: 'offered', id:",id);
+    addToken(result);
     $('.loader').hide();
     $('.wrapper').removeClass('loading');
-    latestToken = id;
-
-    //execute callback from latest __ function
-    cb();
-
-    //deal with token ID filtering
-    let fst = $('#first-token-filter');
-    let lst = $('#last-token-filter');
-    if(fst.hasClass('fresh')){
-      lastToken = latestToken
-      fst.val(latestToken);
-      lst.val(latestToken);
-      fst.removeClass('fresh');
-      lst.removeClass('fresh');
-      opPagination = 0;
-      pastProtections();
-    }else{
-      let lv = lst.val();
-      if(latestToken > lv) lst.val(latestToken);
-    }
-    capToken();
-  }
-}
-
-//populate open protections with open proposals
-//only get data as necessary, used recursively
-var watchProposal = -1;
-var watchAcceptance = -1;
-function pastProtections(){
- console.log("++++++++++++++++++++++++++++")
-  console.log("fn: pastProtections",lastToken-1)
-  let thisToken = lastToken - 1;
-  if(thisToken > 0){
-    //check to see if current ID is an open protection
-    let f = Session.get("filterCriteria");
-    f.tokenID = thisToken;
-    if(watchProposal !== -1) watchProposal.stopWatching();
-    watchProposal = witInstance.ProposalOffered(f,{fromBlock: 0, toBlock: 'latest'}).watch(function(error, result){
-      lastToken = thisToken;
-      //only add token if it hasn't been accepted
-      addToken(result);
-      $('#first-token-filter').val(thisToken);
-      capToken();
-      //are we at the end of the list?
-      managePage(thisToken);
-    });
-
-    //check to see if current ID is an accepted protection
-    let e = {tokenIDAccepter:thisToken};
-    if(watchAcceptance !== -1) watchAcceptance.stopWatching();
-    watchAcceptance = witInstance.ProposalAccepted(e,{fromBlock: 0, toBlock: 'latest'}).watch(function(error, result){
-      lastToken = thisToken;
-      //add previously accepted protections to myProtections
-      addAcceptance(result);
-
-      //continue traverse
-      managePage(thisToken)
-    });
-  }
-  if(thisToken === 0){
-    console.log("clear watch events");
-    //clear watch events
-    if(watchAcceptance !== -1) watchAcceptance.stopWatching();
-    if(watchProposal !== -1) watchProposal.stopWatching();
-  }
-}
-
-//have you loaded enough data for the current page?
-function managePage(thisToken){
-  let l = Session.get("openProtectionsData").length;
-  let ll = Session.get("myProtectionsData").length;
-  if(l >= bin && thisToken > 1){
-    $('#open-pager-btns').show();
-  }
-  if(l < bin){
-    $('#open-pager-btns').hide();
-  }
-  if(ll >= bin && thisToken > 1){
-    $('#my-pager-btns').show();
-  }
-  if(ll < bin){
-    $('#my-pager-btns').hide();
-  }
-  if(l < bin*(1+opPagination) || ll < bin*(1+myPagination)){
-    pastProtections();
-  }else{
-    watchAcceptance.stopWatching();
-    watchProposal.stopWatching();
-  }
-}
-
-//limit the token filter that can be used
-function capToken(){
-  $('#last-token-filter')[0].min = $('#first-token-filter').val();
-  $('#last-token-filter')[0].max = latestToken;
-  $('#first-token-filter')[0].min = 1;
-  $('#first-token-filter')[0].max = $('#last-token-filter').val();
-}
-
-//check token, debug function
-async function checkProposal(result){
-  console.log("===> new proposal created",result)
-  try{
-    let supply = await promisify(cb => witInstance.totalSupply(cb));
-    let afterBalance = await promisify(cb => web3.eth.getBalance(witAddress, cb));
-    afterBalance = toEth(afterBalance.toNumber())
-    let propose = toEth(result.args.weiContributing.toNumber());
-    console.log("WIT supply",supply.toNumber())
-    console.log("afterBalance",afterBalance)
-    console.log("afterBalance-ethPropose === beforeBalance",afterBalance-propose)
-  }catch(error){
-
-  }
-}
-
-//check acceptance
-async function checkAcceptance(result){
-  console.log("===> new acceptance",result)
-  try{
-    let supply2 = await promisify(cb => witInstance.totalSupply(cb));
-    let afterBalance = await promisify(cb => web3.eth.getBalance(witAddress, cb));
-    let owner2 = await promisify(cb => witInstance.ownerOf(supply2.toNumber(), cb));
-
-    console.log("supply",supply2.toNumber())
-    console.log("afterBalance2",afterBalance.toNumber())
-    // console.log("afterBalance2-ethAsk === beforeBalance2",afterBalance.toNumber()-ask)
-    console.log("owner",owner2,testUser2)
-  }catch(error){
-
-  }
-}
-
-//check transfer, debug function
-async function checkTransfer(){
-  witInstance.Transfer({},{fromBlock: 'latest', toBlock: 'latest'}).watch(async function(error, result){
-    if(result.event === "Transfer"){
-      console.log("===> transfer",result)
-      try{
-        let afterAllowance = await promisify(cb => cropInstance.allowance(user[0],witAddress,cb));
-        let ask = toEth(result.args.weiAsking.toNumber());
-        let propose = toEth(result.args.weiContributing.c[0]);
-        console.log("after allowance: ",afterAllowance.toNumber(),propose + ask)
-      }catch(error){
-
-      }
-    }
   });
+}
+
+//get all acceptances, add new acceptances to myProposals as they are created and remove from open proposals
+var watchLatestAcceptance = -1;
+function latestAcceptances(){
+  console.log("fn: latestAcceptance");
+  //do something as new proposal is accepted
+  watchLatestAcceptance = witInstance.ProposalAccepted({},{fromBlock: 0, toBlock: 'latest'}).watch(function(error, result){
+    console.log("===> latest: 'accepted'")
+    addAcceptance(result);
+    $('.loader').hide();
+    $('.wrapper').removeClass('loading');
+  });
+}
+
+//get all evaluations
+var watchLatestEvaluation = -1;
+function latestEvauation(){
+  console.log("fn: latestEvauation")
+  //do something as new evaluation is accepted
+  watchLatestEvaluation = witInstance.WITEvaluated({},{fromBlock: 0, toBlock: 'latest'}).watch(function(error, result){
+    console.log("===> latest: 'evaluated'")
+    console.log(result)
+    //update status in "my protections pages"
+  })
 }
 
 //add token to list
 async function addToken(result){
-  let id = result.args.tokenID;
+  try{
+    let id = result.args.WITID;
+    let owner = await promisify(cb => witInstance.ownerOf(id, cb));
 
-  if(acceptedList.indexOf(id.toNumber()) === -1){
-    //TODO reinstate date filter
-    //only show entries whose starting dates haven't passed
-    //if(new Date(result.args.start.c[0]) - new Date() > 0){
-    if(true){
-      //add to open protections
-      let list = Session.get("openProtectionsData");
-      console.log("===> proposal offered, id:",id.toNumber())
-      list.push(new Entry(result));
-      list = sortArray(list,Session.get("sortIndex"),Session.get("descending"));
-      Session.set("openProtectionsData",list);
-      let pageList = paginateData(list,opPagination);
-      if(pageList.length > 0){
-        Session.set("openProtectionsPaginatedData",pageList);
-      }else{
-        if(opPagination > 0) opPagination -= 1;
+    //add to open protections
+    if(acceptedList.indexOf(id.toNumber()) === -1){
+      //TODO reinstate date filter
+      //only show entries whose starting dates haven't passed
+      // if(new Date(result.args.start.c[0]) - new Date() > 0){
+      if(true){
+        let list = Session.get("openProtectionsData");
+        console.log("===> proposal offered, id:",id.toNumber())
+        list.push(new Entry(result,owner));
+        list = sortArray(list,Session.get("sortIndex"),Session.get("descending"));
+        Session.set("openProtectionsData",list);
+
+        //if more than ten items turn on pagination
+        if(list.length > 10){
+          $("#open-pager-btns").show();
+        }
+
+        //show paginated items
+        let pageList = paginateData(list,opPagination);
+        if(pageList.length > 0){
+          Session.set("openProtectionsPaginatedData",pageList);
+        }else{
+          if(opPagination > 0) opPagination -= 1;
+        }
       }
     }
-  }
 
-  //add to my protections
-  try{
-    let owner = await promisify(cb => witInstance.ownerOf(id, cb));
+    //add to my protections
     if(owner === user[0]){
       let list = Session.get("myProtectionsData");
       list.push(new MyEntry(result,result.args,id.toNumber(),true));
       list = sortArray(list,Session.get("mySortIndex"),Session.get("descending"));
       list = updateStatus(list,id.toNumber());
       Session.set("myProtectionsData",list);
+
+      //if more than ten items turn on pagination
+      if(list.length > 10){
+        $("#my-pager-btns").show();
+      }
+
+      //show paginated items
       let pageList = paginateData(list,myPagination);
       if(pageList.length > 0){
         Session.set("myProtectionsPaginatedData",pageList);
@@ -537,6 +425,13 @@ function removeToken(id){
   list.splice(index,1);
   list = sortArray(list,Session.get("sortIndex"),Session.get("descending"));
   Session.set("openProtectionsData",list);
+
+  //if more than ten items turn on pagination
+  if(list.length <= 10){
+    $("#open-pager-btns").hide();
+  }
+
+  //show paginated items
   let pageList = paginateData(list,opPagination);
   if(pageList.length > 0){
     Session.set("openProtectionsPaginatedData",pageList);
@@ -556,7 +451,7 @@ function updateStatus(list,id){
       let now = new Date().getTime();
       let start = new Date(el[3].name).getTime();
       let end = new Date(el[4].name).getTime();
-      let b1 = "<button type='button' class='action'> Cancel and Redeem </button>";
+      let b1 = "<button type='button' class='action cancelit'> Cancel and Redeem </button>";
 
       if(now < start) status = "Partnered, Waiting to Start";
       if(now >= start && now <= end){
@@ -565,7 +460,7 @@ function updateStatus(list,id){
       }
       if(now > end){
         status = "Waiting for Evaluation";
-        b1 = "<button type='button' class='action'> Evaluate and Complete </button>";
+        b1 = "<button type='button' class='action evaluateit'> Evaluate and Complete </button>";
       }
 
       el[10].name = status;
@@ -585,25 +480,42 @@ function findIndex(array,cb){
 
 //add acceptance to my protections
 async function addAcceptance(result){
+  console.log("fn: addAcceptance")
   try{
     let outerResult = result;
-    let idObj = result.args.tokenIDAccepter;
-    let idpObj = result.args.tokenIDProposer;
-    let id = idObj.toNumber();
+    let idpObj = result.args.WITID;
     let idp = idpObj.toNumber();
+
+    let idObj = result.args.aboveID;
+    if(idp === result.args.aboveID.toNumber()) idObj = result.args.belowID;
+    let id = idObj.toNumber();
+
+    console.log("===> proposal accepted, id:", id);
+    console.log(result)
 
     //prevent previous tokens from being added to list
     acceptedList.push(idp);
+    //if they are already shown remove them
+    removeToken(idp);
+    //if they were your proposals update your "my protections"
+    updateStatus(idp);
 
     let owner = await promisify(cb => witInstance.ownerOf(idObj, cb));
     if(owner === user[0]){
       //get contract information for associated proposal
-      witInstance.ProposalOffered({tokenID:idpObj},{fromBlock: 0, toBlock: 'latest'}).watch(function(error, result){
-        console.log("===> proposal accepted, id:",id)
+      witInstance.ProposalOffered({WITID:idpObj},{fromBlock: 0, toBlock: 'latest'}).watch(function(error, result){
+        console.log("===> proposal accepted details retrieved, id:",id)
         let list = Session.get("myProtectionsData");
         list.push(new MyEntry(outerResult,result.args,id,false));
         list = sortArray(list,Session.get("mySortIndex"),Session.get("descending"));
         Session.set("myProtectionsData",list);
+
+        //if more than ten items turn on pagination
+        if(list.length > 10){
+          $("#my-pager-btns").show();
+        }
+
+        //show paginated items
         let pageList = paginateData(list,myPagination);
         if(pageList.length > 0){
           Session.set("myProtectionsPaginatedData",pageList);
@@ -614,7 +526,6 @@ async function addAcceptance(result){
     }
   } catch (error) {
     console.log(error)
-    alert("My Protections data failed to load: " + error.message);
   }
 }
 
@@ -700,14 +611,17 @@ Template.sortableRows.helpers({
 });
 
 Template.sortableRows.events({
-  'click .action': function(e){
-    alert("action");
-  },
   'click .buyit': function(e){
     acceptProposal(e.target.value);
   },
   'click .sellit': function(e){
     acceptProposal(e.target.value);
+  },
+  'click .evaluateit': function(e){
+    evaluateProposal(e.target.value);
+  },
+  'click .cancelit': function(e){
+    alert("coming soon");
   }
 });
 
@@ -717,21 +631,25 @@ async function acceptProposal(v){
   let id = vals[1];
 
   try {
-    let supply = await promisify(cb => witInstance.totalSupply(cb));
-    let owner = await promisify(cb => witInstance.ownerOf(id, cb));
-    let beforeBalance = await promisify(cb => web3.eth.getBalance(witAddress,cb));
-    beforeBalance = toEth(beforeBalance.toNumber());
-
     console.log("====> new WIT acceptance");
-    console.log("WIT Balance (beforeBalance): ",beforeBalance);
-    console.log("owner",user[0],owner);
-    console.log("supply",supply.toNumber());
     console.log("ethAsk", ethAsk);
     console.log("proposal token ID", id);
-    //TODO don't let user accept their own proposal
 
+    //TODO don't let user accept their own proposal
     await promisify(cb => witInstance.createWITAcceptance(id,{from: user[0], value:toWei(ethAsk)},cb));
   } catch (error) {
+    console.log(error)
+  }
+}
+
+//evaluate WIT once its period has elapsed
+async function evaluateProposal(id){
+  try {
+    console.log("====> new WIT evaluation");
+    console.log("token ID", id);
+    await promisify(cb => witInstance.evaluate(id,"",{from: user[0]},cb));
+  } catch (error) {
+    console.log(error)
   }
 }
 
@@ -820,17 +738,10 @@ Template.openPagination.events({
   'click #open-forward'(e){
     console.log("forward")
     opPagination += 1;
-    let fv = $('#first-token-filter').val();
     let list = Session.get("openProtectionsData");
-    let l = list.length;
-    if(fv > 1 && l < (opPagination+1)*bin){
-      pastProtections();
-    }else{
-      Session.set("openProtectionsData",list);
-      let pageList = paginateData(list,opPagination);
-      if(pageList.length > 0) Session.set("openProtectionsPaginatedData",pageList);
-      else if(opPagination > 0) opPagination -= 1;
-    }
+    let pageList = paginateData(list,opPagination);
+    if(pageList.length > 0) Session.set("openProtectionsPaginatedData",pageList);
+    else if(opPagination > 0) opPagination -= 1;
   },
   'click #open-back'(e){
     if(opPagination > 0) opPagination -= 1;
@@ -847,15 +758,9 @@ Template.myPagination.events({
     myPagination += 1;
     let fv = $('#first-token-filter').val();
     let list = Session.get("myProtectionsData");
-    let l = list.length;
-    if(fv > 1 && l < (myPagination+1)*bin){
-      pastProtections();
-    }else{
-      Session.set("myProtectionsData",list);
-      let pageList = paginateData(list,myPagination);
-      if(pageList.length > 0) Session.set("myProtectionsPaginatedData",pageList);
-      else if(myPagination > 0) myPagination -= 1;
-    }
+    let pageList = paginateData(list,myPagination);
+    if(pageList.length > 0) Session.set("myProtectionsPaginatedData",pageList);
+    else if(myPagination > 0) myPagination -= 1;
   },
   'click #my-back'(e){
     if(myPagination > 0) myPagination -= 1;
@@ -879,116 +784,6 @@ function paginateData (array,index) {
     }
   }
 }
-
-////////////////////////////////////////////
-// FUNCTIONS RELATED TO FILTERING
-////////////////////////////////////////////
-
-// input for filter
-Template.filter.helpers({
-  filterInput: function() {
-    return [
-      {
-        title: "Buyer Contribution (Eth):"
-        ,tooltiptext: "The amount of Eth contributed by the contract buyer."
-        ,type: "number"
-        ,name: "buyer"
-        ,id: "buyer-filter"
-      }
-      ,{
-        title: "Seller Contribution (Eth):"
-        ,tooltiptext: "The amount of Eth contributed by the contract seller."
-        ,type: "number"
-        ,name: "seller"
-        ,id: "seller-filter"
-      }
-    ];
-  }
-});
-
-Template.elFilter.helpers({
-  isEqual: function (a, b) {
-    return a === b;
-  }
-});
-
-// Dealing with submittal of form
-//TODO this doesn't react properly anymore, does it need to call another function?
-//we need to purge filtered data list and start again?
-//maybe we need separate lists one for any sort of filter other than token ID, which gets purged etc...
-Template.filter.events({
-  // 'input .filter'(event) {
-  //   let a = $('#buyer-filter')[0].value;
-  //   let b = $('#seller-filter')[0].value;
-  //   let obj = {};
-  //   if(a > 0) obj.weiAsking = parseInt(a);
-  //   if(b > 0) obj.weiContributing = parseInt(b);
-  //   Session.set("filterCriteria",obj);
-  //   witInstance.ProposalOffered(obj,{fromBlock: 0, toBlock: 'latest'}).get(function(error, result){
-  //     console.log("here",result);
-  //     let list = [], l = result.length;
-  //     for(var i = 0; i < l; i++){
-  //       list.push(new Entry(result[i]));
-  //     }
-  //     Session.set("openProtectionsData",list);
-  //     opPagination = 0;
-  //     let pageList = paginateData(list,0);
-  //     Session.set("openProtectionsPaginatedData",pageList);
-  //   });
-  // }
-});
-
-// input for filter
-Template.tokens.helpers({
-  tokensInput: function() {
-    return [
-      {
-        title: "First Token:"
-        ,tooltiptext: "First token for loaded data range."
-        ,type: "number"
-        ,name: "first-token"
-        ,id: "first-token-filter"
-      }
-      ,{
-        title: "Last Token:"
-        ,tooltiptext: "Last token for loaded data range."
-        ,type: "number"
-        ,name: "last-token"
-        ,id: "last-token-filter"
-      }
-    ];
-  }
-});
-
-Template.elTokens.helpers({
-  isEqual: function (a, b) {
-    return a === b;
-  }
-});
-
-// Dealing with submittal of form
-Template.tokens.events({
-  // 'input .tokens'(event) {
-    // let a = $('#buyer-filter')[0].value;
-    // let b = $('#seller-filter')[0].value;
-    // let obj = {};
-    // if(a > 0) obj.weiAsking = parseInt(a);
-    // if(b > 0) obj.weiContributing = parseInt(b);
-    // Session.set("filterCriteria",obj);
-    // witInstance.ProposalOffered(obj,{fromBlock: 0, toBlock: 'latest'}).get(function(error, result){
-    //   let list = [], l = result.length;
-    //   for(var i = 0; i < l; i++){
-    //     if(result[i].event === "ProposalOffered"){
-    //       list.push(new Entry(result[i]));
-    //     }
-    //   }
-    //   Session.set("openProtectionsData",list);
-    //   opPagination = 0;
-    //   let pageList = paginateData(list,0);
-    //   Session.set("openProtectionsPaginatedData",pageList);
-    // });
-  // }
-});
 
 ////////////////////////////////////////////
 // FUNCTIONS RELATED TO "OPEN PROTECTIONS"
@@ -1027,7 +822,8 @@ Template.openProtectionsTable.helpers({
 // Dealing with submittal of form
 Template.formNewProtection.events({
   'input .date-picker'(event) {
-    capDate(event.currentTarget);
+    //TODO uncomment capDate
+    // capDate(event.currentTarget);
     //update the data that is represented
     let s = +$('#start-date')[0].value.split("-")[1]
       ,sy = +$('#start-date')[0].value.split("-")[0];
@@ -1043,8 +839,21 @@ Template.formNewProtection.events({
   'input .contribution'(event) {
     capVal(event.currentTarget);
   },
+  'input #start-date'(event){
+    $("#start-date").removeClass("missing-info");
+  },
+  'input #end-date'(event){
+    $("#end-date").removeClass("missing-info");
+  },
+  'input #buyer-contrib'(event){
+    $("#buyer-contrib").removeClass("missing-info");
+  },
+  'input #seller-contrib'(event){
+    $("#seller-contrib").removeClass("missing-info");
+  },
   'input #threshold'(event) {
     changeThreshold(event.currentTarget.value);
+    $("#threshold").removeClass("missing-info");
   },
   'submit .new-protection'(event) {
     // Prevent default browser form submit
@@ -1052,8 +861,8 @@ Template.formNewProtection.events({
 
     // Get value from form element
     const target = event.currentTarget;
-    const buyerContr = parseInt(target[2].value);
-    const sellerContr = parseInt(target[3].value);
+    const buyerContr = parseFloat(target[2].value);
+    const sellerContr = parseFloat(target[3].value);
     const buySell = target[4].checked ? "Buy" : "Sell";
     const startDate = target[5].value;
     const endDate = target[6].value;
@@ -1062,17 +871,36 @@ Template.formNewProtection.events({
 
     const index = "Precipitation";
 
+    console.log("proposal",buyerContr,sellerContr,buySell,startDate,endDate,threshold,location)
+
     //TODO add red boxes to indicate missing values
     //check if info is missing
     if(startDate === "" || endDate === "" || parseFloat(buyerContr) === 0 || parseFloat(sellerContr) === 0 || location === "" || index === "" || threshold === ""){
       var s = "Please complete missing elements: \n";
-      if(startDate === "") s += "  Start Date \n";
-      if(endDate === "") s += "  End Date \n";
-      if(parseFloat(buyerContr) === 0) s += "  Buyer Contribution \n";
-      if(parseFloat(sellerContr) === 0) s += "  Seller Contribution \n";
-      if(location === "") s += "  Location \n";
+      if(startDate === ""){
+        s += "  Start Date \n";
+        $("#start-date").addClass("missing-info");
+      }
+      if(endDate === ""){
+        s += "  End Date \n";
+        $("#end-date").addClass("missing-info");
+      }
+      if(parseFloat(buyerContr) === 0){
+        s += "  Buyer Contribution \n";
+        $("#buyer-contrib").addClass("missing-info");
+      }
+      if(parseFloat(sellerContr) === 0){
+        s += "  Seller Contribution \n";
+        $("#seller-contrib").addClass("missing-info");
+      }
+      if(location === ""){
+        s += "  Location \n";
+      }
       if(index === "") s += "  Index \n";
-      if(threshold === "") s += "  Threshold \n";
+      if(threshold === ""){
+        s += "  Threshold \n";
+        $("#threshold").addClass("missing-info");
+      }
       alert(s);
     }else{
       //ask for confirmation
@@ -1111,17 +939,8 @@ Template.formNewProtection.events({
         }
 
         try {
-          let supply = await promisify(cb => witInstance.totalSupply(cb));
-          let beforeBalance = await promisify(cb => web3.eth.getBalance(witAddress, cb));
-          beforeBalance = toEth(beforeBalance.toNumber());
-          let beforeAllowance = await promisify(cb => cropInstance.allowance(user[0],witAddress,cb));
-          await promisify(cb => cropInstance.approve(witAddress, ethPropose + ethAsk, {from: user[0]},cb));
-          await promisify(cb => witInstance.createWITProposal(ethPropose, ethAsk, index, threshold, location, d1, d2, true, {value: ethPropose, from:user[0]}, cb));
-
           console.log("===== CREATE WIT PROPOSAL =====")
-          // console.log("before allowance: ",beforeAllowance.toNumber())
-          console.log("beforeBalance",beforeBalance)
-          console.log("WIT supply",supply.toNumber())
+          await promisify(cb => witInstance.createWITProposal(ethPropose, ethAsk, threshObj[threshold].above, noaaAddress, threshObj[threshold].val*10000, numStringToBytes32(locationObj[location].noaaCode), d1, d2, true, {value: ethPropose, from:user[0]}, cb));
 
           //clear form if succesful
           target[2].value = 0;
@@ -1142,60 +961,80 @@ Template.formNewProtection.events({
           d3.selectAll(`path.${selectedRegion}`)
             .attr("fill","none");
           selectedRegion = "none";
+          NOAACODE = -1;
+          MONTHCODE = -1;
+          DURATIONCODE = -1;
         } catch (error) {
           console.log(error)
-          alert("Transaction was not succesful, a common source of errors is insufficient gas. \n " + error.message);
         }
       }
     }
-  },
-  'click #createRandom'(e){
-    let amt1 = Math.round(Math.random()+1);
-    let amt2 = Math.round(Math.random()+1);
-    $('#seller-contrib')[0].value = amt1 + amt2;
-    $('#buyer-contrib')[0].value = amt1;
-    $('#payout-amt').html(2*amt1 + amt2);
-
-    let amt3 = Math.random()*10000000000;
-    let amt4 = Math.random()*10000000000;
-    let amt5 = Math.random()*10000000000;
-    let amt6 = Math.random()*10000000000;
-    while((amt3 - amt4) > (amt5 - amt6)){
-      amt5 = Math.random()*10000000000;
-      amt6 = Math.random()*10000000000;
-    }
-    let d1 = new Date().getTime() + amt3 - amt4;
-    let d2 = new Date().getTime() + amt5 - amt6;
-    $('#start-date')[0].value = new Date(d1).toISOString().substring(0,7);
-    $('#end-date')[0].value = new Date(d2).toISOString().substring(0,7);
-
-    let a = Math.ceil(Math.random()*2);
-    let b = Math.ceil(Math.random()*4);
-    console.log("a",a,"b",b)
-    $('#location option').eq(a).prop('selected', true);
-    $('#selected-region').html("add name");
-    $('#index option').eq(1).prop('selected', true);
-    $('#threshold option').eq(b).prop('selected', true);
-
-    // Check
-    let bool = true;
-    if(Math.random() > 0.5) bool = false;
-    $('#toggle-buy-sell').prop("checked", bool);
-
-    // call NOAA
-    let s2 = +$('#start-date')[0].value.split("-")[1]
-      ,sy2 = +$('#start-date')[0].value.split("-")[0];
-    let e2 = +$('#end-date')[0].value.split("-")[1]
-      ,ey2 = +$('#end-date')[0].value.split("-")[0];
-
-    if(s2 <= e2 && sy2 <= ey2){
-      MONTHCODE = e2;
-      DURATIONCODE = e2 - s2 + 1;
-      NOAACODE = codesNOAA[a];
-      callNOAA();
-    }
-  },
+  }
+  // ,
+  // 'click #createRandom'(e){
+  //   let amt1 = Math.round(Math.random()+1);
+  //   let amt2 = Math.round(Math.random()+1);
+  //   $('#seller-contrib')[0].value = amt1 + amt2;
+  //   $('#buyer-contrib')[0].value = amt1;
+  //   $('#payout-amt').html(2*amt1 + amt2);
+  //
+  //   let amt3 = Math.random()*10000000000;
+  //   let amt4 = Math.random()*10000000000;
+  //   let amt5 = Math.random()*10000000000;
+  //   let amt6 = Math.random()*10000000000;
+  //   while((amt3 - amt4) > (amt5 - amt6)){
+  //     amt5 = Math.random()*10000000000;
+  //     amt6 = Math.random()*10000000000;
+  //   }
+  //   let d1 = new Date().getTime() + amt3 - amt4;
+  //   let d2 = new Date().getTime() + amt5 - amt6;
+  //   $('#start-date')[0].value = new Date(d1).toISOString().substring(0,7);
+  //   $('#end-date')[0].value = new Date(d2).toISOString().substring(0,7);
+  //
+  //   let a = Math.ceil(Math.random()*2);
+  //   let b = Math.ceil(Math.random()*4);
+  //   $('#location option').eq(a).prop('selected', true);
+  //   $('#selected-region').html("add name");
+  //   $('#index option').eq(1).prop('selected', true);
+  //   $('#threshold option').eq(b).prop('selected', true);
+  //
+  //   // Check
+  //   let bool = true;
+  //   if(Math.random() > 0.5) bool = false;
+  //   $('#toggle-buy-sell').prop("checked", bool);
+  //
+  //   // call NOAA
+  //   let s2 = +$('#start-date')[0].value.split("-")[1]
+  //     ,sy2 = +$('#start-date')[0].value.split("-")[0];
+  //   let e2 = +$('#end-date')[0].value.split("-")[1]
+  //     ,ey2 = +$('#end-date')[0].value.split("-")[0];
+  //
+  //   if(s2 <= e2 && sy2 <= ey2){
+  //     MONTHCODE = e2;
+  //     DURATIONCODE = e2 - s2 + 1;
+  //     NOAACODE = codesNOAA[a];
+  //     callNOAA();
+  //   }
+  // },
 });
+
+function numStringToBytes32(num) {
+   var bn = new BN(num).toTwos(256);
+   return padToBytes32(bn.toString(16));
+}
+
+function bytes32ToNumString(bytes32str) {
+    bytes32str = bytes32str.replace(/^0x/, '');
+    var bn = new BN(bytes32str, 16).fromTwos(256);
+    return bn.toString();
+}
+
+function padToBytes32(n) {
+    while (n.length < 64) {
+        n = "0" + n;
+    }
+    return "0x" + n;
+}
 
 function capDate(target){
   //change properties of the other date picker so that incorrect values can't be chosen
@@ -1214,11 +1053,12 @@ function capDate(target){
 
 function capVal(target){
   //change properties of the other date picker so that incorrect values can't be chosen
-  var num = parseInt(target.value);
+  var num = parseFloat(target.value);
+  var step = parseFloat($('#buyer-contrib')[0].step);
   var id = target.id;
-  if(id === 'buyer-contrib') $('#seller-contrib')[0].min = num + 1;
+  if(id === 'buyer-contrib') $('#seller-contrib')[0].min = Math.round((num + step)/step)*step;
   //show total payout
-  let v = parseInt($('#seller-contrib')[0].value) + parseInt($('#buyer-contrib')[0].value);
+  let v = Math.round((parseFloat($('#seller-contrib')[0].value) + parseFloat($('#buyer-contrib')[0].value))/step)*step;
   $('#payout-amt').html(v);
 }
 

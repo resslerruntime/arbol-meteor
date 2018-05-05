@@ -255,3 +255,12 @@ input:checked + .slider .sell
     /* top: 675px; */
     left: 25%;
   }
+
+  /* --------------------------------------------------------
+    CSS FOR MISSING INFO BORDERS
+  -------------------------------------------------------- */
+  .missing-info {
+    border: 2px solid red;
+    border-radius: 4px;
+    box-sizing: border-box;
+  }
