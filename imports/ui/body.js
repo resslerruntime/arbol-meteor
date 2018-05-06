@@ -60,12 +60,11 @@ function thresholdText(num){
 //table entry constructor open protections
 //event ProposalOffered(uint indexed WITID, uint aboveID, uint belowID, uint indexed weiContributing,  uint indexed weiAsking, address evaluator, uint thresholdPPTTH, bytes32 location, uint start, uint end, bool makeStale);
 function Entry(r,owner){
-  console.log(r)
   let a = r.args;
   let l = r.transactionHash.length;
-  let s = r.transactionHash.substring(0,8) + "..." + r.transactionHash.substring(l-8,l)
-  let d1 = new Date(a.start.c[0]).toISOString().substring(0,10);
-  let d2 = new Date(a.end.c[0]).toISOString().substring(0,10);
+  let s = r.transactionHash.substring(0,8) + "..." + r.transactionHash.substring(l-8,l);
+  let d1 = new Date(a.start.c[0]).toISOString().substring(0,7);
+  let d2 = new Date(a.end.c[0]).toISOString().substring(0,7);
   let ask = a.weiAsking.toNumber();
   let propose = a.weiContributing.toNumber();
   let id = a.WITID.toNumber();
@@ -121,8 +120,8 @@ function MyEntry(r,a,id,bool){
   // console.log("fn: MyEntry",id)
   let l = r.transactionHash.length;
   let s = r.transactionHash.substring(0,8) + "..." + r.transactionHash.substring(l-8,l);
-  let d1 = new Date(a.start.c[0]).toISOString().substring(0,10);
-  let d2 = new Date(a.end.c[0]).toISOString().substring(0,10);
+  let d1 = new Date(a.start.c[0]).toISOString().substring(0,7);
+  let d2 = new Date(a.end.c[0]).toISOString().substring(0,7);
   let ask = a.weiAsking.toNumber();
   let propose = a.weiContributing.toNumber();
 
@@ -646,7 +645,8 @@ async function acceptProposal(v){
 async function evaluateProposal(id){
   try {
     console.log("====> new WIT evaluation");
-    console.log("token ID", id);
+    console.log("token ID", id,user[0]);
+    console.log(witInstance)
     await promisify(cb => witInstance.evaluate(id,"",{from: user[0]},cb));
   } catch (error) {
     console.log(error)
@@ -736,7 +736,6 @@ function sortArray(array,i,d){
 var opPagination = 0;
 Template.openPagination.events({
   'click #open-forward'(e){
-    console.log("forward")
     opPagination += 1;
     let list = Session.get("openProtectionsData");
     let pageList = paginateData(list,opPagination);
@@ -754,7 +753,6 @@ Template.openPagination.events({
 var myPagination = 0;
 Template.myPagination.events({
   'click #my-forward'(e){
-    console.log(myPagination)
     myPagination += 1;
     let fv = $('#first-token-filter').val();
     let list = Session.get("myProtectionsData");
@@ -871,8 +869,6 @@ Template.formNewProtection.events({
 
     const index = "Precipitation";
 
-    console.log("proposal",buyerContr,sellerContr,buySell,startDate,endDate,threshold,location)
-
     //TODO add red boxes to indicate missing values
     //check if info is missing
     if(startDate === "" || endDate === "" || parseFloat(buyerContr) === 0 || parseFloat(sellerContr) === 0 || location === "" || index === "" || threshold === ""){
@@ -924,7 +920,10 @@ Template.formNewProtection.events({
 
       async function createProposal(startDate,endDate,buyerContr,sellerContr,location,index,threshold,buySell){
         const d1 = (new Date(startDate)).getTime();
-        const d2 = (new Date(endDate)).getTime();
+        let dd2 = new Date(endDate);
+        dd2.setDate(dd2.getDate() + 15);
+        const d2 = dd2.getTime();
+        console.log(startDate,endDate,new Date(startDate),dd2,d1,d2)
 
         let ethPropose = 0;
         let ethAsk = 0;
@@ -1200,6 +1199,7 @@ async function drawUSA(){
         clearChart();
         selectedRegion = "none";
         NOAACODE = -1;
+        if(NOAACODE !== -1 && MONTHCODE !== -1 && DURATIONCODE !== -1) $(".chart-loader").fadeOut(1000);
       }
     }
 
@@ -1209,12 +1209,18 @@ async function drawUSA(){
 }
 
 function callNOAA(){
+  // $(".chart-loader-div").addClass("chart-loader");
+  $(".chart-loader").fadeIn(500);
   currentHTTP += 1;
   let check = currentHTTP;
   if(NOAACODE !== -1 && MONTHCODE !== -1 && DURATIONCODE !== -1){
     Meteor.call("glanceNOAA",NOAACODE,MONTHCODE,DURATIONCODE,function(error, results) {
       let obj = parseData(results);
-      if(check === currentHTTP) upDateMonths(obj);
+      if(check === currentHTTP){
+        upDateMonths(obj);
+        // $(".chart-loader-div").removeClass("chart-loader");
+        $(".chart-loader").fadeOut(1000);
+      }
     });
   }
 }
@@ -1350,6 +1356,9 @@ function upDateMonths(o){
     .call(d3.axisRight(ymm).ticks(4));
 
   //draw bars
+  let vs = $("#threshold")[0].value;
+  if(vs === "") vs = "above-average";
+  let to = threshObj[vs];
   let barWidth = width*0.5/10;
   d3.selectAll("g.bars")
     .selectAll("rect")
@@ -1357,8 +1366,8 @@ function upDateMonths(o){
     .transition().duration(1000)
     .attr("y",d => y(d))
     .attr("height",d => height - y(d) + 1)
-    .attr("fill",d => d >= o.avg ? "#b5ffc0" : "#fcc8b0")
-    .attr("stroke",d => d >= o.avg ? "green" : "red")
+    .attr("fill",d => d >= o.avg*to.val ? to.caFill : to.cbFill)
+    .attr("stroke",d => d >= o.avg*to.val ? to.caStroke : to.cbStroke)
     .attr("stroke-dasharray",d => `${barWidth + height - y(d) + 1},${barWidth}`)
     .attr("opacity",1);
 

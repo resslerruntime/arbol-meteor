@@ -217,7 +217,7 @@ input:checked + .slider .sell
     background: rgba(0,0,0,0.3) center center no-repeat
   }
 
-  .loader {
+  .loader{
       border: 6px solid #f3f3f3;
       border-top: 6px solid #3498db;
       border-radius: 50%;
@@ -228,6 +228,19 @@ input:checked + .slider .sell
       left: 50%;
       z-index: 1000;
       animation: spin 2s linear infinite;
+  }
+
+  .chart-loader {
+      border: 6px solid #3498db;
+      border-top: 6px solid white;
+      border-radius: 50%;
+      width: 35px;
+      height: 35px;
+      position: relative;
+      top: -180px;
+      left: 240px;
+      z-index: 1000;
+      animation: spin 1s linear infinite;
   }
 
   @keyframes spin {
