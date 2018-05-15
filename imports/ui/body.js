@@ -285,9 +285,13 @@ function loadData(){
         break
       case "4":
         console.log('This is the Rinkeby test network.')
-        witAddress  = "0xc7452fa89d06effce274410c9a47f3257dd3b4e9";
-        arbolAddress = "0x6b1eb69a46cdb5b58f98cf89c027abc403ef8ef4";
-        noaaAddress = "0x1ff5b606f10e15afef9f4e76ca03533bd2aa8217";
+        // witAddress  = "0xc7452fa89d06effce274410c9a47f3257dd3b4e9";
+        // arbolAddress = "0x6b1eb69a46cdb5b58f98cf89c027abc403ef8ef4";
+        // noaaAddress = "0x1ff5b606f10e15afef9f4e76ca03533bd2aa8217";
+        witAddress  = "0xcf101416e4e572ef1500808ffc25c062f555c605";
+        arbolAddress = "0xe3d980eb41a78178adc99d3d520b5c7fe05f17d8";
+        noaaAddress = "0xf226b67aa2bcbe28380188f78d3e69012c249f53";
+
         break
       case "42":
         console.log('This is the Kovan test network.')
@@ -307,6 +311,7 @@ function loadData(){
     //populate lists
     latestProposals();
     latestAcceptances();
+    latestEvaluations();
   })
 }
 
@@ -348,13 +353,14 @@ function latestAcceptances(){
 
 //get all evaluations
 var watchLatestEvaluation = -1;
-function latestEvauation(){
+function latestEvaluations(){
   console.log("fn: latestEvauation")
   //do something as new evaluation is accepted
   watchLatestEvaluation = witInstance.WITEvaluated({},{fromBlock: 0, toBlock: 'latest'}).watch(function(error, result){
     console.log("===> latest: 'evaluated'")
     console.log(result)
     //update status in "my protections pages"
+
   })
 }
 
@@ -641,13 +647,13 @@ async function acceptProposal(v){
   }
 }
 
-//evaluate WIT once its period has elapsed
+//evaluate WIT once its period h gas elapsed
 async function evaluateProposal(id){
   try {
     console.log("====> new WIT evaluation");
     console.log("token ID", id,user[0]);
     console.log(witInstance)
-    await promisify(cb => witInstance.evaluate(id,"",{from: user[0]},cb));
+    await promisify(cb => witInstance.evaluate(id,"string",{from: user[0]},cb));
   } catch (error) {
     console.log(error)
   }
