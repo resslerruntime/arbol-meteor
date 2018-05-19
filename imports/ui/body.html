@@ -7,17 +7,25 @@
       <h1>A R B O L</h1>
     </header>
   </div>
-  <div id="user">{{> user}}</div>
   <div id="web3-waiting">
     <h3>Waiting for Web3 to load.</h3>
   </div>
-  <div id="no-web3" style="display:none" class="container">
-    <h3>No Web3, consider using MetaMask: </h3>
-    <a href="https://metamask.io/">
-      <img src="/images/metamask-link.png" alt="Download MetaMask" height="120">
-    </a>
+  <div id="no-web3" style="display:none">
+    <table>
+      <tr>
+        <td style="width:300px">
+          <h3 style="color:red">This website requires MetaMask: </h3>
+        </td>
+        <td>
+          <a href="https://metamask.io/">
+            <img src="/images/metamask-link.png" alt="Download MetaMask" height="50">
+          </a>
+        </td>
+      </tr>
+    </table>
   </div>
-  <div id="web3-onload" class="disabled-div" style="display:none">
+  <div id="user">{{> user}}</div>
+  <div id="web3-onload" class="disabled-div" >
     {{> navigation}}
   </div>
 </body>
@@ -46,7 +54,7 @@
 
     <!-- "OPEN PROTECTIONS" TAB -->
     {{#tabContent slug="open"}}
-      All open protections (sort ascending/descending will only affect loaded data):
+      All open protections:
       {{> openProtectionsTable}}
     {{/tabContent}}
 
@@ -58,7 +66,7 @@
 
     <!-- "MY PROTECTIONS" TAB -->
     {{#tabContent slug="mine"}}
-      All of your protections:
+      Your protections:
       {{> myProtectionsTable}}
     {{/tabContent}}
   {{/basicTabs}}
@@ -122,7 +130,7 @@
 </template>
 
 <template name="openProtectionsTable">
-  <div class="wrapper loading">
+  <div id="open-wrapper" class="wrapper loading">
     <table id="openProtections" class="table-sorter">
       <thead>
         {{#each headerData}}
@@ -135,7 +143,7 @@
         {{/each}}
       </tbody>
     </table>
-    <div class="loader"></div>
+    <div id="open-loader"></div>
   </div>
   <div id="open-pager-btns" class="pager-btns" style="display:none"> {{> openPagination}}</div>
 </template>
@@ -378,7 +386,7 @@
 <!-- TEMPLATES FOR "MY PROTECTIONS" -->
 
 <template name="myProtectionsTable">
-  <div class="wrapper loading">
+  <div id="my-wrapper" class="wrapper loading">
     <table id="myProtections" class="table-sorter">
       <thead>
         {{#each headerData}}
@@ -391,7 +399,7 @@
         {{/each}}
       </tbody>
     </table>
-    <div class="loader"></div>
+    <div id="my-loader"></div>
   </div>
   <div id="my-pager-btns" class="pager-btns" style="display:none"> {{> myPagination}}</div>
 </template>

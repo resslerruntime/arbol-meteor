@@ -192,8 +192,8 @@ function MyEntry(r,a,id,bool){
     ];
 }
 
-var user;
-var pastUser = -1;
+var user = [-1];
+var pastUser = [-1];
 var arbolAddress, arbolContract, arbolInstance;
 var witAddress, witContract, witInstance;
 var noaaAddress;
@@ -216,36 +216,42 @@ if (Meteor.isClient) {
 
       //show relevant content depending on wether web3 is loaded or not
       $('#web3-waiting').hide();
-      $('#web3-onload').show();
+      $("#web3-onload").removeClass("disabled-div");
+      // $('#web3-onload').show();
 
       //initialize web3 contracts
-      Session.set("activeUser","current user: no current user- log into metamask");
+      Session.set("activeUser","current user: no current user- log into MetaMask");
       resetSessionVars();
+      loadData();
 
       // check for subsequent account activity, lockout screen if no metamask user is signed in
       setInterval(async function(){
         try{
           user = await promisify(cb => web3.eth.getAccounts(cb));
+          if(typeof user[0] === "undefined") user = [-1];
           if(user[0] !== pastUser[0]){
             console.log("_-_-_- CHANGE IN USER _-_-_-")
             //reset and reload everything for new user
-            $("#web3-onload").addClass("disabled-div");
-            $('.loader').show();
-            $('.wrapper').addClass('loading');
+            // $("#web3-onload").addClass("disabled-div");
+            $('#open-loader').show();
+            $('#my-loader').show();
+            $('#open-wrapper').addClass('loading');
+            $('#my-wrapper').addClass('loading');
             $('#open-pager-btns').hide();
             $('#my-pager-btns').hide();
             resetSessionVars();
             resetGlobalVariables();
             let s;
-            if(user[0]){
+            if(user[0] !== -1){
                s = "current user: " + user[0];
                Session.set("activeUser",s);
-               $("#web3-onload").removeClass("disabled-div");
-               loadData();
+               // $("#web3-onload").removeClass("disabled-div");
+               // loadData();
             } else {
               s = "current user: no current user- log into metamask";
               Session.set("activeUser",s);
             }
+            loadData();
           }
           pastUser = user;
         } catch (error) {
@@ -259,17 +265,17 @@ if (Meteor.isClient) {
     } else {
       console.log('No web3? You should consider trying MetaMask!')
       // fallback - use your fallback strategy (local node / hosted node + in-dapp id mgmt / fail)
-      web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:7545"));
+      // web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:7545"));
       //show relevant content depending on wether web3 is available or not
       $('#web3-waiting').hide();
       $('#no-web3').show();
     }
-    // Now you can start your app & access web3 freely:
   });
 }
 
 //begin the process of loading all the data
 function loadData(){
+  console.log("fn: loadData")
   //check for network use correct deployed addresses
   web3.version.getNetwork((err, netId) => {
     console.log("netID",netId)
@@ -333,8 +339,8 @@ function latestProposals(){
     let id = result.args.WITID.toNumber();
     console.log("===> latest: 'offered', id:",id);
     addToken(result);
-    $('.loader').hide();
-    $('.wrapper').removeClass('loading');
+    $('#open-loader').hide();
+    $('#open-wrapper').removeClass('loading');
   });
 }
 
@@ -346,8 +352,6 @@ function latestAcceptances(){
   watchLatestAcceptance = witInstance.ProposalAccepted({},{fromBlock: 0, toBlock: 'latest'}).watch(function(error, result){
     console.log("===> latest: 'accepted'")
     addAcceptance(result);
-    $('.loader').hide();
-    $('.wrapper').removeClass('loading');
   });
 }
 
@@ -360,7 +364,6 @@ function latestEvaluations(){
     console.log("===> latest: 'evaluated'")
     console.log(result)
     //update status in "my protections pages"
-
   })
 }
 
@@ -507,6 +510,10 @@ async function addAcceptance(result){
 
     let owner = await promisify(cb => witInstance.ownerOf(idObj, cb));
     if(owner === user[0]){
+      //hide the loading
+      $('#my-loader').hide();
+      $('#my-wrapper').removeClass('loading');
+
       //get contract information for associated proposal
       witInstance.ProposalOffered({WITID:idpObj},{fromBlock: 0, toBlock: 'latest'}).watch(function(error, result){
         console.log("===> proposal accepted details retrieved, id:",id)
@@ -617,10 +624,12 @@ Template.sortableRows.helpers({
 
 Template.sortableRows.events({
   'click .buyit': function(e){
-    acceptProposal(e.target.value);
+    if(user[0] === -1) alert("Please login to MetaMask buy a proposal.");
+    else acceptProposal(e.target.value);
   },
   'click .sellit': function(e){
-    acceptProposal(e.target.value);
+    if(user[0] === -1) alert("Please login to MetaMask sell a proposal.");
+    else acceptProposal(e.target.value);
   },
   'click .evaluateit': function(e){
     evaluateProposal(e.target.value);
@@ -860,117 +869,71 @@ Template.formNewProtection.events({
     $("#threshold").removeClass("missing-info");
   },
   'submit .new-protection'(event) {
-    // Prevent default browser form submit
-    event.preventDefault();
-
-    // Get value from form element
-    const target = event.currentTarget;
-    const buyerContr = parseFloat(target[2].value);
-    const sellerContr = parseFloat(target[3].value);
-    const buySell = target[4].checked ? "Buy" : "Sell";
-    const startDate = target[5].value;
-    const endDate = target[6].value;
-    const threshold = target[7].value;
-    const location = target[8].value;
-
-    const index = "Precipitation";
-
-    //TODO add red boxes to indicate missing values
-    //check if info is missing
-    if(startDate === "" || endDate === "" || parseFloat(buyerContr) === 0 || parseFloat(sellerContr) === 0 || location === "" || index === "" || threshold === ""){
-      var s = "Please complete missing elements: \n";
-      if(startDate === ""){
-        s += "  Start Date \n";
-        $("#start-date").addClass("missing-info");
-      }
-      if(endDate === ""){
-        s += "  End Date \n";
-        $("#end-date").addClass("missing-info");
-      }
-      if(parseFloat(buyerContr) === 0){
-        s += "  Buyer Contribution \n";
-        $("#buyer-contrib").addClass("missing-info");
-      }
-      if(parseFloat(sellerContr) === 0){
-        s += "  Seller Contribution \n";
-        $("#seller-contrib").addClass("missing-info");
-      }
-      if(location === ""){
-        s += "  Location \n";
-      }
-      if(index === "") s += "  Index \n";
-      if(threshold === ""){
-        s += "  Threshold \n";
-        $("#threshold").addClass("missing-info");
-      }
-      alert(s);
+    if(user[0] === -1){
+      alert("Please login to MetaMask create a proposal.");
     }else{
-      //ask for confirmation
-      const confirmed = confirm ( "Please confirm your selection: \n\n"
-        + "  Start Date: " + startDate + "\n"
-        + "  End Date: " + endDate + "\n"
-        + "  Buyer Contribution (Eth): " + buyerContr + "\n"
-        + "  Seller Contribution (Eth): " + sellerContr + "\n"
-        + "  Location: " + locationObj[location].text + "\n"
-        + "  Index: " + index + "\n"
-        + "  Threshold: " + threshObj[threshold].text + "\n"
-        + "  Buy or Sell: " + buySell + "\n"
-      );
+      // Prevent default browser form submit
+      event.preventDefault();
 
-      if(confirmed){
-        //submit info
-        createProposal(startDate,endDate,buyerContr,sellerContr,location,index,threshold,buySell);
+      // Get value from form element
+      const target = event.currentTarget;
+      const buyerContr = parseFloat(target[2].value);
+      const sellerContr = parseFloat(target[3].value);
+      const buySell = target[4].checked ? "Buy" : "Sell";
+      const startDate = target[5].value;
+      const endDate = target[6].value;
+      const threshold = target[7].value;
+      const location = target[8].value;
+
+      const index = "Precipitation";
+
+      //TODO add red boxes to indicate missing values
+      //check if info is missing
+      if(startDate === "" || endDate === "" || parseFloat(buyerContr) === 0 || parseFloat(sellerContr) === 0 || location === "" || index === "" || threshold === ""){
+        var s = "Please complete missing elements: \n";
+        if(startDate === ""){
+          s += "  Start Date \n";
+          $("#start-date").addClass("missing-info");
+        }
+        if(endDate === ""){
+          s += "  End Date \n";
+          $("#end-date").addClass("missing-info");
+        }
+        if(parseFloat(buyerContr) === 0){
+          s += "  Buyer Contribution \n";
+          $("#buyer-contrib").addClass("missing-info");
+        }
+        if(parseFloat(sellerContr) === 0){
+          s += "  Seller Contribution \n";
+          $("#seller-contrib").addClass("missing-info");
+        }
+        if(location === ""){
+          s += "  Location \n";
+        }
+        if(index === "") s += "  Index \n";
+        if(threshold === ""){
+          s += "  Threshold \n";
+          $("#threshold").addClass("missing-info");
+        }
+        alert(s);
       }else{
-        //let user continue to edit
-      }
+        //ask for confirmation
+        const confirmed = confirm ( "Please confirm your selection: \n\n"
+          + "  Start Date: " + startDate + "\n"
+          + "  End Date: " + endDate + "\n"
+          + "  Buyer Contribution (Eth): " + buyerContr + "\n"
+          + "  Seller Contribution (Eth): " + sellerContr + "\n"
+          + "  Location: " + locationObj[location].text + "\n"
+          + "  Index: " + index + "\n"
+          + "  Threshold: " + threshObj[threshold].text + "\n"
+          + "  Buy or Sell: " + buySell + "\n"
+        );
 
-      async function createProposal(startDate,endDate,buyerContr,sellerContr,location,index,threshold,buySell){
-        const d1 = (new Date(startDate)).getTime();
-        let dd2 = new Date(endDate);
-        dd2.setDate(dd2.getDate() + 15);
-        const d2 = dd2.getTime();
-        console.log(startDate,endDate,new Date(startDate),dd2,d1,d2)
-
-        let ethPropose = 0;
-        let ethAsk = 0;
-
-        if(buySell === "Buy"){
-          ethPropose = toWei(buyerContr);
-          ethAsk = toWei(sellerContr);
-        }
-        if(buySell === "Sell"){
-          ethPropose = toWei(sellerContr);
-          ethAsk = toWei(buyerContr);
-        }
-
-        try {
-          console.log("===== CREATE WIT PROPOSAL =====")
-          await promisify(cb => witInstance.createWITProposal(ethPropose, ethAsk, threshObj[threshold].above, noaaAddress, threshObj[threshold].val*10000, numStringToBytes32(locationObj[location].noaaCode), d1, d2, true, {value: ethPropose, from:user[0]}, cb));
-
-          //clear form if succesful
-          target[2].value = 0;
-          target[3].value = 0;
-          target[4].value = "";
-          target[5].value = "";
-          target[6].value = "";
-          target[7].value = "";
-          target[8].value = "";
-          $('#end-date')[0].min = "";
-          $('#start-date')[0].max = "";
-          $('#seller-contrib')[0].min = 0;
-          $('#payout-amt').html(0);
-          //unselect region, reset text value
-          clearChart();
-          $('#selected-region').html("No region selected");
-          document.getElementById("location").selectedIndex = -1;
-          d3.selectAll(`path.${selectedRegion}`)
-            .attr("fill","none");
-          selectedRegion = "none";
-          NOAACODE = -1;
-          MONTHCODE = -1;
-          DURATIONCODE = -1;
-        } catch (error) {
-          console.log(error)
+        if(confirmed){
+          //submit info
+          createProposal(startDate,endDate,buyerContr,sellerContr,location,index,threshold,buySell);
+        }else{
+          //let user continue to edit
         }
       }
     }
@@ -1022,6 +985,56 @@ Template.formNewProtection.events({
   //   }
   // },
 });
+
+async function createProposal(startDate,endDate,buyerContr,sellerContr,location,index,threshold,buySell){
+  const d1 = (new Date(startDate)).getTime();
+  let dd2 = new Date(endDate);
+  dd2.setDate(dd2.getDate() + 15);
+  const d2 = dd2.getTime();
+  console.log(startDate,endDate,new Date(startDate),dd2,d1,d2)
+
+  let ethPropose = 0;
+  let ethAsk = 0;
+
+  if(buySell === "Buy"){
+    ethPropose = toWei(buyerContr);
+    ethAsk = toWei(sellerContr);
+  }
+  if(buySell === "Sell"){
+    ethPropose = toWei(sellerContr);
+    ethAsk = toWei(buyerContr);
+  }
+
+  try {
+    console.log("===== CREATE WIT PROPOSAL =====")
+    await promisify(cb => witInstance.createWITProposal(ethPropose, ethAsk, threshObj[threshold].above, noaaAddress, threshObj[threshold].val*10000, numStringToBytes32(locationObj[location].noaaCode), d1, d2, true, {value: ethPropose, from:user[0]}, cb));
+
+    //clear form if succesful
+    target[2].value = 0;
+    target[3].value = 0;
+    target[4].value = "";
+    target[5].value = "";
+    target[6].value = "";
+    target[7].value = "";
+    target[8].value = "";
+    $('#end-date')[0].min = "";
+    $('#start-date')[0].max = "";
+    $('#seller-contrib')[0].min = 0;
+    $('#payout-amt').html(0);
+    //unselect region, reset text value
+    clearChart();
+    $('#selected-region').html("No region selected");
+    document.getElementById("location").selectedIndex = -1;
+    d3.selectAll(`path.${selectedRegion}`)
+      .attr("fill","none");
+    selectedRegion = "none";
+    NOAACODE = -1;
+    MONTHCODE = -1;
+    DURATIONCODE = -1;
+  } catch (error) {
+    console.log(error)
+  }
+}
 
 function numStringToBytes32(num) {
    var bn = new BN(num).toTwos(256);

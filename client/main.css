@@ -8,8 +8,12 @@ body {
                                   supported by Chrome and Opera */
 }
 
-div#user {
+div#user, div#web3-waiting {
   margin-left:2%;
+}
+
+div#no-web3 {
+  margin-left:1%;
 }
 
 strong#payout-amt {
