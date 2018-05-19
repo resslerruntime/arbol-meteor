@@ -1,14 +1,14 @@
 module.exports = {
   servers: {
     one: {
-      host: '159.65.191.202',
+      host: '159.65.189.55',
       username: 'root',
       pem: '~/.ssh/id_rsa'
     }
   },
 
   app: {
-    name: 'arbol-front',
+    name: 'arbolmarketrinkeby',
     path: '../',
 
     servers: {
@@ -20,18 +20,15 @@ module.exports = {
     },
 
     env: {
-      ROOT_URL: 'https://rinkeby.arbol.app',
+      ROOT_URL: 'https://rinkeby.arbol.market',
       MONGO_URL: 'mongodb://mongodb/meteor',
       MONGO_OPLOG_URL: 'mongodb://mongodb/local',
     },
 
     docker: {
-      // change to 'abernix/meteord:base' if your app is using Meteor 1.4 - 1.5
       image: 'abernix/meteord:node-8.4.0-base',
     },
 
-    // Show progress bar while uploading bundle to server
-    // You might need to disable it on CI servers
     enableUploadProgressBar: true
   },
 
@@ -43,10 +40,8 @@ module.exports = {
   },
 
   proxy: {
-    domains: 'rinkey.arbol.app,www.rinkeby.arbol.app',
-
+    domains: 'rinkeby.arbol.market,www.rinkeby.arbol.market',
     ssl: {
-      forceSSL: true,
       letsEncryptEmail: 'admin@arbolcoin.com'
     }
   }
