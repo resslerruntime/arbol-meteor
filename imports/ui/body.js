@@ -218,9 +218,9 @@ if (Meteor.isClient) {
       $('#web3-waiting').hide();
       $("#web3-onload").removeClass("disabled-div");
       // $('#web3-onload').show();
+      Session.set("activeUser","current user:");
+      $('#red-text').show();
 
-      //initialize web3 contracts
-      Session.set("activeUser","current user: no current user- log into MetaMask");
       resetSessionVars();
       loadData();
 
@@ -233,10 +233,6 @@ if (Meteor.isClient) {
             console.log("_-_-_- CHANGE IN USER _-_-_-")
             //reset and reload everything for new user
             // $("#web3-onload").addClass("disabled-div");
-            $('#open-loader').show();
-            $('#my-loader').show();
-            $('#open-wrapper').addClass('loading');
-            $('#my-wrapper').addClass('loading');
             $('#open-pager-btns').hide();
             $('#my-pager-btns').hide();
             resetSessionVars();
@@ -245,11 +241,15 @@ if (Meteor.isClient) {
             if(user[0] !== -1){
                s = "current user: " + user[0];
                Session.set("activeUser",s);
-               // $("#web3-onload").removeClass("disabled-div");
-               // loadData();
+               $('#red-text').hide();
+               $('#my-wrapper').removeClass('loading');
+               $('#my-loader').hide();
             } else {
-              s = "current user: no current user- log into metamask";
+              s = "current user:";
               Session.set("activeUser",s);
+              $('#red-text').show();
+              $('#my-loader').show();
+              $('#my-wrapper').addClass('loading');
             }
             loadData();
           }
@@ -1128,11 +1128,6 @@ async function drawUSA(){
   try{
     let us = await d3.json("USA.json");
 
-    // svg.append("rect")
-    //   .attr("width",width)
-    //   .attr("height",height)
-    //   .attr("fill","white");
-
     let g = svg.selectAll("g#outline")
       .attr("transform", "scale(" + width/1000 + ")");
 
@@ -1233,6 +1228,7 @@ function callNOAA(){
   currentHTTP += 1;
   let check = currentHTTP;
   if(NOAACODE !== -1 && MONTHCODE !== -1 && DURATIONCODE !== -1){
+    console.log(NOAACODE,MONTHCODE,DURATIONCODE)
     Meteor.call("glanceNOAA",NOAACODE,MONTHCODE,DURATIONCODE,function(error, results) {
       let obj = parseData(results);
       if(check === currentHTTP){

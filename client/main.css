@@ -221,7 +221,7 @@ input:checked + .slider .sell
     background: rgba(0,0,0,0.3) center center no-repeat
   }
 
-  .loader{
+  #open-loader, #my-loader {
       border: 6px solid #f3f3f3;
       border-top: 6px solid #3498db;
       border-radius: 50%;

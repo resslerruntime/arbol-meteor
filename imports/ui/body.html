@@ -33,7 +33,7 @@
 <template name="user">
   <h3>
     {{#each activeUser}}
-      {{name}}
+      {{name}} <span id="red-text" style="color:red; display=none">no current user- log into MetaMask</span>
     {{/each}}
   </h3>
 </template>
