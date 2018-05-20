@@ -193,7 +193,7 @@ function MyEntry(r,a,id,bool){
 }
 
 var user = [-1];
-var pastUser = [-1];
+var pastUser = [-2];
 var arbolAddress, arbolContract, arbolInstance;
 var witAddress, witContract, witInstance;
 var noaaAddress;
@@ -217,12 +217,7 @@ if (Meteor.isClient) {
       //show relevant content depending on wether web3 is loaded or not
       $('#web3-waiting').hide();
       $("#web3-onload").removeClass("disabled-div");
-      // $('#web3-onload').show();
       Session.set("activeUser","current user:");
-      $('#red-text').show();
-
-      resetSessionVars();
-      loadData();
 
       // check for subsequent account activity, lockout screen if no metamask user is signed in
       setInterval(async function(){
@@ -869,8 +864,11 @@ Template.formNewProtection.events({
     $("#threshold").removeClass("missing-info");
   },
   'submit .new-protection'(event) {
+    console.log(user,pastUser)
     if(user[0] === -1){
-      alert("Please login to MetaMask create a proposal.");
+      alert("Please login to MetaMask to create a proposal.");
+      //prevent form from submitting
+      return false;
     }else{
       // Prevent default browser form submit
       event.preventDefault();
@@ -930,8 +928,34 @@ Template.formNewProtection.events({
         );
 
         if(confirmed){
+          //call back that clears the form
+          var clearForm = function(){
+            //clear form if succesful
+            target[2].value = 0;
+            target[3].value = 0;
+            target[4].value = "";
+            target[5].value = "";
+            target[6].value = "";
+            target[7].value = "";
+            target[8].value = "";
+            $('#end-date')[0].min = "";
+            $('#start-date')[0].max = "";
+            $('#seller-contrib')[0].min = 0;
+            $('#payout-amt').html(0);
+            //unselect region, reset text value
+            clearChart();
+            $('#selected-region').html("No region selected");
+            document.getElementById("location").selectedIndex = -1;
+            d3.selectAll(`path.${selectedRegion}`)
+              .attr("fill","none");
+            selectedRegion = "none";
+            NOAACODE = -1;
+            MONTHCODE = -1;
+            DURATIONCODE = -1;
+          }
+
           //submit info
-          createProposal(startDate,endDate,buyerContr,sellerContr,location,index,threshold,buySell);
+          createProposal(startDate,endDate,buyerContr,sellerContr,location,index,threshold,buySell,clearForm);
         }else{
           //let user continue to edit
         }
@@ -986,7 +1010,7 @@ Template.formNewProtection.events({
   // },
 });
 
-async function createProposal(startDate,endDate,buyerContr,sellerContr,location,index,threshold,buySell){
+async function createProposal(startDate,endDate,buyerContr,sellerContr,location,index,threshold,buySell,clearForm){
   const d1 = (new Date(startDate)).getTime();
   let dd2 = new Date(endDate);
   dd2.setDate(dd2.getDate() + 15);
@@ -1008,29 +1032,7 @@ async function createProposal(startDate,endDate,buyerContr,sellerContr,location,
   try {
     console.log("===== CREATE WIT PROPOSAL =====")
     await promisify(cb => witInstance.createWITProposal(ethPropose, ethAsk, threshObj[threshold].above, noaaAddress, threshObj[threshold].val*10000, numStringToBytes32(locationObj[location].noaaCode), d1, d2, true, {value: ethPropose, from:user[0]}, cb));
-
-    //clear form if succesful
-    target[2].value = 0;
-    target[3].value = 0;
-    target[4].value = "";
-    target[5].value = "";
-    target[6].value = "";
-    target[7].value = "";
-    target[8].value = "";
-    $('#end-date')[0].min = "";
-    $('#start-date')[0].max = "";
-    $('#seller-contrib')[0].min = 0;
-    $('#payout-amt').html(0);
-    //unselect region, reset text value
-    clearChart();
-    $('#selected-region').html("No region selected");
-    document.getElementById("location").selectedIndex = -1;
-    d3.selectAll(`path.${selectedRegion}`)
-      .attr("fill","none");
-    selectedRegion = "none";
-    NOAACODE = -1;
-    MONTHCODE = -1;
-    DURATIONCODE = -1;
+    clearForm();
   } catch (error) {
     console.log(error)
   }
@@ -1166,6 +1168,8 @@ async function drawUSA(){
       .on("mouseout",handleMOut)
       .on("click", handleClick);
 
+    defaultLocation();
+
     function handleMOver(){
       let v = +d3.select(this).attr("value");
       let region = d3.select(this).attr("class").split(" ")[1];
@@ -1220,6 +1224,16 @@ async function drawUSA(){
   }catch(error){
     console.log("Error retrieving NOAA data: ",error);
   }
+}
+
+function defaultLocation(){
+  let region = selectedRegion = "us-corn-belt";
+  $('#selected-region').html(locationObj[region].text);
+  document.getElementById("location").value = region;
+  NOAACODE = locationObj[region].noaaCode;
+  d3.selectAll(`path.${region}`)
+    .attr("fill","yellow");
+  callNOAA();
 }
 
 function callNOAA(){
@@ -1338,6 +1352,20 @@ function drawMonths(){
     .attr("stroke-width",4)
     .attr("stroke-dasharray","12, 8")
     .attr("opacity",1e-6);
+
+    defaultMonths();
+}
+
+function defaultMonths(){
+  //select something as default
+  let d1 = new Date().getTime();
+  let d2 = new Date().getTime() + 1000*3600*24*30; //add a month
+  $('#start-date')[0].value = new Date(d1).toISOString().substring(0,7);
+  $('#end-date')[0].value = new Date(d2).toISOString().substring(0,7);
+  let s = +$('#start-date')[0].value.split("-")[1];
+  let e = +$('#end-date')[0].value.split("-")[1];
+  MONTHCODE = e;
+  DURATIONCODE = e - s + 1;
 }
 
 function upDateMonths(o){
