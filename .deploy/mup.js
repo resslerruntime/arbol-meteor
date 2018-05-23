@@ -1,14 +1,14 @@
 module.exports = {
   servers: {
     one: {
-      host: '159.65.189.55',
+      host: '165.227.235.92',
       username: 'root',
       pem: '~/.ssh/id_rsa'
     }
   },
 
   app: {
-    name: 'arbolmarketrinkeby',
+    name: 'rinkebyarbolapp',
     path: '../',
 
     servers: {
@@ -20,7 +20,7 @@ module.exports = {
     },
 
     env: {
-      ROOT_URL: 'https://rinkeby.arbol.market',
+      ROOT_URL: 'https://rinkeby.arbol.app',
       MONGO_URL: 'mongodb://mongodb/meteor',
       MONGO_OPLOG_URL: 'mongodb://mongodb/local',
     },
@@ -40,7 +40,7 @@ module.exports = {
   },
 
   proxy: {
-    domains: 'rinkeby.arbol.market,www.rinkeby.arbol.market',
+    domains: 'rinkeby.arbol.app',
     ssl: {
       letsEncryptEmail: 'admin@arbolcoin.com'
     }
