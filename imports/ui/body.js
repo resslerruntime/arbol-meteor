@@ -216,6 +216,7 @@ if (Meteor.isClient) {
 
       //show relevant content depending on wether web3 is loaded or not
       $('#web3-waiting').hide();
+      $("#user").show();
       $("#web3-onload").removeClass("disabled-div");
       Session.set("activeUser","current user:");
 

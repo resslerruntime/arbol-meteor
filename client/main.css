@@ -13,6 +13,20 @@ div#user, div#web3-waiting {
 }
 
 div#no-web3 {
+  position: fixed;
+  width: 500px;
+  height: 300px;
+  left: -webkit-calc(50% - 250px);
+  left:    -moz-calc(50% - 250px);
+  left:         calc(50% - 250px);
+
+  top: -webkit-calc(50% - 150px);
+  top:    -moz-calc(50% - 150px);
+  top:         calc(50% - 150px);
+
+  background-color: #f1f1f1;
+  border-color: #ccc;
+  border-style: solid;
   margin-left:1%;
 }
 

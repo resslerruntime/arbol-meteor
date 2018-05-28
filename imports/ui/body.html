@@ -10,23 +10,25 @@
   <div id="web3-waiting">
     <h3>Waiting for Web3 to load.</h3>
   </div>
+  <div id="user" style="display:none">{{> user}}</div>
+  <div id="web3-onload" class="disabled-div" >
+    {{> navigation}}
+  </div>
   <div id="no-web3" style="display:none">
     <table>
       <tr>
         <td style="width:300px">
           <h3 style="color:red">This website requires MetaMask: </h3>
         </td>
+      </tr>
+      <tr>
         <td>
           <a href="https://metamask.io/">
-            <img src="/images/metamask-link.png" alt="Download MetaMask" height="50">
+            <img src="/images/metamask-link.png" alt="Download MetaMask" height="140">
           </a>
         </td>
       </tr>
     </table>
-  </div>
-  <div id="user">{{> user}}</div>
-  <div id="web3-onload" class="disabled-div" >
-    {{> navigation}}
   </div>
 </body>
 
