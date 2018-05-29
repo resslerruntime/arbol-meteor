@@ -218,7 +218,6 @@ if (Meteor.isClient) {
       $('#web3-waiting').hide();
       $("#user").show();
       $("#web3-onload").removeClass("disabled-div");
-      Session.set("activeUser","current user:");
 
       // check for subsequent account activity, lockout screen if no metamask user is signed in
       setInterval(async function(){
@@ -235,15 +234,15 @@ if (Meteor.isClient) {
             resetGlobalVariables();
             let s;
             if(user[0] !== -1){
-               s = "current user: " + user[0];
-               Session.set("activeUser",s);
-               $('#red-text').hide();
+               $('#user-hash').html(user[0]);
+               $('#user-hash').removeClass('red-text');
+               $('#user-hash').addClass('green-text');
                $('#my-wrapper').removeClass('loading');
                $('#my-loader').hide();
             } else {
-              s = "current user:";
-              Session.set("activeUser",s);
-              $('#red-text').show();
+              $('#user-hash').html("No current user- log into MetaMask");
+              $('#user-hash').addClass('red-text');
+              $('#user-hash').removeClass('green-text');
               $('#my-loader').show();
               $('#my-wrapper').addClass('loading');
             }
@@ -274,18 +273,26 @@ function loadData(){
   console.log("fn: loadData")
   //check for network use correct deployed addresses
   web3.version.getNetwork((err, netId) => {
-    console.log("netID",netId)
     switch (netId) {
       case "1":
+        $("#network-name").html("Mainnet");
+        $("#network-name").addClass("red-text");
         console.log('This is mainnet')
         break
       case "2":
+        $("#network-name").html("Deprecated Morden");
+        $("#network-name").addClass("red-text");
         console.log('This is the deprecated Morden test network.')
         break
       case "3":
+        $("#network-name").html("Ropsten");
+        $("#network-name").addClass("red-text");
         console.log('This is the ropsten test network.')
         break
       case "4":
+        $("#network-name").html("Rinkeby");
+        $("#network-name").removeClass("red-text");
+        $("#network-name").addClass("green-text");
         console.log('This is the Rinkeby test network.')
         // witAddress  = "0xc7452fa89d06effce274410c9a47f3257dd3b4e9";
         // arbolAddress = "0x6b1eb69a46cdb5b58f98cf89c027abc403ef8ef4";
@@ -296,9 +303,13 @@ function loadData(){
 
         break
       case "42":
+        $("#network-name").html("Kovan");
+        $("#network-name").addClass("red-text");
         console.log('This is the Kovan test network.')
         break
       default:
+        $("#network-name").html("Unkown");
+        $("#network-name").addClass("red-text");
         console.log('This is an unknown network.')
         //ganache-cli
         witAddress  = "0x96ef5ac933b4a16e68651f03fdc0cd4cb2b80204";
@@ -545,18 +556,6 @@ function toEth(n){
 function toWei(n){
   return n*Math.pow(10,18);
 }
-
-////////////////////////////////////////////
-// ACTIVE USER
-////////////////////////////////////////////
-Session.set("activeUser","");
-
-// populate open protections table
-Template.user.helpers({
-  activeUser: function(){
-    return [{name: Session.get("activeUser")}];
-  }
-});
 
 ////////////////////////////////////////////
 // FUNCTIONS RELATED TO THE TAB LAYOUT

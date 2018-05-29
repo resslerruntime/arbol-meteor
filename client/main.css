@@ -30,6 +30,19 @@ div#no-web3 {
   margin-left:1%;
 }
 
+span#pipe {
+  padding-left:1em;
+  padding-right:1em;
+}
+
+.red-text{
+  color:red;
+}
+
+.green-text{
+  color:#00cc00;
+}
+
 strong#payout-amt {
   margin-left:15px;
 }
