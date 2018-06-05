@@ -207,6 +207,9 @@ let DURATIONCODE = -1;
 
 if (Meteor.isClient) {
   Meteor.startup(async function() {
+    //start voronoi animation
+    voronoiAnimation();
+
     console.log('Meteor.startup');
     // Checking if Web3 has been injected by the browser (Mist/MetaMask)
     if (typeof web3 !== 'undefined') {
@@ -337,7 +340,6 @@ function resetGlobalVariables(){
   if(watchLatestEvaluation !== -1) watchLatestEvaluation.stopWatching();
 }
 
-//TODO only add token if it hasn't been accepted
 //get all proposals, add new entries as they are created
 var watchLatestProposal = -1;
 function latestProposals(){
@@ -558,41 +560,74 @@ function toWei(n){
 }
 
 ////////////////////////////////////////////
+// FUNCTIONS RELATED TO VORONOI ANIMATION
+////////////////////////////////////////////
+
+function voronoiAnimation(){
+
+  let c = ["#446633","#44AA33","#338833","#227733","#448822","#448855","#447733","#337733","#888844"];
+
+  var width = 725,
+      height = 250,
+      color_qtd = 9;
+  var vertices = d3.range(300).map(function(d) {
+    // return [Math.min(Math.tan(Math.random()*Math.PI/2)/50,1)* width, Math.random() * height];
+    return [Math.min(Math.random()**2,1)*width, Math.random() * height];
+  });
+  var voronoi = d3.voronoi();
+  var svg = d3.select("#arbol-text");
+  var path = svg.append("g").selectAll("path");
+  redraw();
+
+  function redraw() {
+    path = path.data(voronoi.polygons(vertices), polygon);
+    path.exit().remove();
+    path.enter().append("path")
+        .attr("clip-path","url(#arbol-clip)")
+        .attr("fill", function(d, i) { return c[i%color_qtd];})
+        .attr("stroke","none")
+        .attr("d", polygon);
+    path.order();
+  }
+
+  function polygon(d) {
+    return "M" + d.join("L") + "Z";
+  }
+}
+
+
+////////////////////////////////////////////
 // FUNCTIONS RELATED TO THE TAB LAYOUT
 ////////////////////////////////////////////
 
-//instantiate tab layout
-ReactiveTabs.createInterface({
-  template: 'basicTabs',
-  onChange: function (slug, template) {
-    // This callback runs every time a tab changes.
-    // The `template` instance is unique per {{#basicTabs}} block.
-    // console.log('[tabs] Tab has changed! Current tab:', slug);
-    // console.log('[tabs] Template instance calling onChange:', template);
+Template.tabs.events({
+  'click .click-tab': function(e){
+    $('html, body').animate({
+      scrollTop: $('#arbol-wrapper').height()
+    }, 500);
+    if(e.currentTarget.id === "open-tab"){
+      $("#open-protections").show();
+      $("#create-protection").hide();
+      $("#your-protections").hide();
+    }
+    if(e.currentTarget.id === "create-tab"){
+      $("#open-protections").hide();
+      $("#create-protection").show();
+      $("#your-protections").hide();
+    }
+    if(e.currentTarget.id === "your-tab"){
+      $("#open-protections").hide();
+      $("#create-protection").hide();
+      $("#your-protections").show();
+    }
   }
 });
 
-Template.navigation.helpers({
-  tabs: function () {
-    // Every tab object MUST have a name and a slug!
-    return [
-      { name: 'Open Protections', slug: 'open' },
-      { name: 'Create a Protection', slug: 'create' },
-      { name: 'My Protections', slug: 'mine', onRender: function(slug, template) {
-        // Make the call to block chain to get information on protections
-      }}
-    ];
-  },
-  activeTab: function () {
-    // Use this optional helper to reactively set the active tab.
-    // All you have to do is return the slug of the tab.
-
-    // You can set this using an Iron Router param if you want--
-    // or a Session variable, or any reactive value from anywhere.
-
-    // If you don't provide an active tab, the first one is selected by default.
-    // See the `advanced use` section below to learn about dynamic tabs.
-    return Session.get('activeTab'); // Returns "people", "places", or "things".
+Template.arrow.events({
+  'click .arrow-border': function(e){
+    $('html, body').animate({
+      scrollTop: $('#arbol-wrapper').height()
+    }, 500);
   }
 });
 

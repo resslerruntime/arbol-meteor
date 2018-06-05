@@ -2,7 +2,6 @@
 alexvandesande:identicon@2.0.2
 allow-deny@1.1.0
 amplify@1.0.0
-andrei:tablesorter@0.0.1
 autopublish@1.0.7
 autoupdate@1.4.0
 babel-compiler@7.0.0
@@ -33,7 +32,6 @@ ejson@1.1.0
 es5-shim@4.7.3
 ethereum:accounts@0.4.0
 ethereum:blocks@0.3.2
-ethereum:dapp-styles@0.5.8
 ethereum:elements@0.7.17
 ethereum:tools@0.7.0
 ethereum:web3@0.20.2

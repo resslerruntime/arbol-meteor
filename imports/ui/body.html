@@ -1,76 +1,121 @@
 
 
 <body>
-  <div class="container">
-    <header>
-      <img src="/images/green_circle_line1.png" alt="Arbol">
-      <h1>A R B O L</h1>
-    </header>
+  <div id="arbol-wrapper">
+    <div id="arbol">
+      <table>
+        <tr>
+          <td>
+            <!--<img src="/images/green_circle_line1.png" alt="Arbol">-->
+            <svg id="arbol-text">
+              <clipPath id="arbol-clip">
+                <text>ARBOL</text>
+              </clipPath>
+                <text id="under-text">ARBOL</text>
+            </svg>
+          </td>
+          <td>
+            {{> tabs}}
+          </td>
+        </tr>
+      </table>
+    </div>
+    <div id="arrow-wrapper">
+      {{> arrow}}
+    </div>
   </div>
-  <div id="web3-waiting">
-    <h3>Waiting for Web3 to load.</h3>
+  <div id="content-wrapper">
+    <div id=header>
+      <div id="user" style="display:none">{{> user}}</div>
+    </div>
+    <div id="web3-waiting">
+      <h3>Waiting for Web3 to load.</h3>
+    </div>
+    <div id="no-web3" style="display:none">
+      <table>
+        <tr>
+          <td style="width:300px">
+            <h3 style="color:red">This website requires MetaMask: </h3>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <a href="https://metamask.io/">
+              <img src="/images/metamask-link.png" alt="Download MetaMask" height="140">
+            </a>
+          </td>
+        </tr>
+      </table>
+    </div>
+
+    <div id="web3-onload" class="disabled-div">
+      {{> navigation}}
+    </div>
   </div>
-  <div id="user" style="display:none">{{> user}}</div>
-  <div id="web3-onload" class="disabled-div" >
-    {{> navigation}}
-  </div>
-  <div id="no-web3" style="display:none">
-    <table>
-      <tr>
-        <td style="width:300px">
-          <h3 style="color:red">This website requires MetaMask: </h3>
-        </td>
-      </tr>
-      <tr>
-        <td>
-          <a href="https://metamask.io/">
-            <img src="/images/metamask-link.png" alt="Download MetaMask" height="140">
-          </a>
-        </td>
-      </tr>
-    </table>
+  <div id=footer>
   </div>
 </body>
 
+<template name="arrow">
+  <div class="arrow-border">
+    <div class="arrow"></div>
+  </div>
+</template>
+
 <template name="user">
-  <h3>
-    Current User: <span id="user-hash" class="red-text"> No current user- log into MetaMask </span><br>
-    Network: <span id="network-name" class="red-text"> Unkown </span>
-  </h3>
+  <table id="instance-data">
+    <tr>
+      <td class="inf-name">
+        Network:
+      </td>
+      <td class="inf">
+        <span id="network-name" class="red-text"> Unkown </span>
+      </td>
+      <td class="inf-name">
+        Current User:
+      </td>
+      <td class="inf">
+        <span id="user-hash" class="red-text"> No current user- log into MetaMask </span>
+      </td>
+      <td class="inf-name">
+        Balance (Eth):
+      </td>
+      <td class="inf">
+        <span id="user-balance" class="red-text"> 0.00 </span>
+      </td>
+    </tr>
+  </table>
+</template>
+
+<template name="tabs">
+  <table>
+    <tr>
+      <td class="tabs"><input type="radio" name="selected-tab" id="open" display="none"/><label for="open" id="open-tab" class="click-tab">Open WITs</label></td>
+    </tr>
+    <tr>
+      <td class="tabs"><input type="radio" name="selected-tab" id="create"/><label for="create" id="create-tab" class="click-tab">Create WIT</label></td>
+    </tr>
+    <tr>
+      <td class="tabs"><input type="radio" name="selected-tab" id="your"/><label for="your" id="your-tab" class="click-tab">Your WITs</label></td>
+    </tr>
+  </table>
 </template>
 
 <template name="navigation">
-  <!-- Use `name` to add a custom class to the outer container -->
-  {{#basicTabs name="newTabs" tabs=tabs}}
-    <!--
-      There are two ways to define content for your tabs:
-
-      1. Wrap each tabbed section in a blank `<div></div>`.
-         Sections must correspond with the order of the tabs you specified.
-
-      2. Wrap each tabbed section in the provided block helper (RECOMMENDED!).
-         `{{#tabContent slug="nameOfSlug"}} ... {{/tabContent}}`
-         These can be defined in any order you like.
-    -->
-
     <!-- "OPEN PROTECTIONS" TAB -->
-    {{#tabContent slug="open"}}
-      All open protections:
+    <div id="open-protections">
       {{> openProtectionsTable}}
-    {{/tabContent}}
+    </div>
 
     <!-- "CREATE A PROTECTION" TAB -->
-    {{#tabContent slug="create"}}
-      Select the options for the protection you want to create. Make sure you have enough Eth in your wallet, and if you are selling a protection, make sure you have enough ARBOL in your wallet as well.
+    <div id="create-protection">
       {{> formNewProtection}}
-    {{/tabContent}}
+    </div>
 
     <!-- "MY PROTECTIONS" TAB -->
-    {{#tabContent slug="mine"}}
-      Your protections:
+    <div id="your-protections">
       {{> myProtectionsTable}}
-    {{/tabContent}}
-  {{/basicTabs}}
+    </div>
 </template>
 
 <!-- TEMPLATES FOR SORTABLE TABLE -->
@@ -84,7 +129,7 @@
 </template>
 
 <template name="sortableRows">
-  <tr>
+  <tr class="body-row">
     {{#if isEqual type "headerRow"}}
       {{#each column}}
         <th> {{name}} </th>
@@ -150,8 +195,21 @@
 </template>
 
 <template name="openPagination">
-    <input type="button" id="open-back" value="Back">
-    <input type="button" id="open-forward" value="Forward">
+  <table>
+    <tr>
+      <td>
+        <div class="pager-wrapper"><div id="open-back"></div></div>
+      </td>
+      <td>
+        <div class="page-count">
+          <span id="open-current">1</span><span>/</span><span id="open-max">2</span>
+        </div>
+      </td>
+      <td>
+        <div class="pager-wrapper"><div id="open-forward"></div></div>
+      </td>
+    </tr>
+  </table>
 </template>
 
 <!-- TEMPLATES FOR "CREATE A PROTECTION FORM" -->
@@ -406,6 +464,19 @@
 </template>
 
 <template name="myPagination">
-    <input type="button" id="my-back" value="Back">
-    <input type="button" id="my-forward" value="Forward">
+  <table>
+    <tr>
+      <td>
+        <div class="pager-wrapper"><div id="my-back"></div></div>
+      </td>
+      <td>
+        <div class="page-count">
+          <span id="my-current">1</span><span>/</span><span id="my-max">2</span>
+        </div>
+      </td>
+      <td>
+        <div class="pager-wrapper"><div id="my-forward"></div></div>
+      </td>
+    </tr>
+  </table>
 </template>

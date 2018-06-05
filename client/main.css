@@ -1,11 +1,14 @@
+
+
 body {
+  margin: 0px;
+  background-color: #efffe8;
   -webkit-touch-callout: none; /* iOS Safari */
     -webkit-user-select: none; /* Safari */
      -khtml-user-select: none; /* Konqueror HTML */
        -moz-user-select: none; /* Firefox */
         -ms-user-select: none; /* Internet Explorer/Edge */
-            user-select: none; /* Non-prefixed version, currently
-                                  supported by Chrome and Opera */
+            user-select: none; /* Non-prefixed version, currently supported by Chrome and Opera */
 }
 
 div#user, div#web3-waiting {
@@ -35,14 +38,6 @@ span#pipe {
   padding-right:1em;
 }
 
-.red-text{
-  color:red;
-}
-
-.green-text{
-  color:#00cc00;
-}
-
 strong#payout-amt {
   margin-left:15px;
 }
@@ -64,53 +59,212 @@ strong#payout-amt {
 /* --------------------------------------------------------
   CSS FOR MAKING LOGO
 -------------------------------------------------------- */
-
-header img {
-  position: relative;
-  top: 30px;
-  height: 50px;
-  width: 50px;
+#arbol-wrapper {
+  height: 100vh;
 }
 
-header h1 {
-  position: relative;
-  top: -40px;
-  left: 75px;
+#arbol {
+  padding-top: 15%;
+  padding-left: 10%;
+  height: calc(85% - 250px);
 }
 
+#arbol svg {
+  width: 725px;
+  height: 250px;
+}
+
+#arbol svg text {
+  transform: translate(0,200px);
+  letter-spacing: -60px;
+  font: bold 250px verdana;
+  line-height: 0.8;
+  fill: gray;
+  /*text-shadow: -4px 4px pink;*/
+  padding-right: 100px;
+}
+
+#under-text {
+  text-shadow: -4px 4px pink;
+}
+
+/* --------------------------------------------------------
+  CSS FOR MAKING TAB SELECTORS
+-------------------------------------------------------- */
+
+.tabs {
+  padding: 20px;
+  letter-spacing: 5px;
+  font: bold 30px arial;
+  color: black;
+  text-transform: uppercase;
+}
+
+.click-tab:hover {
+  text-decoration: underline;
+}
+input[type="radio"]:checked+label {
+  text-decoration: underline;
+}
+
+#open, #create, #your {
+  visibility: hidden;
+}
+
+/* --------------------------------------------------------
+  CSS FOR MAKING INSTANCE DATA
+-------------------------------------------------------- */
+#content-wrapper {
+  height: 100vh;
+  background-color: #f9f9ef;
+}
+
+#header{
+  padding: 10px;
+  width: 100%;
+  height: 25px;
+  background-color: lightgray;
+}
+
+#instance-data {
+  width: 100%;
+  /*border-radius: 1px;
+  border: 1px solid gray;*/
+
+}
+
+#instance-data td {
+  padding-left: 15px;
+  padding-right: 15px;
+}
+
+td.inf {
+  text-align:left;
+  letter-spacing: 2px;
+  font: 15px arial;
+}
+
+td.inf-name {
+  text-align:right;
+  letter-spacing: 2px;
+  font: bold 18px arial;
+  color: #f9f9ef;
+  text-transform: uppercase;
+}
+
+.red-text{
+  color: red;
+  border-bottom: 1px solid red;
+}
+
+.green-text{
+  color: #00cc00;
+  border-bottom: 1px solid #00cc00;
+}
 
 /* --------------------------------------------------------
   CSS FOR MAKING THE TABS LAYOUT
 -------------------------------------------------------- */
 
-/* Style the list */
-ul.tabs-list {
-    list-style-type: none;
-    margin: 0;
-    padding: 0;
-    overflow: hidden;
-    background-color: #f1f1f1;
+#web3-onload {
+  padding: 25px;
 }
 
-/* Float the list items side by side */
-ul.tabs-list li {float: left;}
-
-/* Style the links inside the list items */
-ul.tabs-list li a {
-    display: inline-block;
-    color: black;
-    text-align: center;
-    padding: 14px 16px;
-    transition: 0.3s;
-    border: 1px solid #ccc;
+#create-protection, #your-protections {
+  display: none;
 }
 
-/* Style the tab content */
-.tabs-content {
-    display: none;
-    padding: 6px 12px;
+/* --------------------------------------------------------
+  CSS FOR FOOTER
+-------------------------------------------------------- */
+
+#footer {
+  padding: 50px;
+  width: 100%;
+  height: 100%;
+  background-color: lightgray;
 }
 
+/* --------------------------------------------------------
+  CSS FOR TABLE SORT
+-------------------------------------------------------- */
+.table-sorter {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.table-sorter th {
+  border: 2.5px solid gray;
+  padding-top: 20px;
+  padding-bottom: 20px;
+  font: bold 15px arial;
+  text-transform: uppercase;
+}
+
+.table-sorter th.hover {
+  background-color: gray;
+  color: #f9f9ef;
+}
+
+.table-sorter td {
+  padding-top: 5px;
+  padding-bottom: 5px;
+  font: 15px arial;
+}
+
+.table-sorter tr.body-row:hover {
+  background-color: #eee;
+}
+
+.wrapper {
+  min-height: 465px;
+}
+
+/* --------------------------------------------------------
+  CSS FOR PAGINATION
+-------------------------------------------------------- */
+.pager-btns {
+  width: 60px;
+  height: 60px;
+  margin: 0 auto;
+}
+
+.pager-wrapper {
+  position: relative;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.6);
+  transition: transform .2s ease-in-out;
+}
+
+#open-back, #open-forward, #my-back, #my-forward {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border-top: 3px solid black;
+  border-right: 3px solid black;
+}
+
+#open-forward, #my-forward {
+  transform: rotate(45deg);
+  top: 3px;
+}
+
+#open-back, #my-back {
+  transform: rotate(-135deg);
+  top: 3px;
+  left: 7px;
+}
+
+.pager-wrapper:hover{
+  transform: scale(1.2);
+}
+
+.page-count span {
+  letter-spacing: 5px;
+  font: bold 20px arial;
+}
 
 /* --------------------------------------------------------
   CSS FOR TOOLTIP
@@ -227,25 +381,25 @@ input:checked + .slider .sell
 .slider.round:before {
   border-radius: 50%;}
 
-  /* --------------------------------------------------------
-    CSS FOR MAKING LOADING ICON
-  -------------------------------------------------------- */
+/* --------------------------------------------------------
+  CSS FOR MAKING LOADING ICON
+-------------------------------------------------------- */
 
   .wrapper {
-    position: relative;
+      position: relative;
   }
   .loading:before {
-    content: '';
-    display: block;
-    width: 100%;
-    height: 500px;
-    position: absolute;
-    top: 0;
-    left: 0;
-    bottom: 0;
-    right: 0;
-    z-index: 100;
-    background: rgba(0,0,0,0.3) center center no-repeat
+      content: '';
+      display: block;
+      width: 100%;
+      height: 500px;
+      position: absolute;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      right: 0;
+      z-index: 100;
+      background: rgba(0,0,0,0.3) center center no-repeat
   }
 
   #open-loader, #my-loader {
@@ -280,31 +434,58 @@ input:checked + .slider .sell
   }
 
   /* --------------------------------------------------------
-    CSS FOR TABLE SORT
-  -------------------------------------------------------- */
-
-  th.hover {
-    background-color: #4286f4;
-  }
-
-  .wrapper {
-    min-height: 465px;
-  }
-
-  /* --------------------------------------------------------
-    CSS FOR PAGINATION
-  -------------------------------------------------------- */
-  .pager-btns {
-    position: absolute;
-    /* top: 675px; */
-    left: 25%;
-  }
-
-  /* --------------------------------------------------------
     CSS FOR MISSING INFO BORDERS
   -------------------------------------------------------- */
+
   .missing-info {
     border: 2px solid red;
     border-radius: 4px;
     box-sizing: border-box;
+  }
+
+  /* --------------------------------------------------------
+    CSS FOR MAKING DOWN ARROW
+  -------------------------------------------------------- */
+
+  #arrow-wrapper {
+    width: 60px;
+    height: 60px;
+    display: block;
+    margin: 0 auto;
+  }
+  .arrow-border {
+    position: relative;
+    width: 60px;
+    height: 60px;
+    /*border: 2px solid black;*/
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    transition: background .4s ease-in-out;
+  }
+  .arrow-border:hover, .arrow-border:focus{
+    background: rgba(255, 255, 255, 0.9);
+  }
+
+  .arrow {
+    position: absolute;
+    bottom: 24px;
+    width: 20px;
+    height: 20px;
+    border-top: 3px solid black;
+    border-right: 3px solid black;
+    right: 19px;
+  }
+  .arrow {
+    transition-property: transform;
+    transition-duration: 1s;
+    animation-name: pulse;
+    animation-duration: 1.5s;
+    animation-iteration-count: infinite;
+    timing-function: linear;
+  }
+
+  @keyframes pulse {
+    0% {transform: scale(1) rotate(135deg);}
+    50% {transform: scale(1.2) rotate(135deg);}
+    100% {transform: scale(1) rotate(135deg);}
   }
