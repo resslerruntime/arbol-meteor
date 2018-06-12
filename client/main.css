@@ -1,18 +1,14 @@
 
 
 body {
-  margin: 0px;
-  background-color: #efffe8;
   -webkit-touch-callout: none; /* iOS Safari */
     -webkit-user-select: none; /* Safari */
      -khtml-user-select: none; /* Konqueror HTML */
        -moz-user-select: none; /* Firefox */
         -ms-user-select: none; /* Internet Explorer/Edge */
             user-select: none; /* Non-prefixed version, currently supported by Chrome and Opera */
-}
 
-div#user, div#web3-waiting {
-  margin-left:2%;
+  --main-bg-color: #f9f9ef;
 }
 
 div#no-web3 {
@@ -59,7 +55,7 @@ strong#payout-amt {
 /* --------------------------------------------------------
   CSS FOR MAKING LOGO
 -------------------------------------------------------- */
-#arbol-wrapper {
+/* #arbol-wrapper {
   height: 100vh;
 }
 
@@ -80,49 +76,24 @@ strong#payout-amt {
   font: bold 250px verdana;
   line-height: 0.8;
   fill: gray;
-  /*text-shadow: -4px 4px pink;*/
+  text-shadow: -4px 4px pink;
   padding-right: 100px;
 }
 
 #under-text {
   text-shadow: -4px 4px pink;
-}
-
-/* --------------------------------------------------------
-  CSS FOR MAKING TAB SELECTORS
--------------------------------------------------------- */
-
-.tabs {
-  padding: 20px;
-  letter-spacing: 5px;
-  font: bold 30px arial;
-  color: black;
-  text-transform: uppercase;
-}
-
-.click-tab:hover {
-  text-decoration: underline;
-}
-input[type="radio"]:checked+label {
-  text-decoration: underline;
-}
-
-#open, #create, #your {
-  visibility: hidden;
-}
+} */
 
 /* --------------------------------------------------------
   CSS FOR MAKING INSTANCE DATA
 -------------------------------------------------------- */
 #content-wrapper {
-  height: 100vh;
-  background-color: #f9f9ef;
+  background-color: var(--main-bg-color);
 }
 
 #header{
-  padding: 10px;
   width: 100%;
-  height: 25px;
+  height: 60px;
   background-color: lightgray;
 }
 
@@ -130,10 +101,15 @@ input[type="radio"]:checked+label {
   width: 100%;
   /*border-radius: 1px;
   border: 1px solid gray;*/
-
 }
 
-#instance-data td {
+#arbol2 {
+  text-align:left;
+  letter-spacing: -5px;
+  font: bold 45px verdana;
+}
+
+td.inf-body {
   padding-left: 15px;
   padding-right: 15px;
 }
@@ -148,7 +124,7 @@ td.inf-name {
   text-align:right;
   letter-spacing: 2px;
   font: bold 18px arial;
-  color: #f9f9ef;
+  color: var(--main-bg-color);
   text-transform: uppercase;
 }
 
@@ -163,11 +139,58 @@ td.inf-name {
 }
 
 /* --------------------------------------------------------
+  CSS FOR MAKING TAB SELECTORS
+-------------------------------------------------------- */
+
+#tabs-table {
+  width: 705px;
+  margin: 0 auto;
+}
+
+.tabs {
+  padding: 20px;
+  letter-spacing: 5px;
+  font: bold 20px arial;
+  color: black;
+  text-transform: uppercase;
+  transition: transform .2s ease-in-out;
+}
+
+.click-tab {
+  padding: 5px;
+  background-color: var(--main-bg-color);
+}
+
+.click-tab:hover {
+  border-bottom: 2px solid black;
+}
+
+input[type="radio"]:checked+label {
+  border-bottom: 2px solid black;
+}
+
+hr {
+  margin-top: -35px;
+  margin-bottom: 35px;
+  border: none;
+  height: 2px;
+  background-color: black;
+}
+
+#open, #create, #your {
+  visibility: hidden;
+}
+
+/* --------------------------------------------------------
   CSS FOR MAKING THE TABS LAYOUT
 -------------------------------------------------------- */
 
 #web3-onload {
   padding: 25px;
+}
+
+.nav-blocks {
+  margin-top: 25px;
 }
 
 #create-protection, #your-protections {
@@ -179,10 +202,16 @@ td.inf-name {
 -------------------------------------------------------- */
 
 #footer {
-  padding: 50px;
   width: 100%;
-  height: 100%;
+  height: 150px;
   background-color: lightgray;
+}
+
+#logo {
+  width: 50px;
+  height: 50px;
+  padding-left: 25px;
+  padding-top: 50px;
 }
 
 /* --------------------------------------------------------
@@ -191,25 +220,28 @@ td.inf-name {
 .table-sorter {
   border-collapse: collapse;
   width: 100%;
+  table-layout: fixed;
 }
 
 .table-sorter th {
   border: 2.5px solid gray;
-  padding-top: 20px;
-  padding-bottom: 20px;
+  padding-top: 5px;
+  padding-bottom: 5px;
   font: bold 15px arial;
   text-transform: uppercase;
+  text-align: center;
 }
 
 .table-sorter th.hover {
   background-color: gray;
-  color: #f9f9ef;
+  color: var(--main-bg-color);
 }
 
 .table-sorter td {
   padding-top: 5px;
   padding-bottom: 5px;
   font: 15px arial;
+  text-align: center;
 }
 
 .table-sorter tr.body-row:hover {
@@ -265,6 +297,34 @@ td.inf-name {
   letter-spacing: 5px;
   font: bold 20px arial;
 }
+
+/* --------------------------------------------------------
+  CSS FOR FORM PAGE
+-------------------------------------------------------- */
+
+#grid-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(515px, 1fr));
+  /* grid-gap: 10px; */
+}
+
+.grid-el {
+  margin: 25px;
+  height: 300px;
+  width: 515px;
+  border: 4px solid #f2f0e3;
+  border-radius: 6px;
+  background: #ffffff;
+}
+
+/* #map-div {
+  padding-left: 35px;
+  padding-top: 0px;
+}
+
+#form-div {
+
+} */
 
 /* --------------------------------------------------------
   CSS FOR TOOLTIP
@@ -463,7 +523,7 @@ input:checked + .slider .sell
     transition: background .4s ease-in-out;
   }
   .arrow-border:hover, .arrow-border:focus{
-    background: rgba(255, 255, 255, 0.9);
+    background: rgba(255, 255, 255, 0.5);
   }
 
   .arrow {

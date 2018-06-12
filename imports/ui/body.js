@@ -101,13 +101,13 @@ function Entry(r,owner){
   this.id = a.WITID;
   this.type = "bodyRow";
   this.column = [
-       {type:"num",name:id}
-      ,{type:"text",name:s}
+      //  {type:"num",name:id}
+      // ,{type:"text",name:s}
+      {type:"text",name:locationText(bytes32ToNumString(a.location))}
       ,{type:"text",name:d1}
       ,{type:"text",name:d2}
       ,{type:"num",name:buyerContr}
       ,{type:"num",name:sellerContr}
-      ,{type:"text",name:locationText(bytes32ToNumString(a.location))}
       ,{type:"text",name:"Rainfall"}
       ,{type:"text",name:thresh}
       ,{type:"button",name:b,button:b1}
@@ -177,14 +177,14 @@ function MyEntry(r,a,id,bool){
   //create the object
   this.type = "bodyRow";
   this.column = [
-       {type:"num",name:id}
-      ,{type:"text",name:s}
-      ,{type:"text",name:o}
+      {type:"text",name:locationText(bytes32ToNumString(a.location))}
+      // ,{type:"num",name:id}
+      // ,{type:"text",name:s}
+      // ,{type:"text",name:o}
       ,{type:"text",name:d1}
       ,{type:"text",name:d2}
       ,{type:"num",name:buyerContr}
       ,{type:"num",name:sellerContr}
-      ,{type:"text",name:locationText(bytes32ToNumString(a.location))}
       ,{type:"text",name:"Rainfall"}
       ,{type:"text",name:thresh}
       ,{type:"text",name:status}
@@ -208,7 +208,7 @@ let DURATIONCODE = -1;
 if (Meteor.isClient) {
   Meteor.startup(async function() {
     //start voronoi animation
-    voronoiAnimation();
+    //voronoiAnimation();
 
     console.log('Meteor.startup');
     // Checking if Web3 has been injected by the browser (Mist/MetaMask)
@@ -237,15 +237,41 @@ if (Meteor.isClient) {
             resetGlobalVariables();
             let s;
             if(user[0] !== -1){
-               $('#user-hash').html(user[0]);
-               $('#user-hash').removeClass('red-text');
-               $('#user-hash').addClass('green-text');
-               $('#my-wrapper').removeClass('loading');
-               $('#my-loader').hide();
+              $('#user-hash').html(user[0]);
+              $('#user-hash').removeClass('red-text');
+              $('#user-hash').addClass('green-text');
+
+              web3.eth.getBalance(user[0],function (error, result) {
+                if (!error) {
+                  console.log();
+                  var e = toEth(result.plus(21).toString(10));
+                  var n = Math.round(e*100)/100;
+                  if(n === 0){
+                    $('#user-balance').html("0.00");
+                    $('#user-balance').removeClass('red-text');
+                    $('#user-balance').addClass('green-text');
+                  }else{
+                    if(e < 0.01) $('#user-balance').html("<0.01");
+                    else $('#user-balance').html(n);
+                    $('#user-balance').removeClass('red-text');
+                    $('#user-balance').addClass('green-text');
+                  }
+                } else {
+                  console.error(error);
+                }
+              });
+
+              $('#my-wrapper').removeClass('loading');
+              $('#my-loader').hide();
             } else {
               $('#user-hash').html("No current user- log into MetaMask");
               $('#user-hash').addClass('red-text');
               $('#user-hash').removeClass('green-text');
+
+              $('#user-balance').html("0.00");
+              $('#user-balance').removeClass('red-text');
+              $('#user-balance').addClass('green-text');
+
               $('#my-loader').show();
               $('#my-wrapper').addClass('loading');
             }
@@ -395,8 +421,11 @@ async function addToken(result){
         Session.set("openProtectionsData",list);
 
         //if more than ten items turn on pagination
+        //set max pagination
         if(list.length > 10){
           $("#open-pager-btns").show();
+          $("#open-max").html(Math.ceil(list.length/10));
+          $("#open-current").html(1);
         }
 
         //show paginated items
@@ -420,6 +449,8 @@ async function addToken(result){
       //if more than ten items turn on pagination
       if(list.length > 10){
         $("#my-pager-btns").show();
+        $("#my-max").html(Math.ceil(list.length/10));
+        $("#my-current").html(1);
       }
 
       //show paginated items
@@ -563,37 +594,37 @@ function toWei(n){
 // FUNCTIONS RELATED TO VORONOI ANIMATION
 ////////////////////////////////////////////
 
-function voronoiAnimation(){
-
-  let c = ["#446633","#44AA33","#338833","#227733","#448822","#448855","#447733","#337733","#888844"];
-
-  var width = 725,
-      height = 250,
-      color_qtd = 9;
-  var vertices = d3.range(300).map(function(d) {
-    // return [Math.min(Math.tan(Math.random()*Math.PI/2)/50,1)* width, Math.random() * height];
-    return [Math.min(Math.random()**2,1)*width, Math.random() * height];
-  });
-  var voronoi = d3.voronoi();
-  var svg = d3.select("#arbol-text");
-  var path = svg.append("g").selectAll("path");
-  redraw();
-
-  function redraw() {
-    path = path.data(voronoi.polygons(vertices), polygon);
-    path.exit().remove();
-    path.enter().append("path")
-        .attr("clip-path","url(#arbol-clip)")
-        .attr("fill", function(d, i) { return c[i%color_qtd];})
-        .attr("stroke","none")
-        .attr("d", polygon);
-    path.order();
-  }
-
-  function polygon(d) {
-    return "M" + d.join("L") + "Z";
-  }
-}
+// function voronoiAnimation(){
+//
+//   let c = ["#446633","#44AA33","#338833","#227733","#448822","#448855","#447733","#337733","#888844"];
+//
+//   var width = 725,
+//       height = 250,
+//       color_qtd = 9;
+//   var vertices = d3.range(300).map(function(d) {
+//     // return [Math.min(Math.tan(Math.random()*Math.PI/2)/50,1)* width, Math.random() * height];
+//     return [Math.min(Math.random()**2,1)*width, Math.random() * height];
+//   });
+//   var voronoi = d3.voronoi();
+//   var svg = d3.select("#arbol-text");
+//   var path = svg.append("g").selectAll("path");
+//   redraw();
+//
+//   function redraw() {
+//     path = path.data(voronoi.polygons(vertices), polygon);
+//     path.exit().remove();
+//     path.enter().append("path")
+//         .attr("clip-path","url(#arbol-clip)")
+//         .attr("fill", function(d, i) { return c[i%color_qtd];})
+//         .attr("stroke","none")
+//         .attr("d", polygon);
+//     path.order();
+//   }
+//
+//   function polygon(d) {
+//     return "M" + d.join("L") + "Z";
+//   }
+// }
 
 
 ////////////////////////////////////////////
@@ -715,16 +746,16 @@ Template.headerRow.events({
       let d = Session.get("descending");
       array = Session.get("openProtectionsData");
       //sort array based on the click header
-      if(t.innerText === "TOKEN NUMBER") colIndex = 0;
-      if(t.innerText === "TOKEN HASH") colIndex = 1;
-      if(t.innerText === "START") colIndex = 2;
-      if(t.innerText === "END") colIndex = 3;
-      if(t.innerText === "BUYER CONTRIBUTION (ETH)") colIndex = 4;
-      if(t.innerText === "SELLER CONTRIBUTION (ETH)") colIndex = 5;
-      if(t.innerText === "LOCATION") colIndex = 6;
-      if(t.innerText === "INDEX") colIndex = 7;
-      if(t.innerText === "THRESHOLD (%)") colIndex = 8;
-      if(t.innerText === "BUY/SELL") colIndex = 9;
+      // if(t.innerText === "TOKEN NUMBER") colIndex = 0;
+      // if(t.innerText === "TOKEN HASH") colIndex = 1;
+      if(t.innerText === "LOCATION") colIndex = 0;
+      if(t.innerText === "START") colIndex = 1;
+      if(t.innerText === "END") colIndex = 2;
+      if(t.innerText === "BUYER CONTRIBUTION (ETH)") colIndex = 3;
+      if(t.innerText === "SELLER CONTRIBUTION (ETH)") colIndex = 4;
+      if(t.innerText === "INDEX") colIndex = 5;
+      if(t.innerText === "THRESHOLD") colIndex = 6;
+      if(t.innerText === "BUY/SELL") colIndex = 7;
       Session.set("sortIndex",colIndex);
       //set variable to new sorted array
       let list = sortArray(array,colIndex,d);
@@ -738,18 +769,17 @@ Template.headerRow.events({
       let d = Session.get("myDescending");
       array = Session.get("myProtectionsData");
       //sort array based on the click header
-      if(t.innerText === "BLOCK NUMBER") colIndex = 0;
-      if(t.innerText === "TOKEN HASH") colIndex = 1;
-      if(t.innerText === "OWNERSHIP") colIndex = 2;
-      if(t.innerText === "START") colIndex = 3;
-      if(t.innerText === "END") colIndex = 4;
-      if(t.innerText === "BUYER CONTRIBUTION (ETH)") colIndex = 5;
-      if(t.innerText === "SELLER CONTRIBUTION (ETH)") colIndex = 6;
-      if(t.innerText === "LOCATION") colIndex = 7;
-      if(t.innerText === "INDEX") colIndex = 8;
-      if(t.innerText === "THRESHOLD (%)") colIndex = 9;
-      if(t.innerText === "THRESHOLD (%)") colIndex = 10;
-      if(t.innerText === "ACTION") colIndex = 11;
+      // if(t.innerText === "BLOCK NUMBER") colIndex = 0;
+      // if(t.innerText === "TOKEN HASH") colIndex = 1;
+      // if(t.innerText === "OWNERSHIP") colIndex = 2;
+      if(t.innerText === "LOCATION") colIndex = 0;
+      if(t.innerText === "START") colIndex = 1;
+      if(t.innerText === "END") colIndex = 2;
+      if(t.innerText === "BUYER CONTRIBUTION (ETH)") colIndex = 3;
+      if(t.innerText === "SELLER CONTRIBUTION (ETH)") colIndex = 4;
+      if(t.innerText === "INDEX") colIndex = 5;
+      if(t.innerText === "THRESHOLD") colIndex = 6;
+      if(t.innerText === "ACTION") colIndex = 7;
       Session.set("mySortIndex",colIndex);
       //set variable to new sorted array
       let list = sortArray(array,colIndex,d);
@@ -786,12 +816,14 @@ Template.openPagination.events({
     let pageList = paginateData(list,opPagination);
     if(pageList.length > 0) Session.set("openProtectionsPaginatedData",pageList);
     else if(opPagination > 0) opPagination -= 1;
+    $("#open-current").html(opPagination+1);
   },
   'click #open-back'(e){
     if(opPagination > 0) opPagination -= 1;
     let fullList = Session.get("openProtectionsData");
     let pageList = paginateData(fullList,opPagination);
     Session.set("openProtectionsPaginatedData",pageList);
+    $("#open-current").html(opPagination+1);
   }
 });
 
@@ -804,12 +836,14 @@ Template.myPagination.events({
     let pageList = paginateData(list,myPagination);
     if(pageList.length > 0) Session.set("myProtectionsPaginatedData",pageList);
     else if(myPagination > 0) myPagination -= 1;
+    $("#my-current").html(myPagination+1);
   },
   'click #my-back'(e){
     if(myPagination > 0) myPagination -= 1;
     let fullList = Session.get("myProtectionsData");
     let pageList = paginateData(fullList,myPagination);
     Session.set("myProtectionsPaginatedData",pageList);
+    $("#my-current").html(myPagination+1);
   }
 });
 
@@ -839,15 +873,16 @@ Template.openProtectionsTable.helpers({
       {
         type: "headerRow"
         ,column: [
-          {name:"Token Number"}
-          ,{name:"Token Hash"}
+
+          // ,{name:"Token Number"}
+          // ,{name:"Token Hash"}
+          {name:"Location"}
           ,{name:"Start"}
           ,{name:"End"}
           ,{name:"Buyer Contribution (Eth)"}
           ,{name:"Seller Contribution (Eth)"}
-          ,{name:"Location"}
           ,{name:"Index"}
-          ,{name:"Threshold (%)"}
+          ,{name:"Threshold"}
           ,{name:"BUY/SELL"}
         ]
       }
@@ -1073,6 +1108,7 @@ async function createProposal(startDate,endDate,buyerContr,sellerContr,location,
   }
 }
 
+// Big Number
 function numStringToBytes32(num) {
    var bn = new BN(num).toTwos(256);
    return padToBytes32(bn.toString(16));
@@ -1128,16 +1164,16 @@ Template.myProtectionsTable.helpers({
       {
         type: "headerRow"
         ,column: [
-          {name:"Token Number"}
-          ,{name:"Token Hash"}
-          ,{name:"Ownership"}
+          // {name:"Token Number"}
+          // ,{name:"Token Hash"}
+          // ,{name:"Ownership"}
+          {name:"Location"}
           ,{name:"Start"}
           ,{name:"End"}
           ,{name:"Buyer Contribution (Eth)"}
           ,{name:"Seller Contribution (Eth)"}
-          ,{name:"Location"}
           ,{name:"Index"}
-          ,{name:"Threshold (%)"}
+          ,{name:"Threshold"}
           ,{name:"Status"}
           ,{name:"Action"}
         ]
