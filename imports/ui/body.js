@@ -61,10 +61,6 @@ function thresholdText(num){
 //event ProposalOffered(uint indexed WITID, uint aboveID, uint belowID, uint indexed weiContributing,  uint indexed weiAsking, address evaluator, uint thresholdPPTTH, bytes32 location, uint start, uint end, bool makeStale);
 function Entry(r,owner){
   let a = r.args;
-  let l = r.transactionHash.length;
-  let s = r.transactionHash.substring(0,8) + "..." + r.transactionHash.substring(l-8,l);
-  let d1 = new Date(a.start.c[0]).toISOString().substring(0,7);
-  let d2 = new Date(a.end.c[0]).toISOString().substring(0,7);
   let ask = a.weiAsking.toNumber();
   let propose = a.weiContributing.toNumber();
   let id = a.WITID.toNumber();
@@ -101,11 +97,9 @@ function Entry(r,owner){
   this.id = a.WITID;
   this.type = "bodyRow";
   this.column = [
-      //  {type:"num",name:id}
-      // ,{type:"text",name:s}
       {type:"text",name:locationText(bytes32ToNumString(a.location))}
-      ,{type:"text",name:d1}
-      ,{type:"text",name:d2}
+      ,{type:"text",name:dateText(a.start.c[0])}
+      ,{type:"text",name:dateText(a.end.c[0])}
       ,{type:"num",name:buyerContr}
       ,{type:"num",name:sellerContr}
       ,{type:"text",name:"Rainfall"}
@@ -118,10 +112,6 @@ function Entry(r,owner){
 //bool if you proposed the protection = true, if you accepted the protection = false
 function MyEntry(r,a,id,bool){
   // console.log("fn: MyEntry",id)
-  let l = r.transactionHash.length;
-  let s = r.transactionHash.substring(0,8) + "..." + r.transactionHash.substring(l-8,l);
-  let d1 = new Date(a.start.c[0]).toISOString().substring(0,7);
-  let d2 = new Date(a.end.c[0]).toISOString().substring(0,7);
   let ask = a.weiAsking.toNumber();
   let propose = a.weiContributing.toNumber();
 
@@ -134,15 +124,6 @@ function MyEntry(r,a,id,bool){
   if(propose > ask){
     sellerContr = toEth(propose);
     buyerContr = toEth(ask);
-  }
-
-  let o;
-  if(bool){
-    if(propose < ask) o = "you are the <strong>buyer</strong>";
-    if(propose > ask) o = "you are the <strong>seller</strong>";
-  }else{
-    if(propose < ask) o = "you are the <strong>seller</strong>";
-    if(propose > ask) o = "you are the <strong>buyer</strong>";
   }
 
   let status = "";
@@ -178,11 +159,8 @@ function MyEntry(r,a,id,bool){
   this.type = "bodyRow";
   this.column = [
       {type:"text",name:locationText(bytes32ToNumString(a.location))}
-      // ,{type:"num",name:id}
-      // ,{type:"text",name:s}
-      // ,{type:"text",name:o}
-      ,{type:"text",name:d1}
-      ,{type:"text",name:d2}
+      ,{type:"text",name:dateText(a.start.c[0])}
+      ,{type:"text",name:dateText(a.end.c[0])}
       ,{type:"num",name:buyerContr}
       ,{type:"num",name:sellerContr}
       ,{type:"text",name:"Rainfall"}
@@ -590,6 +568,25 @@ function toWei(n){
   return n*Math.pow(10,18);
 }
 
+// num = a.start.c[0]
+let months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+function dateText(iso){
+  let d1 = new Date(iso).toISOString().substring(0,7);
+  let a = d1.split("-");
+  let n = parseInt(a[1]) - 1;
+  return months[n] + " " + a[0];
+}
+
+function dateNum(text){
+  let a = text.split(" ");
+  let lm = months.length;
+  let n = 0;
+  while(lm--){
+    if(months[lm] === a[0]) n = lm;
+  }
+  return parseInt(a[1]) + n/12;
+}
+
 ////////////////////////////////////////////
 // FUNCTIONS RELATED TO VORONOI ANIMATION
 ////////////////////////////////////////////
@@ -746,8 +743,6 @@ Template.headerRow.events({
       let d = Session.get("descending");
       array = Session.get("openProtectionsData");
       //sort array based on the click header
-      // if(t.innerText === "TOKEN NUMBER") colIndex = 0;
-      // if(t.innerText === "TOKEN HASH") colIndex = 1;
       if(t.innerText === "LOCATION") colIndex = 0;
       if(t.innerText === "START") colIndex = 1;
       if(t.innerText === "END") colIndex = 2;
@@ -769,9 +764,6 @@ Template.headerRow.events({
       let d = Session.get("myDescending");
       array = Session.get("myProtectionsData");
       //sort array based on the click header
-      // if(t.innerText === "BLOCK NUMBER") colIndex = 0;
-      // if(t.innerText === "TOKEN HASH") colIndex = 1;
-      // if(t.innerText === "OWNERSHIP") colIndex = 2;
       if(t.innerText === "LOCATION") colIndex = 0;
       if(t.innerText === "START") colIndex = 1;
       if(t.innerText === "END") colIndex = 2;
@@ -795,6 +787,9 @@ Template.headerRow.events({
 function sortArray(array,i,d){
   let sortedArray = _.sortBy(array,function(obj){
     let cell = obj.column[i], key;
+    if(i === 1 || i === 2){
+      return key = dateNum(cell.name);
+    }
     if(cell.type === "num") return key = parseFloat(cell.name);
     if(cell.type === "text" || cell.type === "button") return key = cell.name;
   });
@@ -933,6 +928,10 @@ Template.formNewProtection.events({
     changeThreshold(event.currentTarget.value);
     $("#threshold").removeClass("missing-info");
   },
+  'input #location'(event) {
+    changeRegion(event.currentTarget.value);
+    $("#location").removeClass("missing-info");
+  },
   'submit .new-protection'(event) {
     console.log(user,pastUser)
     if(user[0] === -1){
@@ -977,6 +976,7 @@ Template.formNewProtection.events({
         }
         if(location === ""){
           s += "  Location \n";
+          $("#location").addClass("missing-info");
         }
         if(index === "") s += "  Index \n";
         if(threshold === ""){
@@ -1014,8 +1014,7 @@ Template.formNewProtection.events({
             $('#payout-amt').html(0);
             //unselect region, reset text value
             clearChart();
-            $('#selected-region').html("No region selected");
-            document.getElementById("location").selectedIndex = -1;
+            $('#location').val("none");
             d3.selectAll(`path.${selectedRegion}`)
               .attr("fill","none");
             selectedRegion = "none";
@@ -1032,52 +1031,6 @@ Template.formNewProtection.events({
       }
     }
   }
-  // ,
-  // 'click #createRandom'(e){
-  //   let amt1 = Math.round(Math.random()+1);
-  //   let amt2 = Math.round(Math.random()+1);
-  //   $('#seller-contrib')[0].value = amt1 + amt2;
-  //   $('#buyer-contrib')[0].value = amt1;
-  //   $('#payout-amt').html(2*amt1 + amt2);
-  //
-  //   let amt3 = Math.random()*10000000000;
-  //   let amt4 = Math.random()*10000000000;
-  //   let amt5 = Math.random()*10000000000;
-  //   let amt6 = Math.random()*10000000000;
-  //   while((amt3 - amt4) > (amt5 - amt6)){
-  //     amt5 = Math.random()*10000000000;
-  //     amt6 = Math.random()*10000000000;
-  //   }
-  //   let d1 = new Date().getTime() + amt3 - amt4;
-  //   let d2 = new Date().getTime() + amt5 - amt6;
-  //   $('#start-date')[0].value = new Date(d1).toISOString().substring(0,7);
-  //   $('#end-date')[0].value = new Date(d2).toISOString().substring(0,7);
-  //
-  //   let a = Math.ceil(Math.random()*2);
-  //   let b = Math.ceil(Math.random()*4);
-  //   $('#location option').eq(a).prop('selected', true);
-  //   $('#selected-region').html("add name");
-  //   $('#index option').eq(1).prop('selected', true);
-  //   $('#threshold option').eq(b).prop('selected', true);
-  //
-  //   // Check
-  //   let bool = true;
-  //   if(Math.random() > 0.5) bool = false;
-  //   $('#toggle-buy-sell').prop("checked", bool);
-  //
-  //   // call NOAA
-  //   let s2 = +$('#start-date')[0].value.split("-")[1]
-  //     ,sy2 = +$('#start-date')[0].value.split("-")[0];
-  //   let e2 = +$('#end-date')[0].value.split("-")[1]
-  //     ,ey2 = +$('#end-date')[0].value.split("-")[0];
-  //
-  //   if(s2 <= e2 && sy2 <= ey2){
-  //     MONTHCODE = e2;
-  //     DURATIONCODE = e2 - s2 + 1;
-  //     NOAACODE = codesNOAA[a];
-  //     callNOAA();
-  //   }
-  // },
 });
 
 async function createProposal(startDate,endDate,buyerContr,sellerContr,location,index,threshold,buySell,clearForm){
@@ -1239,7 +1192,7 @@ async function drawUSA(){
       .on("mouseout",handleMOut)
       .on("click", handleClick);
 
-    defaultLocation();
+    changeRegion("us-corn-belt");
 
     function handleMOver(){
       let v = +d3.select(this).attr("value");
@@ -1264,10 +1217,8 @@ async function drawUSA(){
       let region = d3.select(this).attr("class").split(" ")[1];
       //manage the coloration change
       if(region !== selectedRegion){
-        //update the title
-        $('#selected-region').html(locationObj[region].text);
-        //update the form
-        document.getElementById("location").value = region;
+        // update the form
+        $('#location').val(region);
         //make previous region go blank
         d3.selectAll(`path.${selectedRegion}`)
           .attr("fill","none");
@@ -1278,12 +1229,12 @@ async function drawUSA(){
         d3.selectAll(`path.${selectedRegion}`)
           .attr("fill","yellow");
       }else{
-        //update the title
-        $('#selected-region').html("No region selected");
         //update the form
-        let f = document.getElementById("location").selectedIndex = -1;
+        $('#location').val("none");
+        //update map
         d3.selectAll(`path.${selectedRegion}`)
           .attr("fill",locationObj[selectedRegion].col);
+
         currentHTTP += 1;
         clearChart();
         selectedRegion = "none";
@@ -1297,14 +1248,21 @@ async function drawUSA(){
   }
 }
 
-function defaultLocation(){
-  let region = selectedRegion = "us-corn-belt";
-  $('#selected-region').html(locationObj[region].text);
-  document.getElementById("location").value = region;
-  NOAACODE = locationObj[region].noaaCode;
-  d3.selectAll(`path.${region}`)
-    .attr("fill","yellow");
-  callNOAA();
+function changeRegion(region){
+  if(region !== selectedRegion){
+    // update the form
+    $('#location').val(region);
+
+    //make previous region go blank
+    d3.selectAll(`path.${selectedRegion}`)
+      .attr("fill","none");
+
+    selectedRegion = region;
+    NOAACODE = locationObj[selectedRegion].noaaCode;
+    callNOAA();
+    d3.selectAll(`path.${selectedRegion}`)
+      .attr("fill","yellow");
+  }
 }
 
 function callNOAA(){

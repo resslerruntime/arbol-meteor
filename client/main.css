@@ -42,11 +42,6 @@ strong#payout-amt {
   margin-left:15%;
 }
 
-#create-request {
-  background-color: #d6e5ff;
-  color: #4286f4;
-}
-
 .disabled-div {
     pointer-events: none;
     opacity: 0.4;

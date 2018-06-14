@@ -223,8 +223,6 @@
   <div id="grid-container">
     <div class="grid-el" id="form-div">
       <form class="new-protection">
-        <input type="submit" id="create-request" value="Create Request">
-        <input type="button" id="createRandom" value="Fill Form Randomly" style="display:none">
         <table>
           <tr>
             <td>
@@ -293,19 +291,19 @@
               <div class="tooltip"> Location: <span class="tooltiptext">Select the geographic area covered by the contract.</span></div>
             </td>
             <td>
-              <span id="selected-region"> No region selected</span><br>
+              <select id="location" name="location" >
+                <option value="none" hidden disabled selected>Select a region</option>
+                <option value="us-corn-belt">US Corn Belt</option>
+                <option value="us-soy-belt">US Soy Belt</option>
+                <option value="us-redwinter-belt">US Red Winter Wheat Belt</option>
+              </select>
             </td>
           </tr>
         </table>
+        <input type="submit" id="create-request" value="Create Request">
       </form>
     </div>
     <div class="grid-el" id="map-div">
-      <select id="location" name="location" hidden>
-        <option value="us-corn-belt"></option>
-        <option value="us-soy-belt"></option>
-        <option value="us-redwinter-belt"></option>
-        <option value="" selected></option>
-      </select>
       <svg id="map" width="500" height="300">
         <g id="outline"></g>
         <g id="areas">
