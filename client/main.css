@@ -9,6 +9,7 @@ body {
             user-select: none; /* Non-prefixed version, currently supported by Chrome and Opera */
 
   --main-bg-color: #f9f9ef;
+  margin: 0px;
 }
 
 div#no-web3 {
@@ -26,7 +27,7 @@ div#no-web3 {
   background-color: #f1f1f1;
   border-color: #ccc;
   border-style: solid;
-  margin-left:1%;
+  margin-left: 1%;
 }
 
 span#pipe {
@@ -42,38 +43,6 @@ span#pipe {
     pointer-events: none;
     opacity: 0.4;
 }
-
-/* --------------------------------------------------------
-  CSS FOR MAKING LOGO
--------------------------------------------------------- */
-/* #arbol-wrapper {
-  height: 100vh;
-}
-
-#arbol {
-  padding-top: 15%;
-  padding-left: 10%;
-  height: calc(85% - 250px);
-}
-
-#arbol svg {
-  width: 725px;
-  height: 250px;
-}
-
-#arbol svg text {
-  transform: translate(0,200px);
-  letter-spacing: -60px;
-  font: bold 250px verdana;
-  line-height: 0.8;
-  fill: gray;
-  text-shadow: -4px 4px pink;
-  padding-right: 100px;
-}
-
-#under-text {
-  text-shadow: -4px 4px pink;
-} */
 
 /* --------------------------------------------------------
   CSS FOR MAKING INSTANCE DATA
@@ -199,10 +168,22 @@ hr {
 }
 
 #logo {
+  position:relative;
   width: 50px;
   height: 50px;
   padding-left: 25px;
   padding-top: 50px;
+}
+
+#links {
+  position:relative;
+  left: 100px;
+  bottom: 80px;
+}
+
+#links table tr td {
+  padding: 10px;
+  font: bold 12px arial;
 }
 
 /* --------------------------------------------------------
@@ -212,8 +193,6 @@ hr {
   border-collapse: collapse;
   width: 100%;
   table-layout: fixed;
-
-
 }
 
 .table-sorter th {
@@ -303,7 +282,7 @@ hr {
 
 #form-inner-div {
   padding-top: 50px;
-  padding-left: 50px;
+  padding-left: 25px;
 }
 
 #form-inner-div form table tr td {
@@ -410,6 +389,7 @@ button.action:hover {
 
   .wrapper {
       position: relative;
+      min-height: 450px;
   }
   .loading:before {
       content: '';
@@ -422,33 +402,28 @@ button.action:hover {
       bottom: 0;
       right: 0;
       z-index: 100;
-      background: rgba(0,0,0,0.3) center center no-repeat
+      background: rgba(0,0,0,0.3) center center no-repeat;
+  }
+
+  .loader-icon {
+    border: 6px solid #f3f3f3;
+    border-top: 6px solid #3498db;
+    border-radius: 50%;
+    width: 35px;
+    height: 35px;
+    position: relative;
+    z-index: 1000;
+    animation: spin 1s linear infinite;
   }
 
   #open-loader, #my-loader {
-      border: 6px solid #f3f3f3;
-      border-top: 6px solid #3498db;
-      border-radius: 50%;
-      width: 35px;
-      height: 35px;
-      position: relative;
       top: 200px;
       left: 50%;
-      z-index: 1000;
-      animation: spin 2s linear infinite;
   }
 
-  .chart-loader {
-      border: 6px solid #3498db;
-      border-top: 6px solid white;
-      border-radius: 50%;
-      width: 35px;
-      height: 35px;
-      position: relative;
+  #chart-loader {
       top: -180px;
       left: 240px;
-      z-index: 1000;
-      animation: spin 1s linear infinite;
   }
 
   @keyframes spin {

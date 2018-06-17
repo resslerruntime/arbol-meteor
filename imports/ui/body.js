@@ -187,7 +187,6 @@ if (Meteor.isClient) {
       web3 = new Web3(web3.currentProvider);
 
       //show relevant content depending on wether web3 is loaded or not
-      $('#web3-waiting').hide();
       $("#user").show();
       $("#web3-onload").removeClass("disabled-div");
 
@@ -228,7 +227,6 @@ if (Meteor.isClient) {
                   console.error(error);
                 }
               });
-
               $('#my-wrapper').removeClass('loading');
               $('#my-loader').hide();
             } else {
@@ -259,7 +257,6 @@ if (Meteor.isClient) {
       // fallback - use your fallback strategy (local node / hosted node + in-dapp id mgmt / fail)
       // web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:7545"));
       //show relevant content depending on wether web3 is available or not
-      $('#web3-waiting').hide();
       $('#no-web3').show();
     }
   });
@@ -455,6 +452,7 @@ function removeToken(id){
 }
 
 function updateStatus(list,id){
+  console.log("updateStatus")
   //only update status for those that are accepted
   if(acceptedList.indexOf(id) !== -1){
     let index = findIndex(list,function(el){return el.column[0].name === id;});
@@ -712,8 +710,8 @@ async function acceptProposal(v){
 async function evaluateWIT(id){
   try {
     console.log("=================> new WIT evaluation");
-    console.log("token ID", parseInt(id), user[0]);
-    await promisify(cb => witInstance.evaluate(parseInt(id),"string",{from: user[0]},cb));
+    console.log("token ID", parseInt(id), user[0],witInstance);
+    await promisify(cb => witInstance.evaluate(parseInt(id),"",{from: user[0]},cb));
   } catch (error) {
     console.log(error)
   }
@@ -1209,7 +1207,7 @@ async function drawUSA(){
         clearChart();
         selectedRegion = "none";
         NOAACODE = -1;
-        if(NOAACODE !== -1 && MONTHCODE !== -1 && DURATIONCODE !== -1) $(".chart-loader").fadeOut(1000);
+        if(NOAACODE !== -1 && MONTHCODE !== -1 && DURATIONCODE !== -1) $("#chart-loader").fadeOut(1000);
       }
     }
 
@@ -1236,8 +1234,7 @@ function changeRegion(region){
 }
 
 function callNOAA(){
-  // $(".chart-loader-div").addClass("chart-loader");
-  $(".chart-loader").fadeIn(500);
+  $("#chart-loader").fadeIn(500);
   currentHTTP += 1;
   let check = currentHTTP;
   if(NOAACODE !== -1 && MONTHCODE !== -1 && DURATIONCODE !== -1){
@@ -1246,7 +1243,7 @@ function callNOAA(){
       if(check === currentHTTP){
         upDateMonths(obj);
         // $(".chart-loader-div").removeClass("chart-loader");
-        $(".chart-loader").fadeOut(1000);
+        $("#chart-loader").fadeOut(1000);
       }
     });
   }

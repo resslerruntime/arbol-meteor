@@ -1,36 +1,10 @@
 
 
 <body>
-  <!--<div id="arbol-wrapper">
-    <div id="arbol">
-      <table>
-        <tr>
-          <td>
-            <img src="/images/green_circle_line1.png" alt="Arbol">
-            <svg id="arbol-text">
-              <clipPath id="arbol-clip">
-                <text>ARBOL</text>
-              </clipPath>
-                <text id="under-text">ARBOL</text>
-            </svg>
-          </td>
-          <td>
-            {{> tabs}}
-          </td>
-        </tr>
-      </table>
-    </div>
-    <div id="arrow-wrapper">
-      {{> arrow}}
-    </div>
-  </div>-->
   <div id=header>
     <div id="user" style="display:none">{{> user}}</div>
   </div>
   <div id="content-wrapper">
-    <div id="web3-waiting">
-      <h3>Waiting for Web3 to load.</h3>
-    </div>
     <div id="not-chrome">
       <!-- Add a page that asks people to use chrome for the development version -->
     </div>
@@ -57,6 +31,31 @@
   </div>
   <div id=footer>
     <img id="logo" src="/images/green_circle_line1.png" alt="Arbol">
+    <div id="links">
+      <table>
+        <tr>
+          <td>
+            About Arbol
+          </td>
+          <td>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            FAQ
+          </td>
+          <td>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            Contact
+          </td>
+          <td>
+          </td>
+        </tr>
+      </table>
+    </div>
   </div>
 </body>
 
@@ -191,7 +190,7 @@
         {{/each}}
       </tbody>
     </table>
-    <div id="open-loader"></div>
+    <div id="open-loader" class="loader-icon"></div>
   </div>
   <div id="open-pager-btns" class="pager-btns" style="display:none"> {{> openPagination}}</div>
 </template>
@@ -256,6 +255,23 @@
                 <div class="tooltip"> Threshold: <span class="tooltiptext">Choose payout threshold.</span></div>
               </td>
               <td>
+                <select>
+                  <option value="" hidden disabled selected>________</option>
+                  <option value="exceeds">Exceeds</option>
+                  <option value="doesnt-exceed">Does not exceed</option>
+                </select>
+                <select>
+                  <option value="" hidden disabled selected>________</option>
+                  <option value="0">0%</option>
+                  <option value="10">10%</option>
+                  <option value="25">20%</option>
+                </select>
+                <select>
+                  <option value="" hidden disabled selected>________</option>
+                  <option value="above">above average</option>
+                  <option value="below">below average</option>
+                </select>
+                <br>
                 <select id="threshold" name="threshold" >
                   <option value="" hidden disabled selected>Select payout threshold</option>
                   <option value="above-average-10pct" >Greater than 10% above average</option>
@@ -430,7 +446,7 @@
     <div class="grid-el" id="chart-div">
       <svg id="chart" width="500" height="300"></svg>
       <div class="chart-loader-div" style="height:50px">
-        <div class="chart-loader" style="display:none"></div>
+        <div id="chart-loader" class="loader-icon" style="display:none"></div>
       </div>
     </div>
   </div>
@@ -452,7 +468,7 @@
         {{/each}}
       </tbody>
     </table>
-    <div id="my-loader"></div>
+    <div id="my-loader" class="loader-icon"></div>
   </div>
   <div id="my-pager-btns" class="pager-btns" style="display:none"> {{> myPagination}}</div>
 </template>
