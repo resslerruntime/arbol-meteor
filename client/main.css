@@ -34,10 +34,6 @@ span#pipe {
   padding-right:1em;
 }
 
-strong#payout-amt {
-  margin-left:15px;
-}
-
 .buttonHolder{
   margin-left:15%;
 }
@@ -216,6 +212,8 @@ hr {
   border-collapse: collapse;
   width: 100%;
   table-layout: fixed;
+
+
 }
 
 .table-sorter th {
@@ -225,6 +223,9 @@ hr {
   font: bold 15px arial;
   text-transform: uppercase;
   text-align: center;
+
+  text-overflow: clipped;
+  overflow: hidden;
 }
 
 .table-sorter th.hover {
@@ -237,6 +238,9 @@ hr {
   padding-bottom: 5px;
   font: 15px arial;
   text-align: center;
+
+  text-overflow: clipped;
+  overflow: hidden;
 }
 
 .table-sorter tr.body-row:hover {
@@ -297,29 +301,55 @@ hr {
   CSS FOR FORM PAGE
 -------------------------------------------------------- */
 
+#form-inner-div {
+  padding-top: 50px;
+  padding-left: 50px;
+}
+
+#form-inner-div form table tr td {
+  padding: 5px;
+  font: bold 14px arial;
+  /* text-transform: uppercase; */
+  /* width: 120px; */
+  text-align: right;
+}
+
+#create-proposal {
+  margin-left: 125px;
+  margin-top: 20px;
+
+  font: bold 15px arial;
+  text-transform: uppercase;
+
+  background: lightgray;
+  border: none;
+  padding: 10px;
+  outline: inherit;
+  cursor: pointer;
+}
+
+#create-proposal:hover {
+  color: blue;
+}
+
+#map-inner-div {
+  padding-left: 20px;
+}
+
 #grid-container {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(515px, 1fr));
-  /* grid-gap: 10px; */
+  grid-gap: 10px;
 }
 
 .grid-el {
-  margin: 25px;
   height: 300px;
   width: 515px;
   border: 4px solid #f2f0e3;
   border-radius: 6px;
   background: #ffffff;
+  align-self: start;
 }
-
-/* #map-div {
-  padding-left: 35px;
-  padding-top: 0px;
-}
-
-#form-div {
-
-} */
 
 /* --------------------------------------------------------
   CSS FOR TOOLTIP
@@ -353,88 +383,26 @@ hr {
 }
 
 /* --------------------------------------------------------
-  CSS FOR MAKING THE BUY / SELL TOGGLE ON THE CREATE PROTECTIONS FORM
+  Remove button styling
 -------------------------------------------------------- */
 
-.buy-sell {
-  position: relative;
-  display: inline-block;
-  width: 90px;
-  height: 34px;
+button.tableBtn {
+    background: none;
+    color: inherit;
+    border: none;
+    padding: 0;
+    font: inherit;
+    outline: inherit;
 }
 
-.buy-sell input {display:none;}
-
-.slider {
-  position: absolute;
+button.action {
   cursor: pointer;
-  top: 0;
-  left: -5px;
-  right: 0;
-  bottom: 0;
-  background-color: #4286f4;
-  -webkit-transition: .4s;
-  transition: .4s;
+  font-weight: bold;
 }
 
-.slider:before {
-  position: absolute;
-  content: "";
-  height: 26px;
-  width: 26px;
-  left: 4px;
-  bottom: 4px;
-  background-color: white;
-  -webkit-transition: .4s;
-  transition: .4s;
+button.action:hover {
+  color: blue;
 }
-
-input:checked + .slider {
-  background-color: #fcbc1e;
-}
-
-/*input:focus + .slider {
-  box-shadow: 0 0 1px #2196F3;
-}*/
-
-input:checked + .slider:before {
-  -webkit-transform: translateX(60px);
-  -ms-transform: translateX(60px);
-  transform: translateX(60px);
-}
-
-/*------ ADDED CSS ---------*/
-.buy
-{
-  display: none;
-}
-
-.buy, .sell
-{
-  color: white;
-  position: absolute;
-  transform: translate(-50%,-50%);
-  top: 50%;
-  left: 50%;
-  font-size: 10px;
-  font-family: Verdana, sans-serif;
-}
-
-input:checked+ .slider .buy
-{display: block;}
-
-input:checked + .slider .sell
-{display: none;}
-
-/*--------- END --------*/
-
-/* Rounded sliders */
-.slider.round {
-  border-radius: 34px;
-}
-
-.slider.round:before {
-  border-radius: 50%;}
 
 /* --------------------------------------------------------
   CSS FOR MAKING LOADING ICON

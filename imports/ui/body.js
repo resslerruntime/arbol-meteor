@@ -61,35 +61,25 @@ function thresholdText(num){
 //event ProposalOffered(uint indexed WITID, uint aboveID, uint belowID, uint indexed weiContributing,  uint indexed weiAsking, address evaluator, uint thresholdPPTTH, bytes32 location, uint start, uint end, bool makeStale);
 function Entry(r,owner){
   let a = r.args;
+  let location = locationText(bytes32ToNumString(a.location));
   let ask = a.weiAsking.toNumber();
   let propose = a.weiContributing.toNumber();
   let id = a.WITID.toNumber();
 
   //update for if the contract is for offered for sale or for funding
-  let sellerContr, buyerContr;
-  let b= "", b1 ="";
-  let v = toEth(ask)+","+a.WITID.toNumber();
-  if(propose > ask){
-    sellerContr = toEth(propose);
-    buyerContr = toEth(ask);
-    b = "Buy";
-    b1 = "<button type='button' class='buyit' value='" + v + "'> buy </button>";
-  }
-  if(propose < ask){
-    sellerContr = toEth(ask);
-    buyerContr = toEth(propose);
-    b = "Sell";
-    b1 = "<button type='button' class='sellit' value='" + v + "'> sell </button>";
-  }
+  let totalPayout = `${clipNum(toEth(propose) + toEth(ask))} Eth`;
+  let b = `${toEth(ask)}`;
+  let b1 = `<button type='button' class='action buyit tableBtn' value='${toEth(ask)},${a.WITID.toNumber()}'>Pay <span class="green-text">${toEth(ask)} Eth</span> to accept</button>`;
+
   //if the current use is the owner of the proposal don't give them the option to purchase the proposal
   if(owner === user[0]){
-    b = "Owner";
-    b1 = `<button type='button' onClick='alert("You are the owner of this proposal.")'> owner </button>`;
+    b = "1e99";
+    b1 = `<button type='button' class='tableBtn'>You are the owner of this proposal</button>`;
   }
 
   //get threshold text
-  let thresh = thresholdText(a.thresholdPPM.toNumber());
-  if(a.WITID.toNumber() === a.belowID.toNumber() && a.thresholdPPM.toNumber() === 10000){
+  let thresh = thresholdText(a.thresholdPPTTH.toNumber());
+  if(a.WITID.toNumber() === a.belowID.toNumber() && a.thresholdPPTTH.toNumber() === 10000){
     thresh = threshObj["below-average"].text;
   }
 
@@ -97,52 +87,53 @@ function Entry(r,owner){
   this.id = a.WITID;
   this.type = "bodyRow";
   this.column = [
-      {type:"text",name:locationText(bytes32ToNumString(a.location))}
-      ,{type:"text",name:dateText(a.start.c[0])}
-      ,{type:"text",name:dateText(a.end.c[0])}
-      ,{type:"num",name:buyerContr}
-      ,{type:"num",name:sellerContr}
-      ,{type:"text",name:"Rainfall"}
-      ,{type:"text",name:thresh}
-      ,{type:"button",name:b,button:b1}
+      {type:"text",key:location,name:location}
+      ,{type:"text",key:thresh,name:thresh}
+      ,{type:"text",key:"NOAA Rainfall",name:"NOAA Rainfall"}
+      ,{type:"num",key:a.start.c[0],name:dateText(a.start.c[0])}
+      ,{type:"num",key:a.end.c[0],name:dateText(a.end.c[0])}
+      ,{type:"num",key:totalPayout,name:totalPayout}
+      ,{type:"num",key:b,name:b1}
     ];
 }
 
 //table entry constructor my protections
 //bool if you proposed the protection = true, if you accepted the protection = false
 function MyEntry(r,a,id,bool){
-  // console.log("fn: MyEntry",id)
   let ask = a.weiAsking.toNumber();
   let propose = a.weiContributing.toNumber();
+  let location = locationText(bytes32ToNumString(a.location));
 
-  //update for if the contract is offered for sale or for funding
-  let sellerContr, buyerContr;
-  if(propose < ask){
-    sellerContr = toEth(ask);
-    buyerContr = toEth(propose);
-  }
-  if(propose > ask){
-    sellerContr = toEth(propose);
-    buyerContr = toEth(ask);
-  }
+  //total payouts
+  let totalPayout = `${clipNum(toEth(propose) + toEth(ask))} Eth`;
 
+  //your contribution
+  let yourContr;
+  if(r.args !== a) yourContr = `${toEth(ask)}`;
+  else yourContr = `${toEth(propose)}`;
+  if(yourContr.length > 5) yourContr = yourContr.slice(0,5);
+  yourContr = `${yourContr} Eth`;
+
+  //status
   let status = "";
   let now = new Date().getTime();
   let start = new Date(a.start.c[0]).getTime();
   let end = new Date(a.end.c[0]).getTime();
-  let b = "";
-  let b1 = "<button type='button' class='action cancelit'> Cancel and Redeem </button>";
+  let b = "Cancel";
+  let b1 = `<button type='button' class='action cancelit tableBtn'> Cancel and redeem <span class="green-text">${yourContr}</span></button>`;
 
   //TODO add in "make stale = false" functionality
   if(r.args !== a){
-    if(now < start) status = "Partnered, Waiting to Start";
+    if(now < start) status = "Partnered, waiting to start";
     if(now >= start && now <= end){
-      status = "In Term";
+      status = "In term";
+      b = "Waiting";
       b1 = "Waiting...";
     }
     if(now > end){
-      status = "Waiting for Evaluation";
-      b1 = `<button type='button' class='action evaluateit' value=${id}> Evaluate and Complete </button>`;
+      status = "Waiting for evaluation";
+      b = "Evaluate"
+      b1 = `<button type='button' class='action evaluateit tableBtn' value=${id}> Evaluate and complete </button>`;
     }
   }else{
     if(now < start) status = "Open";
@@ -150,23 +141,23 @@ function MyEntry(r,a,id,bool){
   }
 
   //get threshold text
-  let thresh = thresholdText(a.thresholdPPM.toNumber());
-  if(a.WITID.toNumber() === a.belowID.toNumber() && a.thresholdPPM.toNumber() === 10000){
+  let thresh = thresholdText(a.thresholdPPTTH.toNumber());
+  if(a.WITID.toNumber() === a.belowID.toNumber() && a.thresholdPPTTH.toNumber() === 10000){
     thresh = threshObj["below-average"].text;
   }
 
   //create the object
   this.type = "bodyRow";
   this.column = [
-      {type:"text",name:locationText(bytes32ToNumString(a.location))}
-      ,{type:"text",name:dateText(a.start.c[0])}
-      ,{type:"text",name:dateText(a.end.c[0])}
-      ,{type:"num",name:buyerContr}
-      ,{type:"num",name:sellerContr}
-      ,{type:"text",name:"Rainfall"}
-      ,{type:"text",name:thresh}
-      ,{type:"text",name:status}
-      ,{type:"button",name:b,button:b1}
+      {type:"text",key:location,name:location}
+      ,{type:"text",key:thresh,name:thresh}
+      ,{type:"text",key:"NOAA Rainfall",name:"NOAA Rainfall"}
+      ,{type:"num",key:a.start.c[0],name:dateText(a.start.c[0])}
+      ,{type:"num",key:a.end.c[0],name:dateText(a.end.c[0])}
+      ,{type:"num",key:yourContr,name:yourContr}
+      ,{type:"num",key:totalPayout,name:totalPayout}
+      ,{type:"text",key:status,name:status}
+      ,{type:"text",key:b,name:b1}
     ];
 }
 
@@ -221,7 +212,6 @@ if (Meteor.isClient) {
 
               web3.eth.getBalance(user[0],function (error, result) {
                 if (!error) {
-                  console.log();
                   var e = toEth(result.plus(21).toString(10));
                   var n = Math.round(e*100)/100;
                   if(n === 0){
@@ -301,9 +291,6 @@ function loadData(){
         $("#network-name").removeClass("red-text");
         $("#network-name").addClass("green-text");
         console.log('This is the Rinkeby test network.')
-        // witAddress  = "0xc7452fa89d06effce274410c9a47f3257dd3b4e9";
-        // arbolAddress = "0x6b1eb69a46cdb5b58f98cf89c027abc403ef8ef4";
-        // noaaAddress = "0x1ff5b606f10e15afef9f4e76ca03533bd2aa8217";
         witAddress  = "0xcf101416e4e572ef1500808ffc25c062f555c605";
         arbolAddress = "0xe3d980eb41a78178adc99d3d520b5c7fe05f17d8";
         noaaAddress = "0xf226b67aa2bcbe28380188f78d3e69012c249f53";
@@ -363,7 +350,8 @@ function latestAcceptances(){
   console.log("fn: latestAcceptance");
   //do something as new proposal is accepted
   watchLatestAcceptance = witInstance.ProposalAccepted({},{fromBlock: 0, toBlock: 'latest'}).watch(function(error, result){
-    console.log("===> latest: 'accepted'")
+    let id = result.args.WITID.toNumber();
+    console.log("===> latest: 'accepted', id:",id)
     addAcceptance(result);
   });
 }
@@ -371,12 +359,12 @@ function latestAcceptances(){
 //get all evaluations
 var watchLatestEvaluation = -1;
 function latestEvaluations(){
-  console.log("fn: latestEvauation")
+  console.log("fn: latestEvaluation")
   //do something as new evaluation is accepted
   watchLatestEvaluation = witInstance.WITEvaluated({},{fromBlock: 0, toBlock: 'latest'}).watch(function(error, result){
     console.log("===> latest: 'evaluated'")
     console.log(result)
-    //update status in "my protections pages"
+    //TODO update status in "my protections pages"
   })
 }
 
@@ -477,20 +465,25 @@ function updateStatus(list,id){
       let now = new Date().getTime();
       let start = new Date(el[3].name).getTime();
       let end = new Date(el[4].name).getTime();
-      let b1 = "<button type='button' class='action cancelit'> Cancel and Redeem </button>";
+      let yourContr = "???";
+      let b1 = `<button type='button' class='action cancelit tableBtn'> Cancel and redeem <span class="green-text">${yourContr}</span></button>`;
+      let b = "Cancel";
 
       if(now < start) status = "Partnered, Waiting to Start";
       if(now >= start && now <= end){
         status = "In Term";
         b1 = "Waiting...";
+        b = "Waiting";
       }
       if(now > end){
         status = "Waiting for Evaluation";
-        b1 = "<button type='button' class='action evaluateit'> Evaluate and Complete </button>";
+        b1 = `<button type='button' class='action evaluateit tableBtn' value='${id}'> Evaluate and complete </button>`;
+        b = "Evaluate";
       }
-
+      el[10].key = status;
       el[10].name = status;
-      el[11].button = b1;
+      el[11].key = b;
+      el[11].name = b1;
     }
   }
   return list;
@@ -517,14 +510,15 @@ async function addAcceptance(result){
     let id = idObj.toNumber();
 
     console.log("===> proposal accepted, id:", id);
-    console.log(result)
-
     //prevent previous tokens from being added to list
     acceptedList.push(idp);
     //if they are already shown remove them
     removeToken(idp);
     //if they were your proposals update your "my protections"
-    updateStatus(idp);
+    let updateList = Session.get("myProtectionsData");
+    updateList = sortArray(updateList,Session.get("mySortIndex"),Session.get("descending"));
+    updateList = updateStatus(updateList,idp);
+    Session.set("myProtectionsData",updateList);
 
     let owner = await promisify(cb => witInstance.ownerOf(idObj, cb));
     if(owner === user[0]){
@@ -682,15 +676,15 @@ Template.sortableRows.helpers({
 
 Template.sortableRows.events({
   'click .buyit': function(e){
-    if(user[0] === -1) alert("Please login to MetaMask buy a proposal.");
-    else acceptProposal(e.target.value);
-  },
-  'click .sellit': function(e){
-    if(user[0] === -1) alert("Please login to MetaMask sell a proposal.");
-    else acceptProposal(e.target.value);
+    if(user[0] === -1){
+      alert("Please login to MetaMask buy a proposal.");
+    } else {
+      if(typeof e.target.value === 'undefined') acceptProposal(e.target.parentElement.value);
+      else acceptProposal(e.target.value);
+    }
   },
   'click .evaluateit': function(e){
-    evaluateProposal(e.target.value);
+    evaluateWIT(e.target.value);
   },
   'click .cancelit': function(e){
     alert("coming soon");
@@ -715,12 +709,11 @@ async function acceptProposal(v){
 }
 
 //evaluate WIT once its period h gas elapsed
-async function evaluateProposal(id){
+async function evaluateWIT(id){
   try {
-    console.log("====> new WIT evaluation");
-    console.log("token ID", id,user[0]);
-    console.log(witInstance)
-    await promisify(cb => witInstance.evaluate(id,"string",{from: user[0]},cb));
+    console.log("=================> new WIT evaluation");
+    console.log("token ID", parseInt(id), user[0]);
+    await promisify(cb => witInstance.evaluate(parseInt(id),"string",{from: user[0]},cb));
   } catch (error) {
     console.log(error)
   }
@@ -744,13 +737,12 @@ Template.headerRow.events({
       array = Session.get("openProtectionsData");
       //sort array based on the click header
       if(t.innerText === "LOCATION") colIndex = 0;
-      if(t.innerText === "START") colIndex = 1;
-      if(t.innerText === "END") colIndex = 2;
-      if(t.innerText === "BUYER CONTRIBUTION (ETH)") colIndex = 3;
-      if(t.innerText === "SELLER CONTRIBUTION (ETH)") colIndex = 4;
-      if(t.innerText === "INDEX") colIndex = 5;
-      if(t.innerText === "THRESHOLD") colIndex = 6;
-      if(t.innerText === "BUY/SELL") colIndex = 7;
+      if(t.innerText === "THRESHOLD") colIndex = 1;
+      if(t.innerText === "INDEX") colIndex = 2;
+      if(t.innerText === "START") colIndex = 3;
+      if(t.innerText === "END") colIndex = 4;
+      if(t.innerText === "TOTAL PAYOUT") colIndex = 5;
+      if(t.innerText === "PRICE") colIndex = 6;
       Session.set("sortIndex",colIndex);
       //set variable to new sorted array
       let list = sortArray(array,colIndex,d);
@@ -765,13 +757,14 @@ Template.headerRow.events({
       array = Session.get("myProtectionsData");
       //sort array based on the click header
       if(t.innerText === "LOCATION") colIndex = 0;
-      if(t.innerText === "START") colIndex = 1;
-      if(t.innerText === "END") colIndex = 2;
-      if(t.innerText === "BUYER CONTRIBUTION (ETH)") colIndex = 3;
-      if(t.innerText === "SELLER CONTRIBUTION (ETH)") colIndex = 4;
-      if(t.innerText === "INDEX") colIndex = 5;
-      if(t.innerText === "THRESHOLD") colIndex = 6;
-      if(t.innerText === "ACTION") colIndex = 7;
+      if(t.innerText === "THRESHOLD") colIndex = 1;
+      if(t.innerText === "INDEX") colIndex = 2;
+      if(t.innerText === "START") colIndex = 3;
+      if(t.innerText === "END") colIndex = 4;
+      if(t.innerText === "YOUR CONTRIBUTION") colIndex = 5;
+      if(t.innerText === "TOTAL PAYOUT") colIndex = 6;
+      if(t.innerText === "STATUS") colIndex = 7;
+      if(t.innerText === "ACTION") colIndex = 8;
       Session.set("mySortIndex",colIndex);
       //set variable to new sorted array
       let list = sortArray(array,colIndex,d);
@@ -787,11 +780,8 @@ Template.headerRow.events({
 function sortArray(array,i,d){
   let sortedArray = _.sortBy(array,function(obj){
     let cell = obj.column[i], key;
-    if(i === 1 || i === 2){
-      return key = dateNum(cell.name);
-    }
-    if(cell.type === "num") return key = parseFloat(cell.name);
-    if(cell.type === "text" || cell.type === "button") return key = cell.name;
+    if(cell.type === "num") return key = parseFloat(cell.key);
+    if(cell.type === "text") return key = cell.key;
   });
   if(d) sortedArray.reverse();
   return sortedArray;
@@ -868,17 +858,13 @@ Template.openProtectionsTable.helpers({
       {
         type: "headerRow"
         ,column: [
-
-          // ,{name:"Token Number"}
-          // ,{name:"Token Hash"}
           {name:"Location"}
+          ,{name:"Threshold"}
+          ,{name:"Index"}
           ,{name:"Start"}
           ,{name:"End"}
-          ,{name:"Buyer Contribution (Eth)"}
-          ,{name:"Seller Contribution (Eth)"}
-          ,{name:"Index"}
-          ,{name:"Threshold"}
-          ,{name:"BUY/SELL"}
+          ,{name:"Total Payout"}
+          ,{name:"Price"}
         ]
       }
     ];
@@ -909,20 +895,18 @@ Template.formNewProtection.events({
       callNOAA();
     }
   },
-  'input .contribution'(event) {
-    capVal(event.currentTarget);
-  },
   'input #start-date'(event){
     $("#start-date").removeClass("missing-info");
   },
   'input #end-date'(event){
     $("#end-date").removeClass("missing-info");
   },
-  'input #buyer-contrib'(event){
-    $("#buyer-contrib").removeClass("missing-info");
+  'input #your-contrib'(event){
+    capVal(event.currentTarget);
+    $("#your-contrib").removeClass("missing-info");
   },
-  'input #seller-contrib'(event){
-    $("#seller-contrib").removeClass("missing-info");
+  'input #total-contrib'(event){
+    $("#total-contrib").removeClass("missing-info");
   },
   'input #threshold'(event) {
     changeThreshold(event.currentTarget.value);
@@ -933,7 +917,6 @@ Template.formNewProtection.events({
     $("#location").removeClass("missing-info");
   },
   'submit .new-protection'(event) {
-    console.log(user,pastUser)
     if(user[0] === -1){
       alert("Please login to MetaMask to create a proposal.");
       //prevent form from submitting
@@ -944,20 +927,35 @@ Template.formNewProtection.events({
 
       // Get value from form element
       const target = event.currentTarget;
-      const buyerContr = parseFloat(target[2].value);
-      const sellerContr = parseFloat(target[3].value);
-      const buySell = target[4].checked ? "Buy" : "Sell";
-      const startDate = target[5].value;
-      const endDate = target[6].value;
-      const threshold = target[7].value;
-      const location = target[8].value;
+      const yourContr = parseFloat(target[0].value);
+      const totalPayout = parseFloat(target[1].value);
+      const location = target[2].value;
+      const threshold = target[3].value;
+      const startDate = target[4].value;
+      const endDate = target[5].value;
 
       const index = "Precipitation";
 
       //TODO add red boxes to indicate missing values
       //check if info is missing
-      if(startDate === "" || endDate === "" || parseFloat(buyerContr) === 0 || parseFloat(sellerContr) === 0 || location === "" || index === "" || threshold === ""){
+      if(startDate === "" || endDate === "" || parseFloat(yourContr) === 0 || parseFloat(totalPayout) === 0 || location === "" || index === "" || threshold === ""){
         var s = "Please complete missing elements: \n";
+        if(parseFloat(yourContr) === 0){
+          s += "  Your Contribution \n";
+          $("#your-contrib").addClass("missing-info");
+        }
+        if(parseFloat(totalPayout) === 0){
+          s += "  Total Payout \n";
+          $("#total-contrib").addClass("missing-info");
+        }
+        if(location === ""){
+          s += "  Location \n";
+          $("#location").addClass("missing-info");
+        }
+        if(threshold === ""){
+          s += "  Threshold \n";
+          $("#threshold").addClass("missing-info");
+        }
         if(startDate === ""){
           s += "  Start Date \n";
           $("#start-date").addClass("missing-info");
@@ -966,52 +964,31 @@ Template.formNewProtection.events({
           s += "  End Date \n";
           $("#end-date").addClass("missing-info");
         }
-        if(parseFloat(buyerContr) === 0){
-          s += "  Buyer Contribution \n";
-          $("#buyer-contrib").addClass("missing-info");
-        }
-        if(parseFloat(sellerContr) === 0){
-          s += "  Seller Contribution \n";
-          $("#seller-contrib").addClass("missing-info");
-        }
-        if(location === ""){
-          s += "  Location \n";
-          $("#location").addClass("missing-info");
-        }
-        if(index === "") s += "  Index \n";
-        if(threshold === ""){
-          s += "  Threshold \n";
-          $("#threshold").addClass("missing-info");
-        }
         alert(s);
       }else{
         //ask for confirmation
         const confirmed = confirm ( "Please confirm your selection: \n\n"
+          + "  Your Contribution (Eth): " + yourContr + "\n"
+          + "  Total Payout (Eth): " + totalPayout + "\n"
+          + "  Location: " + locationObj[location].text + "\n"
+          + "  Threshold: " + threshObj[threshold].text + "\n"
           + "  Start Date: " + startDate + "\n"
           + "  End Date: " + endDate + "\n"
-          + "  Buyer Contribution (Eth): " + buyerContr + "\n"
-          + "  Seller Contribution (Eth): " + sellerContr + "\n"
-          + "  Location: " + locationObj[location].text + "\n"
-          + "  Index: " + index + "\n"
-          + "  Threshold: " + threshObj[threshold].text + "\n"
-          + "  Buy or Sell: " + buySell + "\n"
         );
 
         if(confirmed){
           //call back that clears the form
           var clearForm = function(){
             //clear form if succesful
-            target[2].value = 0;
-            target[3].value = 0;
+            target[0].value = 0;
+            target[1].value = 0;
+            target[2].value = "";
+            target[3].value = "";
             target[4].value = "";
             target[5].value = "";
-            target[6].value = "";
-            target[7].value = "";
-            target[8].value = "";
             $('#end-date')[0].min = "";
             $('#start-date')[0].max = "";
-            $('#seller-contrib')[0].min = 0;
-            $('#payout-amt').html(0);
+            $('#total-contrib')[0].min = 0;
             //unselect region, reset text value
             clearChart();
             $('#location').val("none");
@@ -1024,7 +1001,7 @@ Template.formNewProtection.events({
           }
 
           //submit info
-          createProposal(startDate,endDate,buyerContr,sellerContr,location,index,threshold,buySell,clearForm);
+          createProposal(startDate,endDate,yourContr,totalPayout,location,index,threshold,clearForm);
         }else{
           //let user continue to edit
         }
@@ -1033,24 +1010,14 @@ Template.formNewProtection.events({
   }
 });
 
-async function createProposal(startDate,endDate,buyerContr,sellerContr,location,index,threshold,buySell,clearForm){
+async function createProposal(startDate,endDate,yourContr,totalPayout,location,index,threshold,clearForm){
   const d1 = (new Date(startDate)).getTime();
   let dd2 = new Date(endDate);
   dd2.setDate(dd2.getDate() + 15);
   const d2 = dd2.getTime();
-  console.log(startDate,endDate,new Date(startDate),dd2,d1,d2)
 
-  let ethPropose = 0;
-  let ethAsk = 0;
-
-  if(buySell === "Buy"){
-    ethPropose = toWei(buyerContr);
-    ethAsk = toWei(sellerContr);
-  }
-  if(buySell === "Sell"){
-    ethPropose = toWei(sellerContr);
-    ethAsk = toWei(buyerContr);
-  }
+  let ethPropose = toWei(yourContr);
+  let ethAsk = toWei(totalPayout - yourContr);
 
   try {
     console.log("===== CREATE WIT PROPOSAL =====")
@@ -1098,12 +1065,18 @@ function capDate(target){
 function capVal(target){
   //change properties of the other date picker so that incorrect values can't be chosen
   var num = parseFloat(target.value);
-  var step = parseFloat($('#buyer-contrib')[0].step);
-  var id = target.id;
-  if(id === 'buyer-contrib') $('#seller-contrib')[0].min = Math.round((num + step)/step)*step;
-  //show total payout
-  let v = Math.round((parseFloat($('#seller-contrib')[0].value) + parseFloat($('#buyer-contrib')[0].value))/step)*step;
-  $('#payout-amt').html(v);
+  var step = parseFloat($('#your-contrib')[0].step);
+  let next = clipNum(num + step);
+  $('#total-contrib')[0].min = next;
+
+  let tot = parseFloat($('#total-contrib')[0].value);
+  if(num >= tot) $('#total-contrib')[0].value = next;
+}
+
+function clipNum(n){
+  var s = `${n}`;
+  if(s.length > 5) s = s.slice(0,5);
+  return s;
 }
 
 ////////////////////////////////////////////
@@ -1117,16 +1090,13 @@ Template.myProtectionsTable.helpers({
       {
         type: "headerRow"
         ,column: [
-          // {name:"Token Number"}
-          // ,{name:"Token Hash"}
-          // ,{name:"Ownership"}
           {name:"Location"}
+          ,{name:"Threshold"}
+          ,{name:"Index"}
           ,{name:"Start"}
           ,{name:"End"}
-          ,{name:"Buyer Contribution (Eth)"}
-          ,{name:"Seller Contribution (Eth)"}
-          ,{name:"Index"}
-          ,{name:"Threshold"}
+          ,{name:"Your Contribution"}
+          ,{name:"Total Payout"}
           ,{name:"Status"}
           ,{name:"Action"}
         ]
@@ -1271,7 +1241,6 @@ function callNOAA(){
   currentHTTP += 1;
   let check = currentHTTP;
   if(NOAACODE !== -1 && MONTHCODE !== -1 && DURATIONCODE !== -1){
-    console.log(NOAACODE,MONTHCODE,DURATIONCODE)
     Meteor.call("glanceNOAA",NOAACODE,MONTHCODE,DURATIONCODE,function(error, results) {
       let obj = parseData(results);
       if(check === currentHTTP){
@@ -1398,7 +1367,6 @@ function defaultMonths(){
 }
 
 function upDateMonths(o){
-  // console.log(o)
   svg = d3.select("svg#chart");
   margin = {top: 20, right: 50, bottom: 45, left: 50};
   width = +svg.attr("width") - margin.left - margin.right;
