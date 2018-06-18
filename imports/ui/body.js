@@ -61,39 +61,25 @@ function thresholdText(num){
 //event ProposalOffered(uint indexed WITID, uint aboveID, uint belowID, uint indexed weiContributing,  uint indexed weiAsking, address evaluator, uint thresholdPPTTH, bytes32 location, uint start, uint end, bool makeStale);
 function Entry(r,owner){
   let a = r.args;
-  let l = r.transactionHash.length;
-  let s = r.transactionHash.substring(0,8) + "..." + r.transactionHash.substring(l-8,l);
-  let d1 = new Date(a.start.c[0]).toISOString().substring(0,7);
-  let d2 = new Date(a.end.c[0]).toISOString().substring(0,7);
+  let location = locationText(bytes32ToNumString(a.location));
   let ask = a.weiAsking.toNumber();
   let propose = a.weiContributing.toNumber();
   let id = a.WITID.toNumber();
 
   //update for if the contract is for offered for sale or for funding
-  let sellerContr, buyerContr;
-  let b= "", b1 ="";
-  let v = toEth(ask)+","+a.WITID.toNumber();
-  if(propose > ask){
-    sellerContr = toEth(propose);
-    buyerContr = toEth(ask);
-    b = "Buy";
-    b1 = "<button type='button' class='buyit' value='" + v + "'> buy </button>";
-  }
-  if(propose < ask){
-    sellerContr = toEth(ask);
-    buyerContr = toEth(propose);
-    b = "Sell";
-    b1 = "<button type='button' class='sellit' value='" + v + "'> sell </button>";
-  }
+  let totalPayout = `${clipNum(toEth(propose) + toEth(ask))} Eth`;
+  let b = `${toEth(ask)}`;
+  let b1 = `<button type='button' class='action buyit tableBtn' value='${toEth(ask)},${a.WITID.toNumber()}'>Pay <span class="green-text">${toEth(ask)} Eth</span> to accept</button>`;
+
   //if the current use is the owner of the proposal don't give them the option to purchase the proposal
   if(owner === user[0]){
-    b = "Owner";
-    b1 = `<button type='button' onClick='alert("You are the owner of this proposal.")'> owner </button>`;
+    b = "1e99";
+    b1 = `<button type='button' class='tableBtn'>You are the owner of this proposal</button>`;
   }
 
   //get threshold text
-  let thresh = thresholdText(a.thresholdPPM.toNumber());
-  if(a.WITID.toNumber() === a.belowID.toNumber() && a.thresholdPPM.toNumber() === 10000){
+  let thresh = thresholdText(a.thresholdPPTTH.toNumber());
+  if(a.WITID.toNumber() === a.belowID.toNumber() && a.thresholdPPTTH.toNumber() === 10000){
     thresh = threshObj["below-average"].text;
   }
 
@@ -101,67 +87,53 @@ function Entry(r,owner){
   this.id = a.WITID;
   this.type = "bodyRow";
   this.column = [
-       {type:"num",name:id}
-      ,{type:"text",name:s}
-      ,{type:"text",name:d1}
-      ,{type:"text",name:d2}
-      ,{type:"num",name:buyerContr}
-      ,{type:"num",name:sellerContr}
-      ,{type:"text",name:locationText(bytes32ToNumString(a.location))}
-      ,{type:"text",name:"Rainfall"}
-      ,{type:"text",name:thresh}
-      ,{type:"button",name:b,button:b1}
+      {type:"text",key:location,name:location}
+      ,{type:"text",key:thresh,name:thresh}
+      ,{type:"text",key:"NOAA Rainfall",name:"NOAA Rainfall"}
+      ,{type:"num",key:a.start.c[0],name:dateText(a.start.c[0])}
+      ,{type:"num",key:a.end.c[0],name:dateText(a.end.c[0])}
+      ,{type:"num",key:totalPayout,name:totalPayout}
+      ,{type:"num",key:b,name:b1}
     ];
 }
 
 //table entry constructor my protections
 //bool if you proposed the protection = true, if you accepted the protection = false
 function MyEntry(r,a,id,bool){
-  // console.log("fn: MyEntry",id)
-  let l = r.transactionHash.length;
-  let s = r.transactionHash.substring(0,8) + "..." + r.transactionHash.substring(l-8,l);
-  let d1 = new Date(a.start.c[0]).toISOString().substring(0,7);
-  let d2 = new Date(a.end.c[0]).toISOString().substring(0,7);
   let ask = a.weiAsking.toNumber();
   let propose = a.weiContributing.toNumber();
+  let location = locationText(bytes32ToNumString(a.location));
 
-  //update for if the contract is offered for sale or for funding
-  let sellerContr, buyerContr;
-  if(propose < ask){
-    sellerContr = toEth(ask);
-    buyerContr = toEth(propose);
-  }
-  if(propose > ask){
-    sellerContr = toEth(propose);
-    buyerContr = toEth(ask);
-  }
+  //total payouts
+  let totalPayout = `${clipNum(toEth(propose) + toEth(ask))} Eth`;
 
-  let o;
-  if(bool){
-    if(propose < ask) o = "you are the <strong>buyer</strong>";
-    if(propose > ask) o = "you are the <strong>seller</strong>";
-  }else{
-    if(propose < ask) o = "you are the <strong>seller</strong>";
-    if(propose > ask) o = "you are the <strong>buyer</strong>";
-  }
+  //your contribution
+  let yourContr;
+  if(r.args !== a) yourContr = `${toEth(ask)}`;
+  else yourContr = `${toEth(propose)}`;
+  if(yourContr.length > 5) yourContr = yourContr.slice(0,5);
+  yourContr = `${yourContr} Eth`;
 
+  //status
   let status = "";
   let now = new Date().getTime();
   let start = new Date(a.start.c[0]).getTime();
   let end = new Date(a.end.c[0]).getTime();
-  let b = "";
-  let b1 = "<button type='button' class='action cancelit'> Cancel and Redeem </button>";
+  let b = "Cancel";
+  let b1 = `<button type='button' class='action cancelit tableBtn'> Cancel and redeem <span class="green-text">${yourContr}</span></button>`;
 
   //TODO add in "make stale = false" functionality
   if(r.args !== a){
-    if(now < start) status = "Partnered, Waiting to Start";
+    if(now < start) status = "Partnered, waiting to start";
     if(now >= start && now <= end){
-      status = "In Term";
+      status = "In term";
+      b = "Waiting";
       b1 = "Waiting...";
     }
     if(now > end){
-      status = "Waiting for Evaluation";
-      b1 = `<button type='button' class='action evaluateit' value=${id}> Evaluate and Complete </button>`;
+      status = "Waiting for evaluation";
+      b = "Evaluate"
+      b1 = `<button type='button' class='action evaluateit tableBtn' value=${id}> Evaluate and complete </button>`;
     }
   }else{
     if(now < start) status = "Open";
@@ -169,31 +141,28 @@ function MyEntry(r,a,id,bool){
   }
 
   //get threshold text
-  let thresh = thresholdText(a.thresholdPPM.toNumber());
-  if(a.WITID.toNumber() === a.belowID.toNumber() && a.thresholdPPM.toNumber() === 10000){
+  let thresh = thresholdText(a.thresholdPPTTH.toNumber());
+  if(a.WITID.toNumber() === a.belowID.toNumber() && a.thresholdPPTTH.toNumber() === 10000){
     thresh = threshObj["below-average"].text;
   }
 
   //create the object
   this.type = "bodyRow";
   this.column = [
-       {type:"num",name:id}
-      ,{type:"text",name:s}
-      ,{type:"text",name:o}
-      ,{type:"text",name:d1}
-      ,{type:"text",name:d2}
-      ,{type:"num",name:buyerContr}
-      ,{type:"num",name:sellerContr}
-      ,{type:"text",name:locationText(bytes32ToNumString(a.location))}
-      ,{type:"text",name:"Rainfall"}
-      ,{type:"text",name:thresh}
-      ,{type:"text",name:status}
-      ,{type:"button",name:b,button:b1}
+      {type:"text",key:location,name:location}
+      ,{type:"text",key:thresh,name:thresh}
+      ,{type:"text",key:"NOAA Rainfall",name:"NOAA Rainfall"}
+      ,{type:"num",key:a.start.c[0],name:dateText(a.start.c[0])}
+      ,{type:"num",key:a.end.c[0],name:dateText(a.end.c[0])}
+      ,{type:"num",key:yourContr,name:yourContr}
+      ,{type:"num",key:totalPayout,name:totalPayout}
+      ,{type:"text",key:status,name:status}
+      ,{type:"text",key:b,name:b1}
     ];
 }
 
-var user;
-var pastUser = -1;
+var user = [-1];
+var pastUser = [-2];
 var arbolAddress, arbolContract, arbolInstance;
 var witAddress, witContract, witInstance;
 var noaaAddress;
@@ -207,6 +176,9 @@ let DURATIONCODE = -1;
 
 if (Meteor.isClient) {
   Meteor.startup(async function() {
+    //start voronoi animation
+    //voronoiAnimation();
+
     console.log('Meteor.startup');
     // Checking if Web3 has been injected by the browser (Mist/MetaMask)
     if (typeof web3 !== 'undefined') {
@@ -215,37 +187,61 @@ if (Meteor.isClient) {
       web3 = new Web3(web3.currentProvider);
 
       //show relevant content depending on wether web3 is loaded or not
-      $('#web3-waiting').hide();
-      $('#web3-onload').show();
-
-      //initialize web3 contracts
-      Session.set("activeUser","current user: no current user- log into metamask");
-      resetSessionVars();
+      $("#user").show();
+      $("#web3-onload").removeClass("disabled-div");
 
       // check for subsequent account activity, lockout screen if no metamask user is signed in
       setInterval(async function(){
         try{
           user = await promisify(cb => web3.eth.getAccounts(cb));
+          if(typeof user[0] === "undefined") user = [-1];
           if(user[0] !== pastUser[0]){
             console.log("_-_-_- CHANGE IN USER _-_-_-")
             //reset and reload everything for new user
-            $("#web3-onload").addClass("disabled-div");
-            $('.loader').show();
-            $('.wrapper').addClass('loading');
+            // $("#web3-onload").addClass("disabled-div");
             $('#open-pager-btns').hide();
             $('#my-pager-btns').hide();
             resetSessionVars();
             resetGlobalVariables();
             let s;
-            if(user[0]){
-               s = "current user: " + user[0];
-               Session.set("activeUser",s);
-               $("#web3-onload").removeClass("disabled-div");
-               loadData();
+            if(user[0] !== -1){
+              $('#user-hash').html(user[0]);
+              $('#user-hash').removeClass('red-text');
+              $('#user-hash').addClass('green-text');
+
+              web3.eth.getBalance(user[0],function (error, result) {
+                if (!error) {
+                  var e = toEth(result.plus(21).toString(10));
+                  var n = Math.round(e*100)/100;
+                  if(n === 0){
+                    $('#user-balance').html("0.00");
+                    $('#user-balance').removeClass('red-text');
+                    $('#user-balance').addClass('green-text');
+                  }else{
+                    if(e < 0.01) $('#user-balance').html("<0.01");
+                    else $('#user-balance').html(n);
+                    $('#user-balance').removeClass('red-text');
+                    $('#user-balance').addClass('green-text');
+                  }
+                } else {
+                  console.error(error);
+                }
+              });
+              $('#my-wrapper').removeClass('loading');
+              $('#my-loader').hide();
             } else {
-              s = "current user: no current user- log into metamask";
-              Session.set("activeUser",s);
+              $('#user-hash').html("No current user- log into MetaMask");
+              $('#user-hash').addClass('red-text');
+              $('#user-hash').removeClass('green-text');
+
+              $('#user-balance').html("0.00");
+              $('#user-balance').removeClass('red-text');
+              $('#user-balance').addClass('green-text');
+
+              $('#my-loader').show();
+              $('#my-wrapper').addClass('loading');
             }
+            loadData();
           }
           pastUser = user;
         } catch (error) {
@@ -259,44 +255,52 @@ if (Meteor.isClient) {
     } else {
       console.log('No web3? You should consider trying MetaMask!')
       // fallback - use your fallback strategy (local node / hosted node + in-dapp id mgmt / fail)
-      web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:7545"));
+      // web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:7545"));
       //show relevant content depending on wether web3 is available or not
-      $('#web3-waiting').hide();
       $('#no-web3').show();
     }
-    // Now you can start your app & access web3 freely:
   });
 }
 
 //begin the process of loading all the data
 function loadData(){
+  console.log("fn: loadData")
   //check for network use correct deployed addresses
   web3.version.getNetwork((err, netId) => {
-    console.log("netID",netId)
     switch (netId) {
       case "1":
+        $("#network-name").html("Mainnet");
+        $("#network-name").addClass("red-text");
         console.log('This is mainnet')
         break
       case "2":
+        $("#network-name").html("Deprecated Morden");
+        $("#network-name").addClass("red-text");
         console.log('This is the deprecated Morden test network.')
         break
       case "3":
+        $("#network-name").html("Ropsten");
+        $("#network-name").addClass("red-text");
         console.log('This is the ropsten test network.')
         break
       case "4":
+        $("#network-name").html("Rinkeby");
+        $("#network-name").removeClass("red-text");
+        $("#network-name").addClass("green-text");
         console.log('This is the Rinkeby test network.')
-        // witAddress  = "0xc7452fa89d06effce274410c9a47f3257dd3b4e9";
-        // arbolAddress = "0x6b1eb69a46cdb5b58f98cf89c027abc403ef8ef4";
-        // noaaAddress = "0x1ff5b606f10e15afef9f4e76ca03533bd2aa8217";
         witAddress  = "0xcf101416e4e572ef1500808ffc25c062f555c605";
         arbolAddress = "0xe3d980eb41a78178adc99d3d520b5c7fe05f17d8";
         noaaAddress = "0xf226b67aa2bcbe28380188f78d3e69012c249f53";
 
         break
       case "42":
+        $("#network-name").html("Kovan");
+        $("#network-name").addClass("red-text");
         console.log('This is the Kovan test network.')
         break
       default:
+        $("#network-name").html("Unkown");
+        $("#network-name").addClass("red-text");
         console.log('This is an unknown network.')
         //ganache-cli
         witAddress  = "0x96ef5ac933b4a16e68651f03fdc0cd4cb2b80204";
@@ -324,7 +328,6 @@ function resetGlobalVariables(){
   if(watchLatestEvaluation !== -1) watchLatestEvaluation.stopWatching();
 }
 
-//TODO only add token if it hasn't been accepted
 //get all proposals, add new entries as they are created
 var watchLatestProposal = -1;
 function latestProposals(){
@@ -333,8 +336,8 @@ function latestProposals(){
     let id = result.args.WITID.toNumber();
     console.log("===> latest: 'offered', id:",id);
     addToken(result);
-    $('.loader').hide();
-    $('.wrapper').removeClass('loading');
+    $('#open-loader').hide();
+    $('#open-wrapper').removeClass('loading');
   });
 }
 
@@ -344,23 +347,21 @@ function latestAcceptances(){
   console.log("fn: latestAcceptance");
   //do something as new proposal is accepted
   watchLatestAcceptance = witInstance.ProposalAccepted({},{fromBlock: 0, toBlock: 'latest'}).watch(function(error, result){
-    console.log("===> latest: 'accepted'")
+    let id = result.args.WITID.toNumber();
+    console.log("===> latest: 'accepted', id:",id)
     addAcceptance(result);
-    $('.loader').hide();
-    $('.wrapper').removeClass('loading');
   });
 }
 
 //get all evaluations
 var watchLatestEvaluation = -1;
 function latestEvaluations(){
-  console.log("fn: latestEvauation")
+  console.log("fn: latestEvaluation")
   //do something as new evaluation is accepted
   watchLatestEvaluation = witInstance.WITEvaluated({},{fromBlock: 0, toBlock: 'latest'}).watch(function(error, result){
     console.log("===> latest: 'evaluated'")
     console.log(result)
-    //update status in "my protections pages"
-
+    //TODO update status in "my protections pages"
   })
 }
 
@@ -383,8 +384,11 @@ async function addToken(result){
         Session.set("openProtectionsData",list);
 
         //if more than ten items turn on pagination
+        //set max pagination
         if(list.length > 10){
           $("#open-pager-btns").show();
+          $("#open-max").html(Math.ceil(list.length/10));
+          $("#open-current").html(1);
         }
 
         //show paginated items
@@ -408,6 +412,8 @@ async function addToken(result){
       //if more than ten items turn on pagination
       if(list.length > 10){
         $("#my-pager-btns").show();
+        $("#my-max").html(Math.ceil(list.length/10));
+        $("#my-current").html(1);
       }
 
       //show paginated items
@@ -446,6 +452,7 @@ function removeToken(id){
 }
 
 function updateStatus(list,id){
+  console.log("updateStatus")
   //only update status for those that are accepted
   if(acceptedList.indexOf(id) !== -1){
     let index = findIndex(list,function(el){return el.column[0].name === id;});
@@ -456,20 +463,25 @@ function updateStatus(list,id){
       let now = new Date().getTime();
       let start = new Date(el[3].name).getTime();
       let end = new Date(el[4].name).getTime();
-      let b1 = "<button type='button' class='action cancelit'> Cancel and Redeem </button>";
+      let yourContr = "???";
+      let b1 = `<button type='button' class='action cancelit tableBtn'> Cancel and redeem <span class="green-text">${yourContr}</span></button>`;
+      let b = "Cancel";
 
       if(now < start) status = "Partnered, Waiting to Start";
       if(now >= start && now <= end){
         status = "In Term";
         b1 = "Waiting...";
+        b = "Waiting";
       }
       if(now > end){
         status = "Waiting for Evaluation";
-        b1 = "<button type='button' class='action evaluateit'> Evaluate and Complete </button>";
+        b1 = `<button type='button' class='action evaluateit tableBtn' value='${id}'> Evaluate and complete </button>`;
+        b = "Evaluate";
       }
-
+      el[10].key = status;
       el[10].name = status;
-      el[11].button = b1;
+      el[11].key = b;
+      el[11].name = b1;
     }
   }
   return list;
@@ -496,17 +508,22 @@ async function addAcceptance(result){
     let id = idObj.toNumber();
 
     console.log("===> proposal accepted, id:", id);
-    console.log(result)
-
     //prevent previous tokens from being added to list
     acceptedList.push(idp);
     //if they are already shown remove them
     removeToken(idp);
     //if they were your proposals update your "my protections"
-    updateStatus(idp);
+    let updateList = Session.get("myProtectionsData");
+    updateList = sortArray(updateList,Session.get("mySortIndex"),Session.get("descending"));
+    updateList = updateStatus(updateList,idp);
+    Session.set("myProtectionsData",updateList);
 
     let owner = await promisify(cb => witInstance.ownerOf(idObj, cb));
     if(owner === user[0]){
+      //hide the loading
+      $('#my-loader').hide();
+      $('#my-wrapper').removeClass('loading');
+
       //get contract information for associated proposal
       witInstance.ProposalOffered({WITID:idpObj},{fromBlock: 0, toBlock: 'latest'}).watch(function(error, result){
         console.log("===> proposal accepted details retrieved, id:",id)
@@ -543,54 +560,94 @@ function toWei(n){
   return n*Math.pow(10,18);
 }
 
-////////////////////////////////////////////
-// ACTIVE USER
-////////////////////////////////////////////
-Session.set("activeUser","");
+// num = a.start.c[0]
+let months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+function dateText(iso){
+  let d1 = new Date(iso).toISOString().substring(0,7);
+  let a = d1.split("-");
+  let n = parseInt(a[1]) - 1;
+  return months[n] + " " + a[0];
+}
 
-// populate open protections table
-Template.user.helpers({
-  activeUser: function(){
-    return [{name: Session.get("activeUser")}];
+function dateNum(text){
+  let a = text.split(" ");
+  let lm = months.length;
+  let n = 0;
+  while(lm--){
+    if(months[lm] === a[0]) n = lm;
   }
-});
+  return parseInt(a[1]) + n/12;
+}
+
+////////////////////////////////////////////
+// FUNCTIONS RELATED TO VORONOI ANIMATION
+////////////////////////////////////////////
+
+// function voronoiAnimation(){
+//
+//   let c = ["#446633","#44AA33","#338833","#227733","#448822","#448855","#447733","#337733","#888844"];
+//
+//   var width = 725,
+//       height = 250,
+//       color_qtd = 9;
+//   var vertices = d3.range(300).map(function(d) {
+//     // return [Math.min(Math.tan(Math.random()*Math.PI/2)/50,1)* width, Math.random() * height];
+//     return [Math.min(Math.random()**2,1)*width, Math.random() * height];
+//   });
+//   var voronoi = d3.voronoi();
+//   var svg = d3.select("#arbol-text");
+//   var path = svg.append("g").selectAll("path");
+//   redraw();
+//
+//   function redraw() {
+//     path = path.data(voronoi.polygons(vertices), polygon);
+//     path.exit().remove();
+//     path.enter().append("path")
+//         .attr("clip-path","url(#arbol-clip)")
+//         .attr("fill", function(d, i) { return c[i%color_qtd];})
+//         .attr("stroke","none")
+//         .attr("d", polygon);
+//     path.order();
+//   }
+//
+//   function polygon(d) {
+//     return "M" + d.join("L") + "Z";
+//   }
+// }
+
 
 ////////////////////////////////////////////
 // FUNCTIONS RELATED TO THE TAB LAYOUT
 ////////////////////////////////////////////
 
-//instantiate tab layout
-ReactiveTabs.createInterface({
-  template: 'basicTabs',
-  onChange: function (slug, template) {
-    // This callback runs every time a tab changes.
-    // The `template` instance is unique per {{#basicTabs}} block.
-    // console.log('[tabs] Tab has changed! Current tab:', slug);
-    // console.log('[tabs] Template instance calling onChange:', template);
+Template.tabs.events({
+  'click .click-tab': function(e){
+    $('html, body').animate({
+      scrollTop: $('#arbol-wrapper').height()
+    }, 500);
+    if(e.currentTarget.id === "open-tab"){
+      $("#open-protections").show();
+      $("#create-protection").hide();
+      $("#your-protections").hide();
+    }
+    if(e.currentTarget.id === "create-tab"){
+      $("#open-protections").hide();
+      $("#create-protection").show();
+      $("#your-protections").hide();
+    }
+    if(e.currentTarget.id === "your-tab"){
+      $("#open-protections").hide();
+      $("#create-protection").hide();
+      $("#your-protections").show();
+    }
   }
 });
 
-Template.navigation.helpers({
-  tabs: function () {
-    // Every tab object MUST have a name and a slug!
-    return [
-      { name: 'Open Protections', slug: 'open' },
-      { name: 'Create a Protection', slug: 'create' },
-      { name: 'My Protections', slug: 'mine', onRender: function(slug, template) {
-        // Make the call to block chain to get information on protections
-      }}
-    ];
-  },
-  activeTab: function () {
-    // Use this optional helper to reactively set the active tab.
-    // All you have to do is return the slug of the tab.
-
-    // You can set this using an Iron Router param if you want--
-    // or a Session variable, or any reactive value from anywhere.
-
-    // If you don't provide an active tab, the first one is selected by default.
-    // See the `advanced use` section below to learn about dynamic tabs.
-    return Session.get('activeTab'); // Returns "people", "places", or "things".
+Template.arrow.events({
+  'click .arrow-border': function(e){
+    $('html, body').animate({
+      scrollTop: $('#arbol-wrapper').height()
+    }, 500);
   }
 });
 
@@ -617,13 +674,15 @@ Template.sortableRows.helpers({
 
 Template.sortableRows.events({
   'click .buyit': function(e){
-    acceptProposal(e.target.value);
-  },
-  'click .sellit': function(e){
-    acceptProposal(e.target.value);
+    if(user[0] === -1){
+      alert("Please login to MetaMask buy a proposal.");
+    } else {
+      if(typeof e.target.value === 'undefined') acceptProposal(e.target.parentElement.value);
+      else acceptProposal(e.target.value);
+    }
   },
   'click .evaluateit': function(e){
-    evaluateProposal(e.target.value);
+    evaluateWIT(e.target.value);
   },
   'click .cancelit': function(e){
     alert("coming soon");
@@ -648,12 +707,11 @@ async function acceptProposal(v){
 }
 
 //evaluate WIT once its period h gas elapsed
-async function evaluateProposal(id){
+async function evaluateWIT(id){
   try {
-    console.log("====> new WIT evaluation");
-    console.log("token ID", id,user[0]);
-    console.log(witInstance)
-    await promisify(cb => witInstance.evaluate(id,"string",{from: user[0]},cb));
+    console.log("=================> new WIT evaluation");
+    console.log("token ID", parseInt(id), user[0],witInstance);
+    await promisify(cb => witInstance.evaluate(parseInt(id),"",{from: user[0]},cb));
   } catch (error) {
     console.log(error)
   }
@@ -676,16 +734,13 @@ Template.headerRow.events({
       let d = Session.get("descending");
       array = Session.get("openProtectionsData");
       //sort array based on the click header
-      if(t.innerText === "TOKEN NUMBER") colIndex = 0;
-      if(t.innerText === "TOKEN HASH") colIndex = 1;
-      if(t.innerText === "START") colIndex = 2;
-      if(t.innerText === "END") colIndex = 3;
-      if(t.innerText === "BUYER CONTRIBUTION (ETH)") colIndex = 4;
-      if(t.innerText === "SELLER CONTRIBUTION (ETH)") colIndex = 5;
-      if(t.innerText === "LOCATION") colIndex = 6;
-      if(t.innerText === "INDEX") colIndex = 7;
-      if(t.innerText === "THRESHOLD (%)") colIndex = 8;
-      if(t.innerText === "BUY/SELL") colIndex = 9;
+      if(t.innerText === "LOCATION") colIndex = 0;
+      if(t.innerText === "THRESHOLD") colIndex = 1;
+      if(t.innerText === "INDEX") colIndex = 2;
+      if(t.innerText === "START") colIndex = 3;
+      if(t.innerText === "END") colIndex = 4;
+      if(t.innerText === "TOTAL PAYOUT") colIndex = 5;
+      if(t.innerText === "PRICE") colIndex = 6;
       Session.set("sortIndex",colIndex);
       //set variable to new sorted array
       let list = sortArray(array,colIndex,d);
@@ -699,18 +754,15 @@ Template.headerRow.events({
       let d = Session.get("myDescending");
       array = Session.get("myProtectionsData");
       //sort array based on the click header
-      if(t.innerText === "BLOCK NUMBER") colIndex = 0;
-      if(t.innerText === "TOKEN HASH") colIndex = 1;
-      if(t.innerText === "OWNERSHIP") colIndex = 2;
+      if(t.innerText === "LOCATION") colIndex = 0;
+      if(t.innerText === "THRESHOLD") colIndex = 1;
+      if(t.innerText === "INDEX") colIndex = 2;
       if(t.innerText === "START") colIndex = 3;
       if(t.innerText === "END") colIndex = 4;
-      if(t.innerText === "BUYER CONTRIBUTION (ETH)") colIndex = 5;
-      if(t.innerText === "SELLER CONTRIBUTION (ETH)") colIndex = 6;
-      if(t.innerText === "LOCATION") colIndex = 7;
-      if(t.innerText === "INDEX") colIndex = 8;
-      if(t.innerText === "THRESHOLD (%)") colIndex = 9;
-      if(t.innerText === "THRESHOLD (%)") colIndex = 10;
-      if(t.innerText === "ACTION") colIndex = 11;
+      if(t.innerText === "YOUR CONTRIBUTION") colIndex = 5;
+      if(t.innerText === "TOTAL PAYOUT") colIndex = 6;
+      if(t.innerText === "STATUS") colIndex = 7;
+      if(t.innerText === "ACTION") colIndex = 8;
       Session.set("mySortIndex",colIndex);
       //set variable to new sorted array
       let list = sortArray(array,colIndex,d);
@@ -726,8 +778,8 @@ Template.headerRow.events({
 function sortArray(array,i,d){
   let sortedArray = _.sortBy(array,function(obj){
     let cell = obj.column[i], key;
-    if(cell.type === "num") return key = parseFloat(cell.name);
-    if(cell.type === "text" || cell.type === "button") return key = cell.name;
+    if(cell.type === "num") return key = parseFloat(cell.key);
+    if(cell.type === "text") return key = cell.key;
   });
   if(d) sortedArray.reverse();
   return sortedArray;
@@ -747,12 +799,14 @@ Template.openPagination.events({
     let pageList = paginateData(list,opPagination);
     if(pageList.length > 0) Session.set("openProtectionsPaginatedData",pageList);
     else if(opPagination > 0) opPagination -= 1;
+    $("#open-current").html(opPagination+1);
   },
   'click #open-back'(e){
     if(opPagination > 0) opPagination -= 1;
     let fullList = Session.get("openProtectionsData");
     let pageList = paginateData(fullList,opPagination);
     Session.set("openProtectionsPaginatedData",pageList);
+    $("#open-current").html(opPagination+1);
   }
 });
 
@@ -765,12 +819,14 @@ Template.myPagination.events({
     let pageList = paginateData(list,myPagination);
     if(pageList.length > 0) Session.set("myProtectionsPaginatedData",pageList);
     else if(myPagination > 0) myPagination -= 1;
+    $("#my-current").html(myPagination+1);
   },
   'click #my-back'(e){
     if(myPagination > 0) myPagination -= 1;
     let fullList = Session.get("myProtectionsData");
     let pageList = paginateData(fullList,myPagination);
     Session.set("myProtectionsPaginatedData",pageList);
+    $("#my-current").html(myPagination+1);
   }
 });
 
@@ -800,16 +856,13 @@ Template.openProtectionsTable.helpers({
       {
         type: "headerRow"
         ,column: [
-          {name:"Token Number"}
-          ,{name:"Token Hash"}
+          {name:"Location"}
+          ,{name:"Threshold"}
+          ,{name:"Index"}
           ,{name:"Start"}
           ,{name:"End"}
-          ,{name:"Buyer Contribution (Eth)"}
-          ,{name:"Seller Contribution (Eth)"}
-          ,{name:"Location"}
-          ,{name:"Index"}
-          ,{name:"Threshold (%)"}
-          ,{name:"BUY/SELL"}
+          ,{name:"Total Payout"}
+          ,{name:"Price"}
         ]
       }
     ];
@@ -840,189 +893,140 @@ Template.formNewProtection.events({
       callNOAA();
     }
   },
-  'input .contribution'(event) {
-    capVal(event.currentTarget);
-  },
   'input #start-date'(event){
     $("#start-date").removeClass("missing-info");
   },
   'input #end-date'(event){
     $("#end-date").removeClass("missing-info");
   },
-  'input #buyer-contrib'(event){
-    $("#buyer-contrib").removeClass("missing-info");
+  'input #your-contrib'(event){
+    capVal(event.currentTarget);
+    $("#your-contrib").removeClass("missing-info");
   },
-  'input #seller-contrib'(event){
-    $("#seller-contrib").removeClass("missing-info");
+  'input #total-contrib'(event){
+    $("#total-contrib").removeClass("missing-info");
   },
   'input #threshold'(event) {
     changeThreshold(event.currentTarget.value);
     $("#threshold").removeClass("missing-info");
   },
+  'input #location'(event) {
+    changeRegion(event.currentTarget.value);
+    $("#location").removeClass("missing-info");
+  },
   'submit .new-protection'(event) {
-    // Prevent default browser form submit
-    event.preventDefault();
-
-    // Get value from form element
-    const target = event.currentTarget;
-    const buyerContr = parseFloat(target[2].value);
-    const sellerContr = parseFloat(target[3].value);
-    const buySell = target[4].checked ? "Buy" : "Sell";
-    const startDate = target[5].value;
-    const endDate = target[6].value;
-    const threshold = target[7].value;
-    const location = target[8].value;
-
-    const index = "Precipitation";
-
-    //TODO add red boxes to indicate missing values
-    //check if info is missing
-    if(startDate === "" || endDate === "" || parseFloat(buyerContr) === 0 || parseFloat(sellerContr) === 0 || location === "" || index === "" || threshold === ""){
-      var s = "Please complete missing elements: \n";
-      if(startDate === ""){
-        s += "  Start Date \n";
-        $("#start-date").addClass("missing-info");
-      }
-      if(endDate === ""){
-        s += "  End Date \n";
-        $("#end-date").addClass("missing-info");
-      }
-      if(parseFloat(buyerContr) === 0){
-        s += "  Buyer Contribution \n";
-        $("#buyer-contrib").addClass("missing-info");
-      }
-      if(parseFloat(sellerContr) === 0){
-        s += "  Seller Contribution \n";
-        $("#seller-contrib").addClass("missing-info");
-      }
-      if(location === ""){
-        s += "  Location \n";
-      }
-      if(index === "") s += "  Index \n";
-      if(threshold === ""){
-        s += "  Threshold \n";
-        $("#threshold").addClass("missing-info");
-      }
-      alert(s);
+    if(user[0] === -1){
+      alert("Please login to MetaMask to create a proposal.");
+      //prevent form from submitting
+      return false;
     }else{
-      //ask for confirmation
-      const confirmed = confirm ( "Please confirm your selection: \n\n"
-        + "  Start Date: " + startDate + "\n"
-        + "  End Date: " + endDate + "\n"
-        + "  Buyer Contribution (Eth): " + buyerContr + "\n"
-        + "  Seller Contribution (Eth): " + sellerContr + "\n"
-        + "  Location: " + locationObj[location].text + "\n"
-        + "  Index: " + index + "\n"
-        + "  Threshold: " + threshObj[threshold].text + "\n"
-        + "  Buy or Sell: " + buySell + "\n"
-      );
+      // Prevent default browser form submit
+      event.preventDefault();
 
-      if(confirmed){
-        //submit info
-        createProposal(startDate,endDate,buyerContr,sellerContr,location,index,threshold,buySell);
+      // Get value from form element
+      const target = event.currentTarget;
+      const yourContr = parseFloat(target[0].value);
+      const totalPayout = parseFloat(target[1].value);
+      const location = target[2].value;
+      const threshold = target[3].value;
+      const startDate = target[4].value;
+      const endDate = target[5].value;
+
+      const index = "Precipitation";
+
+      //TODO add red boxes to indicate missing values
+      //check if info is missing
+      if(startDate === "" || endDate === "" || parseFloat(yourContr) === 0 || parseFloat(totalPayout) === 0 || location === "" || index === "" || threshold === ""){
+        var s = "Please complete missing elements: \n";
+        if(parseFloat(yourContr) === 0){
+          s += "  Your Contribution \n";
+          $("#your-contrib").addClass("missing-info");
+        }
+        if(parseFloat(totalPayout) === 0){
+          s += "  Total Payout \n";
+          $("#total-contrib").addClass("missing-info");
+        }
+        if(location === ""){
+          s += "  Location \n";
+          $("#location").addClass("missing-info");
+        }
+        if(threshold === ""){
+          s += "  Threshold \n";
+          $("#threshold").addClass("missing-info");
+        }
+        if(startDate === ""){
+          s += "  Start Date \n";
+          $("#start-date").addClass("missing-info");
+        }
+        if(endDate === ""){
+          s += "  End Date \n";
+          $("#end-date").addClass("missing-info");
+        }
+        alert(s);
       }else{
-        //let user continue to edit
-      }
+        //ask for confirmation
+        const confirmed = confirm ( "Please confirm your selection: \n\n"
+          + "  Your Contribution (Eth): " + yourContr + "\n"
+          + "  Total Payout (Eth): " + totalPayout + "\n"
+          + "  Location: " + locationObj[location].text + "\n"
+          + "  Threshold: " + threshObj[threshold].text + "\n"
+          + "  Start Date: " + startDate + "\n"
+          + "  End Date: " + endDate + "\n"
+        );
 
-      async function createProposal(startDate,endDate,buyerContr,sellerContr,location,index,threshold,buySell){
-        const d1 = (new Date(startDate)).getTime();
-        let dd2 = new Date(endDate);
-        dd2.setDate(dd2.getDate() + 15);
-        const d2 = dd2.getTime();
-        console.log(startDate,endDate,new Date(startDate),dd2,d1,d2)
+        if(confirmed){
+          //call back that clears the form
+          var clearForm = function(){
+            //clear form if succesful
+            target[0].value = 0;
+            target[1].value = 0;
+            target[2].value = "";
+            target[3].value = "";
+            target[4].value = "";
+            target[5].value = "";
+            $('#end-date')[0].min = "";
+            $('#start-date')[0].max = "";
+            $('#total-contrib')[0].min = 0;
+            //unselect region, reset text value
+            clearChart();
+            $('#location').val("none");
+            d3.selectAll(`path.${selectedRegion}`)
+              .attr("fill","none");
+            selectedRegion = "none";
+            NOAACODE = -1;
+            MONTHCODE = -1;
+            DURATIONCODE = -1;
+          }
 
-        let ethPropose = 0;
-        let ethAsk = 0;
-
-        if(buySell === "Buy"){
-          ethPropose = toWei(buyerContr);
-          ethAsk = toWei(sellerContr);
-        }
-        if(buySell === "Sell"){
-          ethPropose = toWei(sellerContr);
-          ethAsk = toWei(buyerContr);
-        }
-
-        try {
-          console.log("===== CREATE WIT PROPOSAL =====")
-          await promisify(cb => witInstance.createWITProposal(ethPropose, ethAsk, threshObj[threshold].above, noaaAddress, threshObj[threshold].val*10000, numStringToBytes32(locationObj[location].noaaCode), d1, d2, true, {value: ethPropose, from:user[0]}, cb));
-
-          //clear form if succesful
-          target[2].value = 0;
-          target[3].value = 0;
-          target[4].value = "";
-          target[5].value = "";
-          target[6].value = "";
-          target[7].value = "";
-          target[8].value = "";
-          $('#end-date')[0].min = "";
-          $('#start-date')[0].max = "";
-          $('#seller-contrib')[0].min = 0;
-          $('#payout-amt').html(0);
-          //unselect region, reset text value
-          clearChart();
-          $('#selected-region').html("No region selected");
-          document.getElementById("location").selectedIndex = -1;
-          d3.selectAll(`path.${selectedRegion}`)
-            .attr("fill","none");
-          selectedRegion = "none";
-          NOAACODE = -1;
-          MONTHCODE = -1;
-          DURATIONCODE = -1;
-        } catch (error) {
-          console.log(error)
+          //submit info
+          createProposal(startDate,endDate,yourContr,totalPayout,location,index,threshold,clearForm);
+        }else{
+          //let user continue to edit
         }
       }
     }
   }
-  // ,
-  // 'click #createRandom'(e){
-  //   let amt1 = Math.round(Math.random()+1);
-  //   let amt2 = Math.round(Math.random()+1);
-  //   $('#seller-contrib')[0].value = amt1 + amt2;
-  //   $('#buyer-contrib')[0].value = amt1;
-  //   $('#payout-amt').html(2*amt1 + amt2);
-  //
-  //   let amt3 = Math.random()*10000000000;
-  //   let amt4 = Math.random()*10000000000;
-  //   let amt5 = Math.random()*10000000000;
-  //   let amt6 = Math.random()*10000000000;
-  //   while((amt3 - amt4) > (amt5 - amt6)){
-  //     amt5 = Math.random()*10000000000;
-  //     amt6 = Math.random()*10000000000;
-  //   }
-  //   let d1 = new Date().getTime() + amt3 - amt4;
-  //   let d2 = new Date().getTime() + amt5 - amt6;
-  //   $('#start-date')[0].value = new Date(d1).toISOString().substring(0,7);
-  //   $('#end-date')[0].value = new Date(d2).toISOString().substring(0,7);
-  //
-  //   let a = Math.ceil(Math.random()*2);
-  //   let b = Math.ceil(Math.random()*4);
-  //   $('#location option').eq(a).prop('selected', true);
-  //   $('#selected-region').html("add name");
-  //   $('#index option').eq(1).prop('selected', true);
-  //   $('#threshold option').eq(b).prop('selected', true);
-  //
-  //   // Check
-  //   let bool = true;
-  //   if(Math.random() > 0.5) bool = false;
-  //   $('#toggle-buy-sell').prop("checked", bool);
-  //
-  //   // call NOAA
-  //   let s2 = +$('#start-date')[0].value.split("-")[1]
-  //     ,sy2 = +$('#start-date')[0].value.split("-")[0];
-  //   let e2 = +$('#end-date')[0].value.split("-")[1]
-  //     ,ey2 = +$('#end-date')[0].value.split("-")[0];
-  //
-  //   if(s2 <= e2 && sy2 <= ey2){
-  //     MONTHCODE = e2;
-  //     DURATIONCODE = e2 - s2 + 1;
-  //     NOAACODE = codesNOAA[a];
-  //     callNOAA();
-  //   }
-  // },
 });
 
+async function createProposal(startDate,endDate,yourContr,totalPayout,location,index,threshold,clearForm){
+  const d1 = (new Date(startDate)).getTime();
+  let dd2 = new Date(endDate);
+  dd2.setDate(dd2.getDate() + 15);
+  const d2 = dd2.getTime();
+
+  let ethPropose = toWei(yourContr);
+  let ethAsk = toWei(totalPayout - yourContr);
+
+  try {
+    console.log("===== CREATE WIT PROPOSAL =====")
+    await promisify(cb => witInstance.createWITProposal(ethPropose, ethAsk, threshObj[threshold].above, noaaAddress, threshObj[threshold].val*10000, numStringToBytes32(locationObj[location].noaaCode), d1, d2, true, {value: ethPropose, from:user[0]}, cb));
+    clearForm();
+  } catch (error) {
+    console.log(error)
+  }
+}
+
+// Big Number
 function numStringToBytes32(num) {
    var bn = new BN(num).toTwos(256);
    return padToBytes32(bn.toString(16));
@@ -1059,12 +1063,18 @@ function capDate(target){
 function capVal(target){
   //change properties of the other date picker so that incorrect values can't be chosen
   var num = parseFloat(target.value);
-  var step = parseFloat($('#buyer-contrib')[0].step);
-  var id = target.id;
-  if(id === 'buyer-contrib') $('#seller-contrib')[0].min = Math.round((num + step)/step)*step;
-  //show total payout
-  let v = Math.round((parseFloat($('#seller-contrib')[0].value) + parseFloat($('#buyer-contrib')[0].value))/step)*step;
-  $('#payout-amt').html(v);
+  var step = parseFloat($('#your-contrib')[0].step);
+  let next = clipNum(num + step);
+  $('#total-contrib')[0].min = next;
+
+  let tot = parseFloat($('#total-contrib')[0].value);
+  if(num >= tot) $('#total-contrib')[0].value = next;
+}
+
+function clipNum(n){
+  var s = `${n}`;
+  if(s.length > 5) s = s.slice(0,5);
+  return s;
 }
 
 ////////////////////////////////////////////
@@ -1078,16 +1088,13 @@ Template.myProtectionsTable.helpers({
       {
         type: "headerRow"
         ,column: [
-          {name:"Token Number"}
-          ,{name:"Token Hash"}
-          ,{name:"Ownership"}
+          {name:"Location"}
+          ,{name:"Threshold"}
+          ,{name:"Index"}
           ,{name:"Start"}
           ,{name:"End"}
-          ,{name:"Buyer Contribution (Eth)"}
-          ,{name:"Seller Contribution (Eth)"}
-          ,{name:"Location"}
-          ,{name:"Index"}
-          ,{name:"Threshold (%)"}
+          ,{name:"Your Contribution"}
+          ,{name:"Total Payout"}
           ,{name:"Status"}
           ,{name:"Action"}
         ]
@@ -1114,11 +1121,6 @@ async function drawUSA(){
 
   try{
     let us = await d3.json("USA.json");
-
-    // svg.append("rect")
-    //   .attr("width",width)
-    //   .attr("height",height)
-    //   .attr("fill","white");
 
     let g = svg.selectAll("g#outline")
       .attr("transform", "scale(" + width/1000 + ")");
@@ -1158,6 +1160,8 @@ async function drawUSA(){
       .on("mouseout",handleMOut)
       .on("click", handleClick);
 
+    changeRegion("us-corn-belt");
+
     function handleMOver(){
       let v = +d3.select(this).attr("value");
       let region = d3.select(this).attr("class").split(" ")[1];
@@ -1181,10 +1185,8 @@ async function drawUSA(){
       let region = d3.select(this).attr("class").split(" ")[1];
       //manage the coloration change
       if(region !== selectedRegion){
-        //update the title
-        $('#selected-region').html(locationObj[region].text);
-        //update the form
-        document.getElementById("location").value = region;
+        // update the form
+        $('#location').val(region);
         //make previous region go blank
         d3.selectAll(`path.${selectedRegion}`)
           .attr("fill","none");
@@ -1195,17 +1197,17 @@ async function drawUSA(){
         d3.selectAll(`path.${selectedRegion}`)
           .attr("fill","yellow");
       }else{
-        //update the title
-        $('#selected-region').html("No region selected");
         //update the form
-        let f = document.getElementById("location").selectedIndex = -1;
+        $('#location').val("none");
+        //update map
         d3.selectAll(`path.${selectedRegion}`)
           .attr("fill",locationObj[selectedRegion].col);
+
         currentHTTP += 1;
         clearChart();
         selectedRegion = "none";
         NOAACODE = -1;
-        if(NOAACODE !== -1 && MONTHCODE !== -1 && DURATIONCODE !== -1) $(".chart-loader").fadeOut(1000);
+        if(NOAACODE !== -1 && MONTHCODE !== -1 && DURATIONCODE !== -1) $("#chart-loader").fadeOut(1000);
       }
     }
 
@@ -1214,9 +1216,25 @@ async function drawUSA(){
   }
 }
 
+function changeRegion(region){
+  if(region !== selectedRegion){
+    // update the form
+    $('#location').val(region);
+
+    //make previous region go blank
+    d3.selectAll(`path.${selectedRegion}`)
+      .attr("fill","none");
+
+    selectedRegion = region;
+    NOAACODE = locationObj[selectedRegion].noaaCode;
+    callNOAA();
+    d3.selectAll(`path.${selectedRegion}`)
+      .attr("fill","yellow");
+  }
+}
+
 function callNOAA(){
-  // $(".chart-loader-div").addClass("chart-loader");
-  $(".chart-loader").fadeIn(500);
+  $("#chart-loader").fadeIn(500);
   currentHTTP += 1;
   let check = currentHTTP;
   if(NOAACODE !== -1 && MONTHCODE !== -1 && DURATIONCODE !== -1){
@@ -1225,7 +1243,7 @@ function callNOAA(){
       if(check === currentHTTP){
         upDateMonths(obj);
         // $(".chart-loader-div").removeClass("chart-loader");
-        $(".chart-loader").fadeOut(1000);
+        $("#chart-loader").fadeOut(1000);
       }
     });
   }
@@ -1329,10 +1347,23 @@ function drawMonths(){
     .attr("stroke-width",4)
     .attr("stroke-dasharray","12, 8")
     .attr("opacity",1e-6);
+
+    defaultMonths();
+}
+
+function defaultMonths(){
+  //select something as default
+  let d1 = new Date().getTime();
+  let d2 = new Date().getTime() + 1000*3600*24*30; //add a month
+  $('#start-date')[0].value = new Date(d1).toISOString().substring(0,7);
+  $('#end-date')[0].value = new Date(d2).toISOString().substring(0,7);
+  let s = +$('#start-date')[0].value.split("-")[1];
+  let e = +$('#end-date')[0].value.split("-")[1];
+  MONTHCODE = e;
+  DURATIONCODE = e - s + 1;
 }
 
 function upDateMonths(o){
-  // console.log(o)
   svg = d3.select("svg#chart");
   margin = {top: 20, right: 50, bottom: 45, left: 50};
   width = +svg.attr("width") - margin.left - margin.right;

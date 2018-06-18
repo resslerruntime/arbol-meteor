@@ -1,28 +1,42 @@
+
+
 body {
   -webkit-touch-callout: none; /* iOS Safari */
     -webkit-user-select: none; /* Safari */
      -khtml-user-select: none; /* Konqueror HTML */
        -moz-user-select: none; /* Firefox */
         -ms-user-select: none; /* Internet Explorer/Edge */
-            user-select: none; /* Non-prefixed version, currently
-                                  supported by Chrome and Opera */
+            user-select: none; /* Non-prefixed version, currently supported by Chrome and Opera */
+
+  --main-bg-color: #f9f9ef;
+  margin: 0px;
 }
 
-div#user {
-  margin-left:2%;
+div#no-web3 {
+  position: fixed;
+  width: 500px;
+  height: 300px;
+  left: -webkit-calc(50% - 250px);
+  left:    -moz-calc(50% - 250px);
+  left:         calc(50% - 250px);
+
+  top: -webkit-calc(50% - 150px);
+  top:    -moz-calc(50% - 150px);
+  top:         calc(50% - 150px);
+
+  background-color: #f1f1f1;
+  border-color: #ccc;
+  border-style: solid;
+  margin-left: 1%;
 }
 
-strong#payout-amt {
-  margin-left:15px;
+span#pipe {
+  padding-left:1em;
+  padding-right:1em;
 }
 
 .buttonHolder{
   margin-left:15%;
-}
-
-#create-request {
-  background-color: #d6e5ff;
-  color: #4286f4;
 }
 
 .disabled-div {
@@ -31,55 +45,290 @@ strong#payout-amt {
 }
 
 /* --------------------------------------------------------
-  CSS FOR MAKING LOGO
+  CSS FOR MAKING INSTANCE DATA
+-------------------------------------------------------- */
+#content-wrapper {
+  background-color: var(--main-bg-color);
+}
+
+#header{
+  width: 100%;
+  height: 60px;
+  background-color: lightgray;
+}
+
+#instance-data {
+  width: 100%;
+  /*border-radius: 1px;
+  border: 1px solid gray;*/
+}
+
+#arbol2 {
+  text-align:left;
+  letter-spacing: -5px;
+  font: bold 45px verdana;
+}
+
+td.inf-body {
+  padding-left: 15px;
+  padding-right: 15px;
+}
+
+td.inf {
+  text-align:left;
+  letter-spacing: 2px;
+  font: 15px arial;
+}
+
+td.inf-name {
+  text-align:right;
+  letter-spacing: 2px;
+  font: bold 18px arial;
+  color: var(--main-bg-color);
+  text-transform: uppercase;
+}
+
+.red-text{
+  color: red;
+  border-bottom: 1px solid red;
+}
+
+.green-text{
+  color: #00cc00;
+  border-bottom: 1px solid #00cc00;
+}
+
+/* --------------------------------------------------------
+  CSS FOR MAKING TAB SELECTORS
 -------------------------------------------------------- */
 
-header img {
-  position: relative;
-  top: 30px;
-  height: 50px;
-  width: 50px;
+#tabs-table {
+  width: 705px;
+  margin: 0 auto;
 }
 
-header h1 {
-  position: relative;
-  top: -40px;
-  left: 75px;
+.tabs {
+  padding: 20px;
+  letter-spacing: 5px;
+  font: bold 20px arial;
+  color: black;
+  text-transform: uppercase;
+  transition: transform .2s ease-in-out;
 }
 
+.click-tab {
+  padding: 5px;
+  background-color: var(--main-bg-color);
+}
+
+.click-tab:hover {
+  border-bottom: 2px solid black;
+}
+
+input[type="radio"]:checked+label {
+  border-bottom: 2px solid black;
+}
+
+hr {
+  margin-top: -35px;
+  margin-bottom: 35px;
+  border: none;
+  height: 2px;
+  background-color: black;
+}
+
+#open, #create, #your {
+  visibility: hidden;
+}
 
 /* --------------------------------------------------------
   CSS FOR MAKING THE TABS LAYOUT
 -------------------------------------------------------- */
 
-/* Style the list */
-ul.tabs-list {
-    list-style-type: none;
-    margin: 0;
-    padding: 0;
-    overflow: hidden;
-    background-color: #f1f1f1;
+#web3-onload {
+  padding: 25px;
 }
 
-/* Float the list items side by side */
-ul.tabs-list li {float: left;}
-
-/* Style the links inside the list items */
-ul.tabs-list li a {
-    display: inline-block;
-    color: black;
-    text-align: center;
-    padding: 14px 16px;
-    transition: 0.3s;
-    border: 1px solid #ccc;
+.nav-blocks {
+  margin-top: 25px;
 }
 
-/* Style the tab content */
-.tabs-content {
-    display: none;
-    padding: 6px 12px;
+#create-protection, #your-protections {
+  display: none;
 }
 
+/* --------------------------------------------------------
+  CSS FOR FOOTER
+-------------------------------------------------------- */
+
+#footer {
+  width: 100%;
+  height: 150px;
+  background-color: lightgray;
+}
+
+#logo {
+  position:relative;
+  width: 50px;
+  height: 50px;
+  padding-left: 25px;
+  padding-top: 50px;
+}
+
+#links {
+  position:relative;
+  left: 100px;
+  bottom: 80px;
+}
+
+#links table tr td {
+  padding: 10px;
+  font: bold 12px arial;
+}
+
+/* --------------------------------------------------------
+  CSS FOR TABLE SORT
+-------------------------------------------------------- */
+.table-sorter {
+  border-collapse: collapse;
+  width: 100%;
+  table-layout: fixed;
+}
+
+.table-sorter th {
+  border: 2.5px solid gray;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  font: bold 15px arial;
+  text-transform: uppercase;
+  text-align: center;
+
+  text-overflow: clipped;
+  overflow: hidden;
+}
+
+.table-sorter th.hover {
+  background-color: gray;
+  color: var(--main-bg-color);
+}
+
+.table-sorter td {
+  padding-top: 5px;
+  padding-bottom: 5px;
+  font: 15px arial;
+  text-align: center;
+
+  text-overflow: clipped;
+  overflow: hidden;
+}
+
+.table-sorter tr.body-row:hover {
+  background-color: #eee;
+}
+
+.wrapper {
+  min-height: 465px;
+}
+
+/* --------------------------------------------------------
+  CSS FOR PAGINATION
+-------------------------------------------------------- */
+.pager-btns {
+  width: 60px;
+  height: 60px;
+  margin: 0 auto;
+}
+
+.pager-wrapper {
+  position: relative;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.6);
+  transition: transform .2s ease-in-out;
+}
+
+#open-back, #open-forward, #my-back, #my-forward {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border-top: 3px solid black;
+  border-right: 3px solid black;
+}
+
+#open-forward, #my-forward {
+  transform: rotate(45deg);
+  top: 3px;
+}
+
+#open-back, #my-back {
+  transform: rotate(-135deg);
+  top: 3px;
+  left: 7px;
+}
+
+.pager-wrapper:hover{
+  transform: scale(1.2);
+}
+
+.page-count span {
+  letter-spacing: 5px;
+  font: bold 20px arial;
+}
+
+/* --------------------------------------------------------
+  CSS FOR FORM PAGE
+-------------------------------------------------------- */
+
+#form-inner-div {
+  padding-top: 50px;
+  padding-left: 25px;
+}
+
+#form-inner-div form table tr td {
+  padding: 5px;
+  font: bold 14px arial;
+  /* text-transform: uppercase; */
+  /* width: 120px; */
+  text-align: right;
+}
+
+#create-proposal {
+  margin-left: 125px;
+  margin-top: 20px;
+
+  font: bold 15px arial;
+  text-transform: uppercase;
+
+  background: lightgray;
+  border: none;
+  padding: 10px;
+  outline: inherit;
+  cursor: pointer;
+}
+
+#create-proposal:hover {
+  color: blue;
+}
+
+#map-inner-div {
+  padding-left: 20px;
+}
+
+#grid-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(515px, 1fr));
+  grid-gap: 10px;
+}
+
+.grid-el {
+  height: 300px;
+  width: 515px;
+  border: 4px solid #f2f0e3;
+  border-radius: 6px;
+  background: #ffffff;
+  align-self: start;
+}
 
 /* --------------------------------------------------------
   CSS FOR TOOLTIP
@@ -113,134 +362,68 @@ ul.tabs-list li a {
 }
 
 /* --------------------------------------------------------
-  CSS FOR MAKING THE BUY / SELL TOGGLE ON THE CREATE PROTECTIONS FORM
+  Remove button styling
 -------------------------------------------------------- */
 
-.buy-sell {
-  position: relative;
-  display: inline-block;
-  width: 90px;
-  height: 34px;
+button.tableBtn {
+    background: none;
+    color: inherit;
+    border: none;
+    padding: 0;
+    font: inherit;
+    outline: inherit;
 }
 
-.buy-sell input {display:none;}
-
-.slider {
-  position: absolute;
+button.action {
   cursor: pointer;
-  top: 0;
-  left: -5px;
-  right: 0;
-  bottom: 0;
-  background-color: #4286f4;
-  -webkit-transition: .4s;
-  transition: .4s;
+  font-weight: bold;
 }
 
-.slider:before {
-  position: absolute;
-  content: "";
-  height: 26px;
-  width: 26px;
-  left: 4px;
-  bottom: 4px;
-  background-color: white;
-  -webkit-transition: .4s;
-  transition: .4s;
+button.action:hover {
+  color: blue;
 }
 
-input:checked + .slider {
-  background-color: #fcbc1e;
-}
-
-/*input:focus + .slider {
-  box-shadow: 0 0 1px #2196F3;
-}*/
-
-input:checked + .slider:before {
-  -webkit-transform: translateX(60px);
-  -ms-transform: translateX(60px);
-  transform: translateX(60px);
-}
-
-/*------ ADDED CSS ---------*/
-.buy
-{
-  display: none;
-}
-
-.buy, .sell
-{
-  color: white;
-  position: absolute;
-  transform: translate(-50%,-50%);
-  top: 50%;
-  left: 50%;
-  font-size: 10px;
-  font-family: Verdana, sans-serif;
-}
-
-input:checked+ .slider .buy
-{display: block;}
-
-input:checked + .slider .sell
-{display: none;}
-
-/*--------- END --------*/
-
-/* Rounded sliders */
-.slider.round {
-  border-radius: 34px;
-}
-
-.slider.round:before {
-  border-radius: 50%;}
-
-  /* --------------------------------------------------------
-    CSS FOR MAKING LOADING ICON
-  -------------------------------------------------------- */
+/* --------------------------------------------------------
+  CSS FOR MAKING LOADING ICON
+-------------------------------------------------------- */
 
   .wrapper {
-    position: relative;
+      position: relative;
+      min-height: 450px;
   }
   .loading:before {
-    content: '';
-    display: block;
-    width: 100%;
-    height: 500px;
-    position: absolute;
-    top: 0;
-    left: 0;
-    bottom: 0;
-    right: 0;
-    z-index: 100;
-    background: rgba(0,0,0,0.3) center center no-repeat
+      content: '';
+      display: block;
+      width: 100%;
+      height: 500px;
+      position: absolute;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      right: 0;
+      z-index: 100;
+      background: rgba(0,0,0,0.3) center center no-repeat;
   }
 
-  .loader{
-      border: 6px solid #f3f3f3;
-      border-top: 6px solid #3498db;
-      border-radius: 50%;
-      width: 35px;
-      height: 35px;
-      position: relative;
+  .loader-icon {
+    border: 6px solid #f3f3f3;
+    border-top: 6px solid #3498db;
+    border-radius: 50%;
+    width: 35px;
+    height: 35px;
+    position: relative;
+    z-index: 1000;
+    animation: spin 1s linear infinite;
+  }
+
+  #open-loader, #my-loader {
       top: 200px;
       left: 50%;
-      z-index: 1000;
-      animation: spin 2s linear infinite;
   }
 
-  .chart-loader {
-      border: 6px solid #3498db;
-      border-top: 6px solid white;
-      border-radius: 50%;
-      width: 35px;
-      height: 35px;
-      position: relative;
+  #chart-loader {
       top: -180px;
       left: 240px;
-      z-index: 1000;
-      animation: spin 1s linear infinite;
   }
 
   @keyframes spin {
@@ -249,31 +432,58 @@ input:checked + .slider .sell
   }
 
   /* --------------------------------------------------------
-    CSS FOR TABLE SORT
-  -------------------------------------------------------- */
-
-  th.hover {
-    background-color: #4286f4;
-  }
-
-  .wrapper {
-    min-height: 465px;
-  }
-
-  /* --------------------------------------------------------
-    CSS FOR PAGINATION
-  -------------------------------------------------------- */
-  .pager-btns {
-    position: absolute;
-    /* top: 675px; */
-    left: 25%;
-  }
-
-  /* --------------------------------------------------------
     CSS FOR MISSING INFO BORDERS
   -------------------------------------------------------- */
+
   .missing-info {
     border: 2px solid red;
     border-radius: 4px;
     box-sizing: border-box;
+  }
+
+  /* --------------------------------------------------------
+    CSS FOR MAKING DOWN ARROW
+  -------------------------------------------------------- */
+
+  #arrow-wrapper {
+    width: 60px;
+    height: 60px;
+    display: block;
+    margin: 0 auto;
+  }
+  .arrow-border {
+    position: relative;
+    width: 60px;
+    height: 60px;
+    /*border: 2px solid black;*/
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    transition: background .4s ease-in-out;
+  }
+  .arrow-border:hover, .arrow-border:focus{
+    background: rgba(255, 255, 255, 0.5);
+  }
+
+  .arrow {
+    position: absolute;
+    bottom: 24px;
+    width: 20px;
+    height: 20px;
+    border-top: 3px solid black;
+    border-right: 3px solid black;
+    right: 19px;
+  }
+  .arrow {
+    transition-property: transform;
+    transition-duration: 1s;
+    animation-name: pulse;
+    animation-duration: 1.5s;
+    animation-iteration-count: infinite;
+    timing-function: linear;
+  }
+
+  @keyframes pulse {
+    0% {transform: scale(1) rotate(135deg);}
+    50% {transform: scale(1.2) rotate(135deg);}
+    100% {transform: scale(1) rotate(135deg);}
   }
