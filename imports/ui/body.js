@@ -69,7 +69,7 @@ function Entry(r,owner){
   //update for if the contract is for offered for sale or for funding
   let totalPayout = `${clipNum(toEth(propose) + toEth(ask))} Eth`;
   let b = `${toEth(ask)}`;
-  let b1 = `<button type='button' class='action buyit tableBtn' value='${toEth(ask)},${a.WITID.toNumber()}'>Pay <span class="green-text">${toEth(ask)} Eth</span> to accept</button>`;
+  let b1 = `<button type='button' class='action buyit tableBtn' value='${toEth(ask)},${a.WITID.toNumber()}'>Pay <span class="green-text">${clipNum(toEth(ask))} Eth</span> to accept</button>`;
 
   //if the current use is the owner of the proposal don't give them the option to purchase the proposal
   if(owner === user[0]){
@@ -84,7 +84,7 @@ function Entry(r,owner){
   }
 
   //create the object
-  this.id = a.WITID;
+  this.id = id;
   this.type = "bodyRow";
   this.column = [
       {type:"text",key:location,name:location}
@@ -108,22 +108,21 @@ function MyEntry(r,a,id,bool){
   let totalPayout = `${clipNum(toEth(propose) + toEth(ask))} Eth`;
 
   //your contribution
-  let yourContr;
-  if(r.args !== a) yourContr = `${toEth(ask)}`;
-  else yourContr = `${toEth(propose)}`;
-  if(yourContr.length > 5) yourContr = yourContr.slice(0,5);
-  yourContr = `${yourContr} Eth`;
+  let v;
+  if(r.args !== a) v = toEth(ask);
+  else v = toEth(propose);
+  let yourContr = `${clipNum(v)} Eth`;
 
   //status
-  let status = "";
   let now = new Date().getTime();
   let start = new Date(a.start.c[0]).getTime();
   let end = new Date(a.end.c[0]).getTime();
-  let b = "Cancel";
+  let status = "";
+  let b = "";
   let b1 = `<button type='button' class='action cancelit tableBtn'> Cancel and redeem <span class="green-text">${yourContr}</span></button>`;
 
-  //TODO add in "make stale = false" functionality
   if(r.args !== a){
+    //acceptances
     if(now < start) status = "Partnered, waiting to start";
     if(now >= start && now <= end){
       status = "In term";
@@ -136,7 +135,9 @@ function MyEntry(r,a,id,bool){
       b1 = `<button type='button' class='action evaluateit tableBtn' value=${id}> Evaluate and complete </button>`;
     }
   }else{
-    if(now < start) status = "Open";
+    //proposals
+    //for actions once partnered this has to be undertaken in updateMyProposals
+    if(now < start) status = "Waiting for partner...";
     if(now >= start) status = "Stale";
   }
 
@@ -147,6 +148,7 @@ function MyEntry(r,a,id,bool){
   }
 
   //create the object
+  this.id = r.args.WITID.toNumber();
   this.type = "bodyRow";
   this.column = [
       {type:"text",key:location,name:location}
@@ -208,25 +210,7 @@ if (Meteor.isClient) {
               $('#user-hash').html(user[0]);
               $('#user-hash').removeClass('red-text');
               $('#user-hash').addClass('green-text');
-
-              web3.eth.getBalance(user[0],function (error, result) {
-                if (!error) {
-                  var e = toEth(result.plus(21).toString(10));
-                  var n = Math.round(e*100)/100;
-                  if(n === 0){
-                    $('#user-balance').html("0.00");
-                    $('#user-balance').removeClass('red-text');
-                    $('#user-balance').addClass('green-text');
-                  }else{
-                    if(e < 0.01) $('#user-balance').html("<0.01");
-                    else $('#user-balance').html(n);
-                    $('#user-balance').removeClass('red-text');
-                    $('#user-balance').addClass('green-text');
-                  }
-                } else {
-                  console.error(error);
-                }
-              });
+              updateBalance();
               $('#my-wrapper').removeClass('loading');
               $('#my-loader').hide();
             } else {
@@ -234,7 +218,7 @@ if (Meteor.isClient) {
               $('#user-hash').addClass('red-text');
               $('#user-hash').removeClass('green-text');
 
-              $('#user-balance').html("0.00");
+              $('#user-balance').html("0.000");
               $('#user-balance').removeClass('red-text');
               $('#user-balance').addClass('green-text');
 
@@ -333,6 +317,7 @@ var watchLatestProposal = -1;
 function latestProposals(){
   console.log("fn: latestProposals");
   watchLatestProposal = witInstance.ProposalOffered({},{fromBlock: 0, toBlock: 'latest'}).watch(function(error, result){
+    updateBalance();
     let id = result.args.WITID.toNumber();
     console.log("===> latest: 'offered', id:",id);
     addToken(result);
@@ -347,6 +332,7 @@ function latestAcceptances(){
   console.log("fn: latestAcceptance");
   //do something as new proposal is accepted
   watchLatestAcceptance = witInstance.ProposalAccepted({},{fromBlock: 0, toBlock: 'latest'}).watch(function(error, result){
+    updateBalance();
     let id = result.args.WITID.toNumber();
     console.log("===> latest: 'accepted', id:",id)
     addAcceptance(result);
@@ -359,6 +345,7 @@ function latestEvaluations(){
   console.log("fn: latestEvaluation")
   //do something as new evaluation is accepted
   watchLatestEvaluation = witInstance.WITEvaluated({},{fromBlock: 0, toBlock: 'latest'}).watch(function(error, result){
+    updateBalance();
     console.log("===> latest: 'evaluated'")
     console.log(result)
     //TODO update status in "my protections pages"
@@ -378,7 +365,7 @@ async function addToken(result){
       // if(new Date(result.args.start.c[0]) - new Date() > 0){
       if(true){
         let list = Session.get("openProtectionsData");
-        console.log("===> proposal offered, id:",id.toNumber())
+        console.log("===> proposal offered, id:",id.toNumber());
         list.push(new Entry(result,owner));
         list = sortArray(list,Session.get("sortIndex"),Session.get("descending"));
         Session.set("openProtectionsData",list);
@@ -406,7 +393,6 @@ async function addToken(result){
       let list = Session.get("myProtectionsData");
       list.push(new MyEntry(result,result.args,id.toNumber(),true));
       list = sortArray(list,Session.get("mySortIndex"),Session.get("descending"));
-      list = updateStatus(list,id.toNumber());
       Session.set("myProtectionsData",list);
 
       //if more than ten items turn on pagination
@@ -430,34 +416,41 @@ async function addToken(result){
 }
 
 function removeToken(id){
+  console.log("removeToken")
   //add to open protections
   let list = Session.get("openProtectionsData");
-  let index = findIndex(list,function(el){return el.column[0].name === id;})
-  list.splice(index,1);
-  list = sortArray(list,Session.get("sortIndex"),Session.get("descending"));
-  Session.set("openProtectionsData",list);
+  if(list.length > 0){
+    console.log(list,list[0])
+    let index = findIndex(list,function(el){console.log(el,el.id,id); return el.id == id;})
+    list.splice(index,1);
+    // list = sortArray(list,Session.get("sortIndex"),Session.get("descending"));
+    Session.set("openProtectionsData",list);
 
-  //if more than ten items turn on pagination
-  if(list.length <= 10){
-    $("#open-pager-btns").hide();
-  }
+    //if more than ten items turn on pagination
+    if(list.length <= 10){
+      $("#open-pager-btns").hide();
+    }
 
-  //show paginated items
-  let pageList = paginateData(list,opPagination);
-  if(pageList.length > 0){
-    Session.set("openProtectionsPaginatedData",pageList);
-  }else{
-    if(opPagination > 0) opPagination -= 1;
+    //show paginated items
+    let pageList = paginateData(list,opPagination);
+    if(pageList.length > 0){
+      Session.set("openProtectionsPaginatedData",pageList);
+    }else{
+      if(opPagination > 0) opPagination -= 1;
+    }
   }
 }
 
-function updateStatus(list,id){
-  console.log("updateStatus")
+//when a proposal is accepted, update the proposal to reflect the correct status and action
+function updateMyProposals(list,id){
+  console.log("updateMyProposals")
+  console.log("___",list)
   //only update status for those that are accepted
   if(acceptedList.indexOf(id) !== -1){
-    let index = findIndex(list,function(el){return el.column[0].name === id;});
+    let index = findIndex(list,function(el){return el.id === id;});
     if(index !== -1){
       let el = list[index].column;
+      console.log("___",el)
 
       let status = "";
       let now = new Date().getTime();
@@ -478,10 +471,10 @@ function updateStatus(list,id){
         b1 = `<button type='button' class='action evaluateit tableBtn' value='${id}'> Evaluate and complete </button>`;
         b = "Evaluate";
       }
-      el[10].key = status;
-      el[10].name = status;
-      el[11].key = b;
-      el[11].name = b1;
+      el[7].key = status;
+      el[7].name = status;
+      el[8].key = b;
+      el[8].name = b1;
     }
   }
   return list;
@@ -515,7 +508,7 @@ async function addAcceptance(result){
     //if they were your proposals update your "my protections"
     let updateList = Session.get("myProtectionsData");
     updateList = sortArray(updateList,Session.get("mySortIndex"),Session.get("descending"));
-    updateList = updateStatus(updateList,idp);
+    updateList = updateMyProposals(updateList,idp);
     Session.set("myProtectionsData",updateList);
 
     let owner = await promisify(cb => witInstance.ownerOf(idObj, cb));
@@ -579,6 +572,26 @@ function dateNum(text){
   return parseInt(a[1]) + n/12;
 }
 
+async function updateBalance(){
+  web3.eth.getBalance(user[0],function (error, result) {
+    if (!error) {
+      var e = toEth(result.plus(21).toString(10));
+      if(e === 0){
+        $('#user-balance').html("0.000");
+        $('#user-balance').removeClass('green-text');
+        $('#user-balance').addClass('red-text');
+      }else{
+        console.log("user balance",e)
+        $('#user-balance').html(clipNum(e));
+        $('#user-balance').removeClass('red-text');
+        $('#user-balance').addClass('green-text');
+      }
+    } else {
+      console.error(error);
+    }
+  });
+}
+
 ////////////////////////////////////////////
 // FUNCTIONS RELATED TO VORONOI ANIMATION
 ////////////////////////////////////////////
@@ -614,7 +627,6 @@ function dateNum(text){
 //     return "M" + d.join("L") + "Z";
 //   }
 // }
-
 
 ////////////////////////////////////////////
 // FUNCTIONS RELATED TO THE TAB LAYOUT
@@ -709,9 +721,11 @@ async function acceptProposal(v){
 //evaluate WIT once its period h gas elapsed
 async function evaluateWIT(id){
   try {
+    let idodd = id;
+    if(id/2 === Math.round(id/2)) idodd = id - 1;
     console.log("=================> new WIT evaluation");
-    console.log("token ID", parseInt(id), user[0],witInstance);
-    await promisify(cb => witInstance.evaluate(parseInt(id),"",{from: user[0]},cb));
+    console.log("token ID", parseInt(idodd), user[0],witInstance);
+    await promisify(cb => witInstance.evaluate(1,"",{from: user[0]},cb));
   } catch (error) {
     console.log(error)
   }
@@ -1019,6 +1033,7 @@ async function createProposal(startDate,endDate,yourContr,totalPayout,location,i
 
   try {
     console.log("===== CREATE WIT PROPOSAL =====")
+    //TODO for deployment makeStale should be true in default
     await promisify(cb => witInstance.createWITProposal(ethPropose, ethAsk, threshObj[threshold].above, noaaAddress, threshObj[threshold].val*10000, numStringToBytes32(locationObj[location].noaaCode), d1, d2, true, {value: ethPropose, from:user[0]}, cb));
     clearForm();
   } catch (error) {
@@ -1072,9 +1087,20 @@ function capVal(target){
 }
 
 function clipNum(n){
-  var s = `${n}`;
-  if(s.length > 5) s = s.slice(0,5);
-  return s;
+  n = Math.round(n*1000)/1000;
+  if(n < 0.001){
+    return "<0.001";
+  }else{
+    //find out how many digits before zero and how many after
+    let s = `${n}`, a = s.split(".");
+    console.log(s,a,a.length)
+    if(a.length === 1){
+      return s += ".000";
+    }else{
+      while(a[1].length < 3) a[1] += "0";
+      return a[0] + "." + a[1];
+    }
+  }
 }
 
 ////////////////////////////////////////////
