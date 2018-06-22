@@ -21,13 +21,41 @@ const promisify = (inner) =>
     );
 
 //data objects for display
-var threshObj = {
-  "above-average":{text:"> Average",above:true,val:1,caStroke:"green",caFill:"#b5ffc0",cbStroke:"red",cbFill:"#fcc8b0"}
-  ,"above-average-10pct":{text:"> 10% Above Avg",above:true,val:1.1,caStroke:"green",caFill:"#b5ffc0",cbStroke:"red",cbFill:"#fcc8b0"}
-  ,"below-average":{text:"< Average",above:false,val:1,caStroke:"red",caFill:"#fcc8b0",cbStroke:"green",cbFill:"#b5ffc0"}
-  ,"below-average-10pct":{text:"< 10% Below Avg",above:false,val:0.9,caStroke:"red",caFill:"#fcc8b0",cbStroke:"green",cbFill:"#b5ffc0"}
+const threshRelationObj = {
+  "less":{text:"< ",val:false,caStroke:"red",caFill:"#fcc8b0",cbStroke:"green",cbFill:"#b5ffc0"}
+  ,"greater":{text:"> ",val:true,caStroke:"green",caFill:"#b5ffc0",cbStroke:"red",cbFill:"#fcc8b0"}
 };
-var locationObj = {
+const threshPercentObj = {
+  "zero":{text:"",val:0}
+  ,"ten":{text:"10% ",val:0.1}
+  ,"twenty-five":{text:"25% ",val:0.25}
+};
+const threshAverageObj = {
+  "average":{text: "Average",val:0}
+  ,"below-average":{text: "Below Avg",val:-1}
+  ,"above-average":{text: "Above Avg",val:1}
+};
+
+function threshText(rel,pct,avg){
+  return threshRelationObj[rel].text + threshPercentObj[pct].text + threshAverageObj[avg].text;
+}
+
+function threshValPPTH(pct,avg){
+  return 10000 + threshPercentObj[pct].val * threshAverageObj[avg].val * 10000;
+}
+
+function threshValsToText(above,num){
+  let a = "< ";
+  if(above) a = "> ";
+  let b = "0% ";
+  if(num === 9000 || 11000) b = "10% ";
+  if(num === 7500 || 12500) b = "25% ";
+  let c = "Below Avg";
+  if(num > 10000) c = "Above Avg";
+  return a + b + c;
+}
+
+const locationObj = {
       // NOAA codes:
       // Corn                   = 261
       // Cotton                 = 265
@@ -49,13 +77,7 @@ function locationText(num){
   return "?";
 }
 
-function thresholdText(num){
-  for (var prop in threshObj) {
-    let el = threshObj[prop];
-    if(parseInt(num)/10000 === el.val) return el.text;
-  }
-  return "?";
-}
+
 
 //table entry constructor open protections
 //event ProposalOffered(uint indexed WITID, uint aboveID, uint belowID, uint indexed weiContributing,  uint indexed weiAsking, address evaluator, uint thresholdPPTTH, bytes32 location, uint start, uint end, bool makeStale);
@@ -78,10 +100,7 @@ function Entry(r,owner){
   }
 
   //get threshold text
-  let thresh = thresholdText(a.thresholdPPTTH.toNumber());
-  if(a.WITID.toNumber() === a.belowID.toNumber() && a.thresholdPPTTH.toNumber() === 10000){
-    thresh = threshObj["below-average"].text;
-  }
+  let thresh = threshValsToText(a.WITID.toNumber() !== a.belowID.toNumber(),a.thresholdPPTTH.toNumber());
 
   //create the object
   this.id = id;
@@ -90,8 +109,8 @@ function Entry(r,owner){
       {type:"text",key:location,name:location}
       ,{type:"text",key:thresh,name:thresh}
       ,{type:"text",key:"NOAA Rainfall",name:"NOAA Rainfall"}
-      ,{type:"num",key:a.start.c[0],name:dateText(a.start.c[0])}
-      ,{type:"num",key:a.end.c[0],name:dateText(a.end.c[0])}
+      ,{type:"num",key:a.start.toNumber(),name:dateText(a.start.toNumber())}
+      ,{type:"num",key:a.end.toNumber(),name:dateText(a.end.toNumber())}
       ,{type:"num",key:totalPayout,name:totalPayout}
       ,{type:"num",key:b,name:b1}
     ];
@@ -100,6 +119,13 @@ function Entry(r,owner){
 //table entry constructor my protections
 //bool if you proposed the protection = true, if you accepted the protection = false
 function MyEntry(r,a,id,bool){
+  //is this entry an acceptance, an open proposal, or an accepted proposal
+  let acceptance = r.args !== a;
+  let acceptedProposal = false;
+  if(!acceptance){
+    if(acceptedList.indexOf(id) !== -1) acceptedProposal = true;
+  }
+
   let ask = a.weiAsking.toNumber();
   let propose = a.weiContributing.toNumber();
   let location = locationText(bytes32ToNumString(a.location));
@@ -109,21 +135,25 @@ function MyEntry(r,a,id,bool){
 
   //your contribution
   let v;
-  if(r.args !== a) v = toEth(ask);
+  if(acceptance) v = toEth(ask);
   else v = toEth(propose);
   let yourContr = `${clipNum(v)} Eth`;
 
   //status
   let now = new Date().getTime();
-  let start = new Date(a.start.c[0]).getTime();
-  let end = new Date(a.end.c[0]).getTime();
+  let start = new Date(a.start.toNumber()).getTime();
+  let end = new Date(a.end.toNumber()).getTime();
   let status = "";
   let b = "";
-  let b1 = `<button type='button' class='action cancelit tableBtn'> Cancel and redeem <span class="green-text">${yourContr}</span></button>`;
+  let b1 = "";
 
-  if(r.args !== a){
-    //acceptances
-    if(now < start) status = "Partnered, waiting to start";
+
+  if(acceptance || acceptedProposal){
+    //acceptances and accepted proposals
+    if(now < start){
+      status = "Partnered, waiting to start";
+      b1 = `<button type='button' class='action cancelit tableBtn'> Cancel and redeem <span class="green-text">${yourContr}</span></button>`;
+    }
     if(now >= start && now <= end){
       status = "In term";
       b = "Waiting";
@@ -135,17 +165,17 @@ function MyEntry(r,a,id,bool){
       b1 = `<button type='button' class='action evaluateit tableBtn' value=${id}> Evaluate and complete </button>`;
     }
   }else{
-    //proposals
-    //for actions once partnered this has to be undertaken in updateMyProposals
+    //not accepted proposal
     if(now < start) status = "Waiting for partner...";
     if(now >= start) status = "Stale";
+    b = "";
+    b1 = `<button type='button' class='action cancelit tableBtn'> Cancel and redeem <span class="green-text">${yourContr}</span></button>`;
   }
 
-  //get threshold text
-  let thresh = thresholdText(a.thresholdPPTTH.toNumber());
-  if(a.WITID.toNumber() === a.belowID.toNumber() && a.thresholdPPTTH.toNumber() === 10000){
-    thresh = threshObj["below-average"].text;
-  }
+  //get threshold text 
+  let thresh;
+  if(acceptance) thresh = threshValsToText(a.WITID.toNumber() !== a.belowID.toNumber(),a.thresholdPPTTH.toNumber());
+  else thresh = threshValsToText(a.WITID.toNumber() === a.belowID.toNumber(),a.thresholdPPTTH.toNumber());
 
   //create the object
   this.id = r.args.WITID.toNumber();
@@ -154,8 +184,8 @@ function MyEntry(r,a,id,bool){
       {type:"text",key:location,name:location}
       ,{type:"text",key:thresh,name:thresh}
       ,{type:"text",key:"NOAA Rainfall",name:"NOAA Rainfall"}
-      ,{type:"num",key:a.start.c[0],name:dateText(a.start.c[0])}
-      ,{type:"num",key:a.end.c[0],name:dateText(a.end.c[0])}
+      ,{type:"num",key:a.start.toNumber(),name:dateText(a.start.toNumber())}
+      ,{type:"num",key:a.end.toNumber(),name:dateText(a.end.toNumber())}
       ,{type:"num",key:yourContr,name:yourContr}
       ,{type:"num",key:totalPayout,name:totalPayout}
       ,{type:"text",key:status,name:status}
@@ -169,6 +199,7 @@ var arbolAddress, arbolContract, arbolInstance;
 var witAddress, witContract, witInstance;
 var noaaAddress;
 
+//TODO can we really rely on the acceptance events always firing before the proposal events and therefore creating a useful acceptedList
 var acceptedList = [];
 
 //data variables for NOAA calls
@@ -362,7 +393,7 @@ async function addToken(result){
     if(acceptedList.indexOf(id.toNumber()) === -1){
       //TODO reinstate date filter
       //only show entries whose starting dates haven't passed
-      // if(new Date(result.args.start.c[0]) - new Date() > 0){
+      // if(new Date(result.args.start.toNumber()) - new Date() > 0){
       if(true){
         let list = Session.get("openProtectionsData");
         console.log("===> proposal offered, id:",id.toNumber());
@@ -416,11 +447,10 @@ async function addToken(result){
 }
 
 function removeToken(id){
-  console.log("removeToken")
+  // console.log("removeToken")
   //add to open protections
   let list = Session.get("openProtectionsData");
   if(list.length > 0){
-    console.log(list,list[0])
     let index = findIndex(list,function(el){console.log(el,el.id,id); return el.id == id;})
     list.splice(index,1);
     // list = sortArray(list,Session.get("sortIndex"),Session.get("descending"));
@@ -441,45 +471,6 @@ function removeToken(id){
   }
 }
 
-//when a proposal is accepted, update the proposal to reflect the correct status and action
-function updateMyProposals(list,id){
-  console.log("updateMyProposals")
-  console.log("___",list)
-  //only update status for those that are accepted
-  if(acceptedList.indexOf(id) !== -1){
-    let index = findIndex(list,function(el){return el.id === id;});
-    if(index !== -1){
-      let el = list[index].column;
-      console.log("___",el)
-
-      let status = "";
-      let now = new Date().getTime();
-      let start = new Date(el[3].name).getTime();
-      let end = new Date(el[4].name).getTime();
-      let yourContr = "???";
-      let b1 = `<button type='button' class='action cancelit tableBtn'> Cancel and redeem <span class="green-text">${yourContr}</span></button>`;
-      let b = "Cancel";
-
-      if(now < start) status = "Partnered, Waiting to Start";
-      if(now >= start && now <= end){
-        status = "In Term";
-        b1 = "Waiting...";
-        b = "Waiting";
-      }
-      if(now > end){
-        status = "Waiting for Evaluation";
-        b1 = `<button type='button' class='action evaluateit tableBtn' value='${id}'> Evaluate and complete </button>`;
-        b = "Evaluate";
-      }
-      el[7].key = status;
-      el[7].name = status;
-      el[8].key = b;
-      el[8].name = b1;
-    }
-  }
-  return list;
-}
-
 function findIndex(array,cb){
   let l = array.length;
   while(l--){
@@ -490,7 +481,7 @@ function findIndex(array,cb){
 
 //add acceptance to my protections
 async function addAcceptance(result){
-  console.log("fn: addAcceptance")
+  // console.log("fn: addAcceptance")
   try{
     let outerResult = result;
     let idpObj = result.args.WITID;
@@ -508,7 +499,6 @@ async function addAcceptance(result){
     //if they were your proposals update your "my protections"
     let updateList = Session.get("myProtectionsData");
     updateList = sortArray(updateList,Session.get("mySortIndex"),Session.get("descending"));
-    updateList = updateMyProposals(updateList,idp);
     Session.set("myProtectionsData",updateList);
 
     let owner = await promisify(cb => witInstance.ownerOf(idObj, cb));
@@ -553,7 +543,7 @@ function toWei(n){
   return n*Math.pow(10,18);
 }
 
-// num = a.start.c[0]
+// num = a.start.toNumber()
 let months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 function dateText(iso){
   let d1 = new Date(iso).toISOString().substring(0,7);
@@ -581,7 +571,6 @@ async function updateBalance(){
         $('#user-balance').removeClass('green-text');
         $('#user-balance').addClass('red-text');
       }else{
-        console.log("user balance",e)
         $('#user-balance').html(clipNum(e));
         $('#user-balance').removeClass('red-text');
         $('#user-balance').addClass('green-text');
@@ -591,6 +580,24 @@ async function updateBalance(){
     }
   });
 }
+
+// give number three decimals
+function clipNum(n){
+  n = Math.round(n*1000)/1000;
+  if(n < 0.001){
+    return "<0.001";
+  }else{
+    //find out how many digits before zero and how many after
+    let s = `${n}`, a = s.split(".");
+    if(a.length === 1){
+      return s += ".000";
+    }else{
+      while(a[1].length < 3) a[1] += "0";
+      return a[0] + "." + a[1];
+    }
+  }
+}
+
 
 ////////////////////////////////////////////
 // FUNCTIONS RELATED TO VORONOI ANIMATION
@@ -921,8 +928,14 @@ Template.formNewProtection.events({
     $("#total-contrib").removeClass("missing-info");
   },
   'input #threshold'(event) {
-    changeThreshold(event.currentTarget.value);
-    $("#threshold").removeClass("missing-info");
+    // const target = event.currentTarget;
+    // const thresholdRelation = target[3].value;
+    // const thresholdPercent = target[4].value;
+    // const thresholdAverage = target[5].value;
+    // if(thresholdRelation !== "" || thresholdPercent !== "" || thresholdAverage !== ""){
+    //   $("#threshold").removeClass("missing-info");
+    // }
+    changeThreshold();
   },
   'input #location'(event) {
     changeRegion(event.currentTarget.value);
@@ -942,15 +955,15 @@ Template.formNewProtection.events({
       const yourContr = parseFloat(target[0].value);
       const totalPayout = parseFloat(target[1].value);
       const location = target[2].value;
-      const threshold = target[3].value;
-      const startDate = target[4].value;
-      const endDate = target[5].value;
-
+      const thresholdRelation = target[3].value;
+      const thresholdPercent = target[4].value;
+      const thresholdAverage = target[5].value;
+      const startDate = target[6].value;
+      const endDate = target[7].value;
       const index = "Precipitation";
 
-      //TODO add red boxes to indicate missing values
       //check if info is missing
-      if(startDate === "" || endDate === "" || parseFloat(yourContr) === 0 || parseFloat(totalPayout) === 0 || location === "" || index === "" || threshold === ""){
+      if(startDate === "" || endDate === "" || parseFloat(yourContr) === 0 || parseFloat(totalPayout) === 0 || location === "" || index === "" || thresholdRelation === "" || thresholdPercent === "" || thresholdAverage === ""){
         var s = "Please complete missing elements: \n";
         if(parseFloat(yourContr) === 0){
           s += "  Your Contribution \n";
@@ -964,7 +977,7 @@ Template.formNewProtection.events({
           s += "  Location \n";
           $("#location").addClass("missing-info");
         }
-        if(threshold === ""){
+        if(thresholdRelation === "" || thresholdPercent === "" || thresholdAverage === ""){
           s += "  Threshold \n";
           $("#threshold").addClass("missing-info");
         }
@@ -983,7 +996,7 @@ Template.formNewProtection.events({
           + "  Your Contribution (Eth): " + yourContr + "\n"
           + "  Total Payout (Eth): " + totalPayout + "\n"
           + "  Location: " + locationObj[location].text + "\n"
-          + "  Threshold: " + threshObj[threshold].text + "\n"
+          + "  Threshold: " + threshText(thresholdRelation,thresholdPercent,thresholdAverage) + "\n"
           + "  Start Date: " + startDate + "\n"
           + "  End Date: " + endDate + "\n"
         );
@@ -998,6 +1011,8 @@ Template.formNewProtection.events({
             target[3].value = "";
             target[4].value = "";
             target[5].value = "";
+            target[6].value = "";
+            target[7].value = "";
             $('#end-date')[0].min = "";
             $('#start-date')[0].max = "";
             $('#total-contrib')[0].min = 0;
@@ -1013,7 +1028,7 @@ Template.formNewProtection.events({
           }
 
           //submit info
-          createProposal(startDate,endDate,yourContr,totalPayout,location,index,threshold,clearForm);
+          createProposal(startDate,endDate,yourContr,totalPayout,location,index,thresholdRelation,thresholdPercent,thresholdAverage,clearForm);
         }else{
           //let user continue to edit
         }
@@ -1022,7 +1037,8 @@ Template.formNewProtection.events({
   }
 });
 
-async function createProposal(startDate,endDate,yourContr,totalPayout,location,index,threshold,clearForm){
+async function createProposal(startDate,endDate,yourContr,totalPayout,location,index,thresholdRelation,thresholdPercent,thresholdAverage,clearForm){
+  console.log("createProposal")
   const d1 = (new Date(startDate)).getTime();
   let dd2 = new Date(endDate);
   dd2.setDate(dd2.getDate() + 15);
@@ -1030,11 +1046,14 @@ async function createProposal(startDate,endDate,yourContr,totalPayout,location,i
 
   let ethPropose = toWei(yourContr);
   let ethAsk = toWei(totalPayout - yourContr);
+  let above = threshRelationObj[thresholdRelation].val;
+  let numPPTH = threshValPPTH(thresholdPercent,thresholdAverage);
+  let location32 = numStringToBytes32(locationObj[location].noaaCode);
+  let makeStale = false; //TODO for deployment makeStale should be true in default
+  console.log(thresholdRelation,thresholdPercent,thresholdAverage,above,numPPTH);
 
   try {
-    console.log("===== CREATE WIT PROPOSAL =====")
-    //TODO for deployment makeStale should be true in default
-    await promisify(cb => witInstance.createWITProposal(ethPropose, ethAsk, threshObj[threshold].above, noaaAddress, threshObj[threshold].val*10000, numStringToBytes32(locationObj[location].noaaCode), d1, d2, true, {value: ethPropose, from:user[0]}, cb));
+    await promisify(cb => witInstance.createWITProposal(ethPropose, ethAsk, above, noaaAddress, numPPTH, location32, d1, d2, makeStale, {value: ethPropose, from:user[0]}, cb));
     clearForm();
   } catch (error) {
     console.log(error)
@@ -1084,23 +1103,6 @@ function capVal(target){
 
   let tot = parseFloat($('#total-contrib')[0].value);
   if(num >= tot) $('#total-contrib')[0].value = next;
-}
-
-function clipNum(n){
-  n = Math.round(n*1000)/1000;
-  if(n < 0.001){
-    return "<0.001";
-  }else{
-    //find out how many digits before zero and how many after
-    let s = `${n}`, a = s.split(".");
-    console.log(s,a,a.length)
-    if(a.length === 1){
-      return s += ".000";
-    }else{
-      while(a[1].length < 3) a[1] += "0";
-      return a[0] + "." + a[1];
-    }
-  }
 }
 
 ////////////////////////////////////////////
@@ -1419,9 +1421,12 @@ function upDateMonths(o){
     .call(d3.axisRight(ymm).ticks(4));
 
   //draw bars
-  let vs = $("#threshold")[0].value;
-  if(vs === "") vs = "above-average";
-  let to = threshObj[vs];
+  let rel = $("#threshold-relation")[0].value;
+  let pct = $("#threshold-percent")[0].value;
+  let avg = $("#threshold-average")[0].value;
+  let ro = threshRelationObj[rel];
+  let n = 1 + threshPercentObj[pct].val*threshAverageObj[avg].val;
+
   let barWidth = width*0.5/10;
   d3.selectAll("g.bars")
     .selectAll("rect")
@@ -1429,8 +1434,8 @@ function upDateMonths(o){
     .transition().duration(1000)
     .attr("y",d => y(d))
     .attr("height",d => height - y(d) + 1)
-    .attr("fill",d => d >= o.avg*to.val ? to.caFill : to.cbFill)
-    .attr("stroke",d => d >= o.avg*to.val ? to.caStroke : to.cbStroke)
+    .attr("fill",d => d >= o.avg*n ? ro.caFill : ro.cbFill)
+    .attr("stroke",d => d >= o.avg*n ? ro.caStroke : ro.cbStroke)
     .attr("stroke-dasharray",d => `${barWidth + height - y(d) + 1},${barWidth}`)
     .attr("opacity",1);
 
@@ -1446,8 +1451,12 @@ function upDateMonths(o){
     .attr("opacity",1);
 }
 
-function changeThreshold(vs){
-  let o = threshObj[vs];
+function changeThreshold(){
+  let rel = $("#threshold-relation")[0].value;
+  let pct = $("#threshold-percent")[0].value;
+  let avg = $("#threshold-average")[0].value;
+  let ro = threshRelationObj[rel];
+  let n = 1 + threshPercentObj[pct].val*threshAverageObj[avg].val;
 
   var y = d3.scaleLinear()
       .rangeRound([height, 0])
@@ -1456,13 +1465,13 @@ function changeThreshold(vs){
   d3.selectAll("g.bars")
     .selectAll("rect")
     .transition().duration(1000)
-    .attr("fill", d => d >= tenYrAvg*o.val ? o.caFill : o.cbFill)
-    .attr("stroke", d => d >= tenYrAvg*o.val ? o.caStroke : o.cbStroke);
+    .attr("fill", d => d >= tenYrAvg*n ? ro.caFill : ro.cbFill)
+    .attr("stroke", d => d >= tenYrAvg*n ? ro.caStroke : ro.cbStroke);
 
   d3.selectAll("line.tenYrAvg")
     .transition().duration(1000)
-    .attr("y1",function(d){return y(tenYrAvg*o.val);})
-    .attr("y2",function(d){return y(tenYrAvg*o.val);});
+    .attr("y1",function(d){return y(tenYrAvg*n);})
+    .attr("y2",function(d){return y(tenYrAvg*n);});
 }
 
 function clearChart(){

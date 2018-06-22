@@ -254,30 +254,31 @@
                 <div class="tooltip"> Threshold: <span class="tooltiptext">Choose payout threshold.</span></div>
               </td>
               <td>
-                <!-- <select>
-                  <option value="" hidden disabled selected>________</option>
-                  <option value="exceeds">Exceeds</option>
-                  <option value="doesnt-exceed">Does not exceed</option>
-                </select>
-                <select>
-                  <option value="" hidden disabled selected>________</option>
-                  <option value="0">0%</option>
-                  <option value="10">10%</option>
-                  <option value="25">20%</option>
-                </select>
-                <select>
-                  <option value="" hidden disabled selected>________</option>
-                  <option value="above">above average</option>
-                  <option value="below">below average</option>
-                </select>
-                <br> -->
-                <select id="threshold" name="threshold" >
+                <div id="threshold">
+                  <select id="threshold-relation">
+                    <option value="" hidden disabled>________</option>
+                    <option value="greater" selected>Greater than</option>
+                    <option value="less">Less than</option>
+                  </select>
+                  <select id="threshold-percent">
+                    <option value="" hidden disabled>________</option>
+                    <option value="zero" selected>0%</option>
+                    <option value="ten">10%</option>
+                    <option value="twenty-five">25%</option>
+                  </select>
+                  <select id="threshold-average">
+                    <option value="" hidden disabled>________</option>
+                    <option value="above-average" selected>above average</option>
+                    <option value="below-average">below average</option>
+                  </select>
+                </div>
+                <!-- <select id="threshold" name="threshold" >
                   <option value="" hidden disabled selected>Select payout threshold</option>
                   <option value="above-average-10pct" >Greater than 10% above average</option>
                   <option value="above-average">Above average</option>
                   <option value="below-average">Below average</option>
                   <option value="below-average-10pct">Less than 10% below average</option>
-                </select>
+                </select> -->
               </td>
             </tr>
             <tr>
