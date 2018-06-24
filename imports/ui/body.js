@@ -1087,10 +1087,10 @@ Template.formNewProtection.events({
 
 async function createProposal(startDate,endDate,yourContr,totalPayout,location,index,thresholdRelation,thresholdPercent,thresholdAverage,clearForm){
   console.log("createProposal")
-  const d1 = (new Date(startDate)).getTime();
+  const d1 = (new Date(startDate)).getTime()/1000;
   let dd2 = new Date(endDate);
   dd2.setDate(dd2.getDate() + 15);
-  const d2 = dd2.getTime();
+  const d2 = dd2.getTime()/1000;
 
   let ethPropose = toWei(yourContr);
   let ethAsk = toWei(totalPayout - yourContr);
@@ -1098,7 +1098,7 @@ async function createProposal(startDate,endDate,yourContr,totalPayout,location,i
   let numPPTH = threshValPPTH(thresholdPercent,thresholdAverage);
   let location32 = numStringToBytes32(locationObj[location].noaaCode);
   let makeStale = false; //TODO for deployment makeStale should be true in default
-  console.log(thresholdRelation,thresholdPercent,thresholdAverage,above,numPPTH);
+  console.log(d1,d2);
 
   try {
     await promisify(cb => witInstance.createWITProposal(ethPropose, ethAsk, above, noaaAddress, numPPTH, location32, d1, d2, makeStale, {value: ethPropose, from:user[0]}, cb));
