@@ -328,8 +328,9 @@ function loadData(){
         $("#network-name").addClass("red-text");
         console.log('This is an unknown network.')
         //ganache-cli
-        witAddress  = "0x96ef5ac933b4a16e68651f03fdc0cd4cb2b80204";
-        arbolAddress = "0x390e418f238841bae8b7525b14111c2b9bc30452";
+        witAddress  = "0x0a143bdf026eabaf95d3e88abb88169674db92f5";
+        arbolAddress = "0x5dc1e82631a4be896333f38a8214554326c11796";
+        noaaAddress = "0x7cb50610e7e107b09acf3fbb8724c6df3f3e1c1d";
         //ganache gui
     }
     arbolContract = web3.eth.contract(ARBOLABI);
