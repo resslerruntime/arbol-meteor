@@ -775,11 +775,11 @@ async function acceptProposal(v){
 //evaluate WIT once its period h gas elapsed
 async function evaluateWIT(id){
   try {
-    let idodd = id;
-    if(id/2 === Math.round(id/2)) idodd = id - 1;
+    let idodd = parseInt(id);
+    if(id/2 === Math.round(id/2)) idodd = parseInt(id) - 1;
     console.log("=================> new WIT evaluation");
-    console.log("token ID", parseInt(idodd), user[0],witInstance);
-    await promisify(cb => witInstance.evaluate(1,"",{from: user[0]},cb));
+    console.log("token ID", idodd, user[0]);
+    await promisify(cb => witInstance.evaluate(idodd,"",{from: user[0]},cb));
   } catch (error) {
     console.log(error)
   }

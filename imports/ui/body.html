@@ -148,12 +148,8 @@
     {{else if isEqual type "bodyRow"}}
       {{#each column}}
         <td>
-          <div class="ellipsis">
-            <div class="inner-ellipsis">
-              <p>
-                {{{name}}}
-              </p>
-            </div>
+          <div>
+            {{{name}}}
           </div>
         </td>
       {{/each}}
@@ -305,6 +301,7 @@
                 <div class="tooltip"> To: <span class="tooltiptext">The ending month of the contract.</span></div>
               </td>
               <td>
+                <!-- {{> dateSelector}} -->
                 <input type="month" id="end-date" name="end-date" class="date-picker">
               </td>
             </tr>
@@ -461,6 +458,31 @@
       </div>
     </div>
   </div>
+</template>
+
+<template name="dateSelector">
+  <select id="month">
+    <option value="" hidden disabled selected>Month:</option>
+    <option value="1" selected>Jan</option>
+    <option value="2" selected>Feb</option>
+    <option value="3" selected>Mar</option>
+    <option value="4" selected>Apr</option>
+    <option value="5" selected>May</option>
+    <option value="6" selected>Jun</option>
+    <option value="7" selected>Jul</option>
+    <option value="8" selected>Aug</option>
+    <option value="9" selected>Sep</option>
+    <option value="10" selected>Oct</option>
+    <option value="11" selected>Nov</option>
+    <option value="12" selected>Dec</option>
+  </select>
+  <select id="year">
+    <option value="" hidden disabled selected>Year:</option>
+    <option value="2017">2017</option>
+    <option value="2018">2018</option>
+    <option value="2019">2019</option>
+    <option value="2020">2020</option>
+  </select>
 </template>
 
 <!-- TEMPLATES FOR "MY PROTECTIONS" -->

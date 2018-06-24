@@ -236,17 +236,12 @@ hr {
   color: var(--main-bg-color);
 }
 
-/* .table-sorter td {
-  padding-top: 5px;
-  padding-bottom: 5px;
-} */
-
 .table-sorter td div {
   font: 15px arial;
   text-align: center;
 
-  /* line-height: 1.1em;
-  height: 2.2em; */
+  line-height: 1.1em;
+  height: 2.2em;
   /* text-overflow: ellipsis; */
   /* overflow: hidden; */
 }
@@ -365,15 +360,22 @@ hr {
     border-bottom: 1px dotted black;
 }
 
-.tooltip .tooltiptext {
+.tooltiptext {
     visibility: hidden;
+    padding-left: 10px;
+    padding-right: 10px;
     width: 180px;
-    background-color: #f1f1f1;
-    color: black;
-    text-align: center;
-    border-radius: 6px;
+    /* height: 2.4em; */
+    background-color: var(--main-bg-color); /* #f1f1f1; */
+    border-radius: 1px;
     border: 1px solid #ccc;
-    padding: 5px 0;
+
+    color: blue;
+    text-align: left;
+    overflow-wrap: break-word;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font: bold 11px arial;
 
     /* Position the tooltip */
     position: absolute;
@@ -415,8 +417,8 @@ button.action:hover {
   .loading:before {
     content: '';
     display: block;
-    width: 100%;
     height: calc(100vh - 200px - var(--header-height) - var(--footer-height));
+    left: var(--web3-onload-padding);
     right: var(--web3-onload-padding);
     position: absolute;
     z-index: 100;
