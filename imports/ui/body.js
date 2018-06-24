@@ -48,10 +48,14 @@ function threshValsToText(above,num){
   let a = "< ";
   if(above) a = "> ";
   let b = "0% ";
-  if(num === 9000 || 11000) b = "10% ";
-  if(num === 7500 || 12500) b = "25% ";
+  if(num === 9000 || num === 11000) b = "10% ";
+  if(num === 7500 || num === 12500) b = "25% ";
   let c = "Below Avg";
   if(num > 10000) c = "Above Avg";
+  if(num === 10000){
+    b = "";
+    c = "Average";
+  }
   return a + b + c;
 }
 
@@ -77,8 +81,6 @@ function locationText(num){
   return "?";
 }
 
-
-
 //table entry constructor open protections
 //event ProposalOffered(uint indexed WITID, uint aboveID, uint belowID, uint indexed weiContributing,  uint indexed weiAsking, address evaluator, uint thresholdPPTTH, bytes32 location, uint start, uint end, bool makeStale);
 function Entry(r,owner){
@@ -100,7 +102,9 @@ function Entry(r,owner){
   }
 
   //get threshold text
-  let thresh = threshValsToText(a.WITID.toNumber() !== a.belowID.toNumber(),a.thresholdPPTTH.toNumber());
+  let above = a.WITID.toNumber() === a.belowID.toNumber();
+  if(owner === user[0]) above = a.WITID.toNumber() !== a.belowID.toNumber();
+  let thresh = threshValsToText(above,a.thresholdPPTTH.toNumber());
 
   //create the object
   this.id = id;
@@ -157,7 +161,7 @@ function MyEntry(r,a,id,bool){
     if(now >= start && now <= end){
       status = "In term";
       b = "Waiting";
-      b1 = "Waiting...";
+      b1 = "Waiting";
     }
     if(now > end){
       status = "Waiting for evaluation";
@@ -166,16 +170,16 @@ function MyEntry(r,a,id,bool){
     }
   }else{
     //not accepted proposal
-    if(now < start) status = "Waiting for partner...";
+    if(now < start) status = "Waiting for partner";
     if(now >= start) status = "Stale";
     b = "";
     b1 = `<button type='button' class='action cancelit tableBtn'> Cancel and redeem <span class="green-text">${yourContr}</span></button>`;
   }
 
-  //get threshold text 
+  //get threshold text
   let thresh;
-  if(acceptance) thresh = threshValsToText(a.WITID.toNumber() !== a.belowID.toNumber(),a.thresholdPPTTH.toNumber());
-  else thresh = threshValsToText(a.WITID.toNumber() === a.belowID.toNumber(),a.thresholdPPTTH.toNumber());
+  if(acceptance) thresh = threshValsToText(a.WITID.toNumber() === a.belowID.toNumber(),a.thresholdPPTTH.toNumber());
+  else thresh = threshValsToText(a.WITID.toNumber() !== a.belowID.toNumber(),a.thresholdPPTTH.toNumber());
 
   //create the object
   this.id = r.args.WITID.toNumber();
@@ -209,10 +213,16 @@ let DURATIONCODE = -1;
 
 if (Meteor.isClient) {
   Meteor.startup(async function() {
-    //start voronoi animation
-    //voronoiAnimation();
+    console.log('Meteor.startup, width: ',screen.width);
+    //TODO check for mobile redirect
+    if(screen.width <= 699) {
+      // document.location = "mobile.html";
+    }
+    //TODO check for not Chrome
+    if(!isChrome()){
+      //display screen to exhort for use of chrome
+    }
 
-    console.log('Meteor.startup');
     // Checking if Web3 has been injected by the browser (Mist/MetaMask)
     if (typeof web3 !== 'undefined') {
       console.log("web3 from current provider: ", web3.currentProvider.constructor.name)
@@ -403,9 +413,10 @@ async function addToken(result){
 
         //if more than ten items turn on pagination
         //set max pagination
-        if(list.length > 10){
+        let tblRow = tableRows();
+        if(list.length > tblRow){
           $("#open-pager-btns").show();
-          $("#open-max").html(Math.ceil(list.length/10));
+          $("#open-max").html(Math.ceil(list.length/tblRow));
           $("#open-current").html(1);
         }
 
@@ -427,9 +438,10 @@ async function addToken(result){
       Session.set("myProtectionsData",list);
 
       //if more than ten items turn on pagination
-      if(list.length > 10){
+      let tblRow = tableRows();
+      if(list.length > tblRow){
         $("#my-pager-btns").show();
-        $("#my-max").html(Math.ceil(list.length/10));
+        $("#my-max").html(Math.ceil(list.length/tblRow));
         $("#my-current").html(1);
       }
 
@@ -457,7 +469,7 @@ function removeToken(id){
     Session.set("openProtectionsData",list);
 
     //if more than ten items turn on pagination
-    if(list.length <= 10){
+    if(list.length <= tableRows()){
       $("#open-pager-btns").hide();
     }
 
@@ -516,7 +528,7 @@ async function addAcceptance(result){
         Session.set("myProtectionsData",list);
 
         //if more than ten items turn on pagination
-        if(list.length > 10){
+        if(list.length > tableRows()){
           $("#my-pager-btns").show();
         }
 
@@ -598,6 +610,40 @@ function clipNum(n){
   }
 }
 
+//check if browser is google Chrome
+function isChrome(){
+  //https://stackoverflow.com/questions/4565112/javascript-how-to-find-out-if-the-user-browser-is-chrome/13348618#13348618
+  // please note,
+  // that IE11 now returns undefined again for window.chrome
+  // and new Opera 30 outputs true for window.chrome
+  // but needs to check if window.opr is not undefined
+  // and new IE Edge outputs to true now for window.chrome
+  // and if not iOS Chrome check
+  // so use the below updated condition
+  var isChromium = window.chrome;
+  var winNav = window.navigator;
+  var vendorName = winNav.vendor;
+  var isOpera = typeof window.opr !== "undefined";
+  var isIEedge = winNav.userAgent.indexOf("Edge") > -1;
+  var isIOSChrome = winNav.userAgent.match("CriOS");
+
+  if (isIOSChrome) {
+     // is Google Chrome on IOS
+     return true;
+  } else if(isChromium !== null && typeof isChromium !== "undefined" && vendorName === "Google Inc." && isOpera === false && isIEedge === false) {
+     // is Google Chrome
+     return true;
+  } else {
+     // not Google Chrome
+     return false;
+  }
+}
+
+//number of rows in the sortable tables
+function tableRows(){
+  //TODO decide how many rows based on available area
+  return 15;
+}
 
 ////////////////////////////////////////////
 // FUNCTIONS RELATED TO VORONOI ANIMATION
@@ -673,6 +719,7 @@ Template.arrow.events({
 ////////////////////////////////////////////
 // FUNCTIONS RELATED TO SORTABLE TABLES
 ////////////////////////////////////////////
+
 function resetSessionVars(){
   Session.set("filterCriteria",{});
   Session.set("openProtectionsData",[]);
@@ -851,8 +898,9 @@ Template.myPagination.events({
   }
 });
 
-var bin = 10;
+//break all entries into list of x entries
 function paginateData (array,index) {
+  let bin = tableRows();
   let l = array.length;
   if(l < index*bin){
     return [];

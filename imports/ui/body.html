@@ -5,8 +5,9 @@
     <div id="user" style="display:none">{{> user}}</div>
   </div>
   <div id="content-wrapper">
-    <div id="not-chrome">
+    <div id="not-chrome" style="display:none">
       <!-- Add a page that asks people to use chrome for the development version -->
+      Arbol is only supported for Chrome.
     </div>
     <div id="no-web3" style="display:none">
       <table>
@@ -74,13 +75,13 @@
         Network:
       </td>
       <td class="inf inf-body">
-        <span id="network-name" class="red-text"> Unkown </span>
+        <div><span id="network-name" class="red-text"> Unknown </span></div>
       </td>
       <td class="inf-name inf-body">
         Current User:
       </td>
       <td class="inf inf-body">
-        <span id="user-hash" class="red-text"> No current user- log into MetaMask </span>
+        <div><span id="user-hash" class="red-text"> No current user- log into MetaMask </span></div>
       </td>
       <td class="inf-name inf-body">
         Balance (Eth):
@@ -93,34 +94,38 @@
 </template>
 
 <template name="tabs">
-  <div id=tabs-table>
-    <table>
-      <tr>
-        <td class="tabs"><input type="radio" name="selected-tab" id="open" display="none"/><label for="open" id="open-tab" class="click-tab">Open WITs</label></td>
-        <td class="tabs"><input type="radio" name="selected-tab" id="create"/><label for="create" id="create-tab" class="click-tab">Create WIT</label></td>
-        <td class="tabs"><input type="radio" name="selected-tab" id="your"/><label for="your" id="your-tab" class="click-tab">Your WITs</label></td>
-      </tr>
-    </table>
+  <div id="tabs-div">
+    <div id=tabs-table>
+      <table>
+        <tr>
+          <td class="tabs"><input type="radio" name="selected-tab" id="open" display="none"/><label for="open" id="open-tab" class="click-tab">Open WITs</label></td>
+          <td class="tabs"><input type="radio" name="selected-tab" id="create"/><label for="create" id="create-tab" class="click-tab">Create WIT</label></td>
+          <td class="tabs"><input type="radio" name="selected-tab" id="your"/><label for="your" id="your-tab" class="click-tab">Your WITs</label></td>
+        </tr>
+      </table>
+    </div>
+    <hr id="tab-rule">
   </div>
-  <hr id="tab-rule">
 </template>
 
 <template name="navigation">
     {{> tabs}}
 
-    <!-- "OPEN PROTECTIONS" TAB -->
-    <div id="open-protections" class="nav-blocks">
-      {{> openProtectionsTable}}
-    </div>
+    <div id="nav-div">
+      <!-- "OPEN PROTECTIONS" TAB -->
+      <div id="open-protections" class="nav-blocks">
+        {{> openProtectionsTable}}
+      </div>
 
-    <!-- "CREATE A PROTECTION" TAB -->
-    <div id="create-protection" class="nav-blocks">
-      {{> formNewProtection}}
-    </div>
+      <!-- "CREATE A PROTECTION" TAB -->
+      <div id="create-protection" class="nav-blocks">
+        {{> formNewProtection}}
+      </div>
 
-    <!-- "MY PROTECTIONS" TAB -->
-    <div id="your-protections" class="nav-blocks">
-      {{> myProtectionsTable}}
+      <!-- "MY PROTECTIONS" TAB -->
+      <div id="your-protections" class="nav-blocks">
+        {{> myProtectionsTable}}
+      </div>
     </div>
 </template>
 
@@ -143,7 +148,13 @@
     {{else if isEqual type "bodyRow"}}
       {{#each column}}
         <td>
-          {{{name}}}
+          <div class="ellipsis">
+            <div class="inner-ellipsis">
+              <p>
+                {{{name}}}
+              </p>
+            </div>
+          </div>
         </td>
       {{/each}}
     {{/if}}
@@ -164,7 +175,7 @@
     <td>
       <div class="tooltip">
         {{title}}
-        <span class="tooltiptext">{{tooltiptext}}</span>
+        <div class="tooltiptext">{{tooltiptext}}</div>
       </div>
     </td>
     <td>

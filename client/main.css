@@ -11,6 +11,7 @@ body {
   --main-bg-color: #f9f9ef;
   --header-height: 60px;
   --footer-height: 150px;
+  --web3-onload-padding: 25px;
   margin: 0px;
   overflow-x: hidden;
 }
@@ -63,8 +64,7 @@ span#pipe {
 
 #instance-data {
   width: 100%;
-  /*border-radius: 1px;
-  border: 1px solid gray;*/
+  table-layout: fixed;
 }
 
 #arbol2 {
@@ -72,10 +72,6 @@ span#pipe {
   text-align:left;
   letter-spacing: -5px;
   font: bold 45px verdana;
-}
-
-#user-hash {
-  word-wrap: break-word;
 }
 
 td.inf-body {
@@ -89,12 +85,21 @@ td.inf {
   font: 15px arial;
 }
 
+td.inf div {
+  padding-bottom: 5px;
+}
+
 td.inf-name {
   text-align:right;
   letter-spacing: 2px;
   font: bold 18px arial;
   color: var(--main-bg-color);
   text-transform: uppercase;
+}
+
+td.inf-name, td.inf div {
+  text-overflow: ellipsis;
+  overflow: hidden;
 }
 
 .red-text{
@@ -155,10 +160,16 @@ hr {
 -------------------------------------------------------- */
 
 #web3-onload {
-  padding: 25px;
+  height: 100%;
+  padding: var(--web3-onload-padding);
+}
+
+#nav-div {
+  height: 100%;
 }
 
 .nav-blocks {
+  height: 100%;
   margin-top: 25px;
 }
 
@@ -198,6 +209,10 @@ hr {
 /* --------------------------------------------------------
   CSS FOR TABLE SORT
 -------------------------------------------------------- */
+.wrapper {
+  min-height: calc(100vh - 200px - var(--header-height) - var(--footer-height));
+}
+
 .table-sorter {
   border-collapse: collapse;
   width: 100%;
@@ -212,7 +227,7 @@ hr {
   text-transform: uppercase;
   text-align: center;
 
-  text-overflow: clipped;
+  text-overflow: ellipsis;
   overflow: hidden;
 }
 
@@ -221,32 +236,32 @@ hr {
   color: var(--main-bg-color);
 }
 
-.table-sorter td {
+/* .table-sorter td {
   padding-top: 5px;
   padding-bottom: 5px;
+} */
+
+.table-sorter td div {
   font: 15px arial;
   text-align: center;
 
-  text-overflow: clipped;
-  overflow: hidden;
+  /* line-height: 1.1em;
+  height: 2.2em; */
+  /* text-overflow: ellipsis; */
+  /* overflow: hidden; */
 }
 
 .table-sorter tr.body-row:hover {
   background-color: #eee;
-  /* background-color: red; */
-}
-
-.wrapper {
-  min-height: 465px;
 }
 
 /* --------------------------------------------------------
   CSS FOR PAGINATION
 -------------------------------------------------------- */
 .pager-btns {
-  width: 60px;
+  width: 118px;
   height: 60px;
-  margin: 0 auto;
+  margin: auto;
 }
 
 .pager-wrapper {
@@ -397,22 +412,15 @@ button.action:hover {
   CSS FOR MAKING LOADING ICON
 -------------------------------------------------------- */
 
-  .wrapper {
-      position: relative;
-      min-height: 450px;
-  }
   .loading:before {
-      content: '';
-      display: block;
-      width: 100%;
-      height: 500px;
-      position: absolute;
-      top: 0;
-      left: 0;
-      bottom: 0;
-      right: 0;
-      z-index: 100;
-      background: rgba(0,0,0,0.3) center center no-repeat;
+    content: '';
+    display: block;
+    width: 100%;
+    height: calc(100vh - 200px - var(--header-height) - var(--footer-height));
+    right: var(--web3-onload-padding);
+    position: absolute;
+    z-index: 100;
+    background: rgba(0,0,0,0.3) center center no-repeat;
   }
 
   .loader-icon {
@@ -427,7 +435,7 @@ button.action:hover {
   }
 
   #open-loader, #my-loader {
-      top: 200px;
+      top: calc((100vh - 235px - var(--header-height) - var(--footer-height))/2);
       left: 50%;
   }
 
