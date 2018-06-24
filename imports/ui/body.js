@@ -113,8 +113,8 @@ function Entry(r,owner){
       {type:"text",key:location,name:location}
       ,{type:"text",key:thresh,name:thresh}
       ,{type:"text",key:"NOAA Rainfall",name:"NOAA Rainfall"}
-      ,{type:"num",key:a.start.toNumber(),name:dateText(a.start.toNumber())}
-      ,{type:"num",key:a.end.toNumber(),name:dateText(a.end.toNumber())}
+      ,{type:"num",key:a.start.toNumber()*1000,name:dateText(a.start.toNumber()*1000)}
+      ,{type:"num",key:a.end.toNumber()*1000,name:dateText(a.end.toNumber()*1000)}
       ,{type:"num",key:totalPayout,name:totalPayout}
       ,{type:"num",key:b,name:b1}
     ];
@@ -145,8 +145,8 @@ function MyEntry(r,a,id,bool){
 
   //status
   let now = new Date().getTime();
-  let start = new Date(a.start.toNumber()).getTime();
-  let end = new Date(a.end.toNumber()).getTime();
+  let start = new Date(a.start.toNumber()*1000).getTime();
+  let end = new Date(a.end.toNumber()*1000).getTime();
   let status = "";
   let b = "";
   let b1 = "";
@@ -188,8 +188,8 @@ function MyEntry(r,a,id,bool){
       {type:"text",key:location,name:location}
       ,{type:"text",key:thresh,name:thresh}
       ,{type:"text",key:"NOAA Rainfall",name:"NOAA Rainfall"}
-      ,{type:"num",key:a.start.toNumber(),name:dateText(a.start.toNumber())}
-      ,{type:"num",key:a.end.toNumber(),name:dateText(a.end.toNumber())}
+      ,{type:"num",key:a.start.toNumber()*1000,name:dateText(a.start.toNumber()*1000)}
+      ,{type:"num",key:a.end.toNumber()*1000,name:dateText(a.end.toNumber()*1000)}
       ,{type:"num",key:yourContr,name:yourContr}
       ,{type:"num",key:totalPayout,name:totalPayout}
       ,{type:"text",key:status,name:status}
@@ -1087,10 +1087,10 @@ Template.formNewProtection.events({
 
 async function createProposal(startDate,endDate,yourContr,totalPayout,location,index,thresholdRelation,thresholdPercent,thresholdAverage,clearForm){
   console.log("createProposal")
-  const d1 = (new Date(startDate)).getTime()/1000;
+  const d1 = (new Date(startDate)).getTime()/1000; //convert to UNIX timestamp
   let dd2 = new Date(endDate);
   dd2.setDate(dd2.getDate() + 15);
-  const d2 = dd2.getTime()/1000;
+  const d2 = dd2.getTime()/1000; //convert to UNIX timestamp
 
   let ethPropose = toWei(yourContr);
   let ethAsk = toWei(totalPayout - yourContr);
@@ -1098,7 +1098,7 @@ async function createProposal(startDate,endDate,yourContr,totalPayout,location,i
   let numPPTH = threshValPPTH(thresholdPercent,thresholdAverage);
   let location32 = numStringToBytes32(locationObj[location].noaaCode);
   let makeStale = false; //TODO for deployment makeStale should be true in default
-  console.log(d1,d2);
+  console.log(new Date(startDate),d1,d2);
 
   try {
     await promisify(cb => witInstance.createWITProposal(ethPropose, ethAsk, above, noaaAddress, numPPTH, location32, d1, d2, makeStale, {value: ethPropose, from:user[0]}, cb));
