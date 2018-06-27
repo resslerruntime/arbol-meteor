@@ -23,4 +23,20 @@ To connect to your local Ganache network, click on the "main network" dropdown a
 
 If you click the profile refresh icon and click "create account," metamask will automatically add additional ganache accounts.
 
-If you go to "add token" and enter the CROP address + symbol, you should see your CROP balance in there as well.
+Deployment
+=====================
+
+Install mup.
+
+    $ npm install --global mup
+
+Make sure your contract addresses are up to date in body.js, and that your ABIs are up to date in client/lib.
+
+Move into the .deploy directory prepare install dependencies on the server.
+
+    $ cd .deploy/
+    $ mup setup
+    
+Build the app and deploy.
+
+    $ mup deploy

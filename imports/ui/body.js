@@ -317,9 +317,9 @@ function loadData(){
         $("#network-name").removeClass("red-text");
         $("#network-name").addClass("green-text");
         console.log('This is the Rinkeby test network.')
-        witAddress  = "0xcf101416e4e572ef1500808ffc25c062f555c605";
-        arbolAddress = "0xe3d980eb41a78178adc99d3d520b5c7fe05f17d8";
-        noaaAddress = "0xf226b67aa2bcbe28380188f78d3e69012c249f53";
+        witAddress  = "0x8ac71ef838699f2ebe03b00adb1a726aa2153afa";
+        arbolAddress = "0x23b14dd217771f3d9988676df4301cca773853ca";
+        noaaAddress = "0x598ca8a1da8f889a244a6031126fa6bd71acc292";
 
         break
       case "42":
@@ -332,14 +332,31 @@ function loadData(){
         $("#network-name").addClass("red-text");
         console.log('This is an unknown network.')
         //ganache-cli
-        witAddress  = "0x96ef5ac933b4a16e68651f03fdc0cd4cb2b80204";
-        arbolAddress = "0x390e418f238841bae8b7525b14111c2b9bc30452";
+        witAddress  = "0x0a143bdf026eabaf95d3e88abb88169674db92f5";
+        arbolAddress = "0x5dc1e82631a4be896333f38a8214554326c11796";
+        noaaAddress = "0x7cb50610e7e107b09acf3fbb8724c6df3f3e1c1d";
         //ganache gui
     }
     arbolContract = web3.eth.contract(ARBOLABI);
     arbolInstance = arbolContract.at(arbolAddress);
     witContract = web3.eth.contract(WITABI);
     witInstance = witContract.at(witAddress);
+
+/*
+
+Ben's happy place. Do not disturb.
+    noaaContract = web3.eth.contract(NOAAABI);
+    noaaInstance = noaaContract.at(noaaAddress);
+
+  let sentNOAAPrecipAggregateOraclizeComputation = noaaInstance.sentNOAAPrecipAggregateOraclizeComputation({},{fromBlock: 0, toBlock: 'latest'}).watch(function(error, result){
+    console.log("sentNOAAPrecipAggregateOraclizeComputation: ", result)
+  });
+
+  let gotNOAAPrecipAggregateCallback = noaaInstance.gotNOAAPrecipAggregateCallback({},{fromBlock: 0, toBlock: 'latest'}).watch(function(error, result){
+    console.log("gotNOAAPrecipAggregateCallback: ", result)
+  });  
+
+  */
 
     //populate lists
     latestProposals();
@@ -1114,7 +1131,7 @@ async function createProposal(startDate,endDate,yourContr,totalPayout,location,i
   let numPPTH = threshValPPTH(thresholdPercent,thresholdAverage);
   let location32 = numStringToBytes32(locationObj[location].noaaCode);
   let makeStale = false; //TODO for deployment makeStale should be true in default
-  console.log(new Date(startDate),d1,d2);
+  console.log(ethPropose, ethAsk, above, noaaAddress, numPPTH, location32, d1, d2, makeStale);
 
   try {
     await promisify(cb => witInstance.createWITProposal(ethPropose, ethAsk, above, noaaAddress, numPPTH, location32, d1, d2, makeStale, {value: ethPropose, from:user[0]}, cb));
