@@ -7,13 +7,13 @@
   <div id="content-wrapper">
     <div id="not-chrome" style="display:none">
       <!-- Add a page that asks people to use chrome for the development version -->
-      Arbol is only supported for Chrome.
+      <div id="not-chrome-text">Uh oh, this website is currently only supported for Chrome</div>
     </div>
     <div id="no-web3" style="display:none">
       <table>
         <tr>
-          <td style="width:300px">
-            <h3 style="color:red">This website requires MetaMask: </h3>
+          <td>
+            This website requires MetaMask:
           </td>
         </tr>
         <tr>
@@ -24,6 +24,9 @@
           </td>
         </tr>
       </table>
+    </div>
+    <div id="demo-popup" style="display:none">
+      Use this seed phrase to try our demo account: keep wire primary open recipe primary expand valve need pull item organ
     </div>
     <div id="web3-onload" class="disabled-div">
       {{> navigation}}

@@ -151,7 +151,6 @@ function MyEntry(r,a,id,bool){
   let b = "";
   let b1 = "";
 
-
   if(acceptance || acceptedProposal){
     //acceptances and accepted proposals
     if(now < start){
@@ -184,6 +183,7 @@ function MyEntry(r,a,id,bool){
   //create the object
   this.id = r.args.WITID.toNumber();
   this.type = "bodyRow";
+  //if you change the number or order of columns, you have to update the evaluation listener
   this.column = [
       {type:"text",key:location,name:location}
       ,{type:"text",key:thresh,name:thresh}
@@ -218,71 +218,75 @@ if (Meteor.isClient) {
     if(screen.width <= 699) {
       // document.location = "mobile.html";
     }
-    //TODO check for not Chrome
+    //check for Chrome browser
     if(!isChrome()){
       //display screen to exhort for use of chrome
-    }
-
-    // Checking if Web3 has been injected by the browser (Mist/MetaMask)
-    if (typeof web3 !== 'undefined') {
-      console.log("web3 from current provider: ", web3.currentProvider.constructor.name)
-      // Use Mist/MetaMask's provider
-      web3 = new Web3(web3.currentProvider);
-
-      //show relevant content depending on wether web3 is loaded or not
+      $("#not-chrome").show();
+      $("#header").hide();
+      $("#web3-onload").hide();
+      $("#footer").addClass("not-chrome-footer");
+    }else{
       $("#user").show();
-      $("#web3-onload").removeClass("disabled-div");
+      // Checking if Web3 has been injected by the browser (Mist/MetaMask)
+      if (typeof web3 !== 'undefined') {
+        console.log("web3 from current provider: ", web3.currentProvider.constructor.name)
+        // Use Mist/MetaMask's provider
+        web3 = new Web3(web3.currentProvider);
 
-      // check for subsequent account activity, lockout screen if no metamask user is signed in
-      setInterval(async function(){
-        try{
-          user = await promisify(cb => web3.eth.getAccounts(cb));
-          if(typeof user[0] === "undefined") user = [-1];
-          if(user[0] !== pastUser[0]){
-            console.log("_-_-_- CHANGE IN USER _-_-_-")
-            //reset and reload everything for new user
-            // $("#web3-onload").addClass("disabled-div");
-            $('#open-pager-btns').hide();
-            $('#my-pager-btns').hide();
-            resetSessionVars();
-            resetGlobalVariables();
-            let s;
-            if(user[0] !== -1){
-              $('#user-hash').html(user[0]);
-              $('#user-hash').removeClass('red-text');
-              $('#user-hash').addClass('green-text');
-              updateBalance();
-              $('#my-wrapper').removeClass('loading');
-              $('#my-loader').hide();
-            } else {
-              $('#user-hash').html("No current user- log into MetaMask");
-              $('#user-hash').addClass('red-text');
-              $('#user-hash').removeClass('green-text');
+        //show relevant content depending on whether web3 is loaded or not
+        $("#web3-onload").removeClass("disabled-div");
 
-              $('#user-balance').html("0.000");
-              $('#user-balance').removeClass('red-text');
-              $('#user-balance').addClass('green-text');
+        // check for subsequent account activity, lockout screen if no metamask user is signed in
+        setInterval(async function(){
+          try{
+            user = await promisify(cb => web3.eth.getAccounts(cb));
+            if(typeof user[0] === "undefined") user = [-1];
+            if(user[0] !== pastUser[0]){
+              console.log("_-_-_- CHANGE IN USER _-_-_-")
+              //reset and reload everything for new user
+              // $("#web3-onload").addClass("disabled-div");
+              $('#open-pager-btns').hide();
+              $('#my-pager-btns').hide();
+              resetSessionVars();
+              resetGlobalVariables();
+              let s;
+              if(user[0] !== -1){
+                $('#user-hash').html(user[0]);
+                $('#user-hash').removeClass('red-text');
+                $('#user-hash').addClass('green-text');
+                updateBalance();
+                $('#my-wrapper').removeClass('loading');
+                $('#my-loader').hide();
+              } else {
+                $('#user-hash').html("No current user- log into MetaMask");
+                $('#user-hash').addClass('red-text');
+                $('#user-hash').removeClass('green-text');
 
-              $('#my-loader').show();
-              $('#my-wrapper').addClass('loading');
+                $('#user-balance').html("0.000");
+                $('#user-balance').removeClass('red-text');
+                $('#user-balance').addClass('green-text');
+
+                $('#my-loader').show();
+                $('#my-wrapper').addClass('loading');
+              }
+              loadData();
             }
-            loadData();
+            pastUser = user;
+          } catch (error) {
+            console.log(error)
           }
-          pastUser = user;
-        } catch (error) {
-          console.log(error)
-        }
-      }, 1000);
+        }, 1000);
 
-      //start drawing svg
-      drawUSA();
-      drawMonths();
-    } else {
-      console.log('No web3? You should consider trying MetaMask!')
-      // fallback - use your fallback strategy (local node / hosted node + in-dapp id mgmt / fail)
-      // web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:7545"));
-      //show relevant content depending on wether web3 is available or not
-      $('#no-web3').show();
+        //start drawing svg
+        drawUSA();
+        drawMonths();
+      } else {
+        console.log('No web3? You should consider trying MetaMask!')
+        // fallback - use your fallback strategy (local node / hosted node + in-dapp id mgmt / fail)
+        // web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:7545"));
+        //show relevant content depending on wether web3 is available or not
+        $('#no-web3').show();
+      }
     }
   });
 }
@@ -389,7 +393,19 @@ function latestEvaluations(){
     updateBalance();
     console.log("===> latest: 'evaluated'")
     console.log(result)
-    //TODO update status in "my protections pages"
+    //update status in "my protections pages"
+    //go through list, change status update page
+    let list = Session.get("myProtectionsData");
+    let index = findIndex(list,el => el.id == result.args.WITID);
+    let outcome = "";
+    let payout = toEth(result.args.weiPayout.toNumber());
+    if(true) outcome = `You received <span class="green-text">${payout}</span>`
+    else outcome = "You did not receive the payout";
+    list[index].column[7].key = "Evaluation";
+    list[index].column[7].name = "Evaluation complete";
+    list[index].column[8].key = "Evaluated";
+    list[index].column[8].name = outcome;
+    Session.set("openProtectionsData",list);
   })
 }
 
@@ -463,7 +479,7 @@ function removeToken(id){
   //add to open protections
   let list = Session.get("openProtectionsData");
   if(list.length > 0){
-    let index = findIndex(list,function(el){console.log(el,el.id,id); return el.id == id;})
+    let index = findIndex(list,el => el.id == id);
     list.splice(index,1);
     // list = sortArray(list,Session.get("sortIndex"),Session.get("descending"));
     Session.set("openProtectionsData",list);
@@ -778,7 +794,7 @@ async function evaluateWIT(id){
     let idodd = parseInt(id);
     if(id/2 === Math.round(id/2)) idodd = parseInt(id) - 1;
     console.log("=================> new WIT evaluation");
-    console.log("token ID", idodd, user[0]);
+    console.log("token ID", id, idodd, user[0]);
     await promisify(cb => witInstance.evaluate(idodd,"",{from: user[0]},cb));
   } catch (error) {
     console.log(error)

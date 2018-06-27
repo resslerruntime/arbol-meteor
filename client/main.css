@@ -16,32 +16,41 @@ body {
   overflow-x: hidden;
 }
 
-div#no-web3 {
+#not-chrome {
+  height: calc(100vh - var(--footer-height));
+  padding: var(--web3-onload-padding);
+  background-color: #ffeae8;
+}
+
+#not-chrome-text {
+  font: bold 45px verdana;
+  color: #ed735e;
+}
+
+div.not-chrome-footer {
+  background-color: #ffcec9 !important;
+  color: #ed735e !important;
+}
+
+#no-web3 {
+  font: bold 45px verdana;
+
   position: fixed;
   width: 500px;
   height: 300px;
-  left: -webkit-calc(50% - 250px);
-  left:    -moz-calc(50% - 250px);
-  left:         calc(50% - 250px);
+  left: calc(50% - 250px);
+  top: calc(50% - 150px);
 
-  top: -webkit-calc(50% - 150px);
-  top:    -moz-calc(50% - 150px);
-  top:         calc(50% - 150px);
-
-  background-color: #f1f1f1;
-  border-color: #ccc;
+  background-color: #ffcec9;
+  color: #ed735e;
+  border-color: #ff6344;
   border-style: solid;
   margin-left: 1%;
+
+  z-index: 2000;
 }
 
-span#pipe {
-  padding-left:1em;
-  padding-right:1em;
-}
 
-.buttonHolder{
-  margin-left:15%;
-}
 
 .disabled-div {
     pointer-events: none;
