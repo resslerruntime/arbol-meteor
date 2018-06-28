@@ -8,6 +8,8 @@ import './body.html';
 // FUNCTIONS RELATED TO WEB3 PAGE STARTUP
 ////////////////////////////////////////////
 
+$('html').bind('click', () => $('#demo-popup').slideUp(200));
+
 //used for asynchronous web3 calls
 const promisify = (inner) =>
     new Promise((resolve, reject) =>
@@ -354,7 +356,7 @@ Ben's happy place. Do not disturb.
 
   let gotNOAAPrecipAggregateCallback = noaaInstance.gotNOAAPrecipAggregateCallback({},{fromBlock: 0, toBlock: 'latest'}).watch(function(error, result){
     console.log("gotNOAAPrecipAggregateCallback: ", result)
-  });  
+  });
 
   */
 
@@ -414,15 +416,18 @@ function latestEvaluations(){
     //go through list, change status update page
     let list = Session.get("myProtectionsData");
     let index = findIndex(list,el => el.id == result.args.WITID);
-    let outcome = "";
-    let payout = toEth(result.args.weiPayout.toNumber());
-    if(true) outcome = `You received <span class="green-text">${payout}</span>`
-    else outcome = "You did not receive the payout";
-    list[index].column[7].key = "Evaluation";
-    list[index].column[7].name = "Evaluation complete";
-    list[index].column[8].key = "Evaluated";
-    list[index].column[8].name = outcome;
-    Session.set("openProtectionsData",list);
+    if(index != -1){
+      let outcome = "";
+      let payout = toEth(result.args.weiPayout.toNumber());
+      if(true) outcome = `You received <span class="green-text">${payout}</span>`
+      else outcome = "You did not receive the payout";
+      console.log("col",list,index,list[index])
+      list[index].column[7].key = "Evaluation";
+      list[index].column[7].name = "Evaluation complete";
+      list[index].column[8].key = "Evaluated";
+      list[index].column[8].name = outcome;
+      Session.set("openProtectionsData",list);
+    }
   })
 }
 
@@ -464,6 +469,7 @@ async function addToken(result){
     }
 
     //add to my protections
+    console.log("my entry", owner, user[0], result)
     if(owner === user[0]){
       let list = Session.get("myProtectionsData");
       list.push(new MyEntry(result,result.args,id.toNumber(),true));

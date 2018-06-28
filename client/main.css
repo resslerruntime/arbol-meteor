@@ -32,6 +32,16 @@ div.not-chrome-footer {
   color: #ed735e !important;
 }
 
+#demo-popup {
+  background-color: #ffeae8;
+  padding: var(--web3-onload-padding);
+  font: bold 15px verdana;
+  color: #ed735e;
+  text-align: center;
+  border-color: #ff6344;
+  border-style: solid;
+}
+
 #no-web3 {
   font: bold 45px verdana;
 
@@ -213,6 +223,15 @@ hr {
 #links table tr td {
   padding: 10px;
   font: bold 12px arial;
+}
+
+#links table tr td a {
+  color: black;
+  text-decoration: none;
+}
+
+#links table tr td a:hover {
+  border-bottom: 2px solid black;
 }
 
 /* --------------------------------------------------------
