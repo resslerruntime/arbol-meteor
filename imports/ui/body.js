@@ -8,8 +8,6 @@ import './body.html';
 // FUNCTIONS RELATED TO WEB3 PAGE STARTUP
 ////////////////////////////////////////////
 
-$('html').bind('click', () => $('#demo-popup').slideUp(200));
-
 //used for asynchronous web3 calls
 const promisify = (inner) =>
     new Promise((resolve, reject) =>
@@ -157,7 +155,7 @@ function MyEntry(r,a,id,bool){
     //acceptances and accepted proposals
     if(now < start){
       status = "Partnered, waiting to start";
-      b1 = `<button type='button' class='action cancelit tableBtn'> Cancel and redeem <span class="green-text">${yourContr}</span></button>`;
+      b1 = "Waiting"; //`<button type='button' class='action cancelit tableBtn'> Cancel and redeem <span class="green-text">${yourContr}</span></button>`;
     }
     if(now >= start && now <= end){
       status = "In term";
@@ -216,6 +214,16 @@ let DURATIONCODE = -1;
 if (Meteor.isClient) {
   Meteor.startup(async function() {
     console.log('Meteor.startup, width: ',screen.width);
+
+    //instantiate some interface elements
+    $('.close-click').click(() => $('#demo-popup').slideUp(200));
+    $("#popup-text").click(()=>{
+      var copyText = document.getElementById("seed-phrase");
+      copyText.select();
+      document.execCommand("copy");
+    });
+
+
     //TODO check for mobile redirect
     if(screen.width <= 699) {
       // document.location = "mobile.html";

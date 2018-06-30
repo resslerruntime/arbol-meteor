@@ -1,6 +1,16 @@
 
 
 <body>
+  <div id="demo-popup">
+    <div id="close" class="arrow-t-b close-click">
+      Close
+      <div class="arrow-l-r close-click"> </div>
+    </div>
+    <div id="popup-text"> New to Arbol? Use this seed phrase to try our demo account that is prestocked with Rinkeby Ether: keep wire primary open recipe primary expand valve need pull item organ
+      <span id="copy-click"> Click to copy seed phrase</span>
+    </div>
+    <input id="seed-phrase" type="text" value="keep wire primary open recipe primary expand valve need pull item organ">
+  </div>
   <div id=header>
     <div id="user" style="display:none">{{> user}}</div>
   </div>
@@ -24,9 +34,6 @@
           </td>
         </tr>
       </table>
-    </div>
-    <div id="demo-popup">
-      New to Arbol? Use this seed phrase to try our demo account that is prestocked with Rinkeby Ether: keep wire primary open recipe primary expand valve need pull item organ
     </div>
     <div id="web3-onload" class="disabled-div">
       {{> navigation}}

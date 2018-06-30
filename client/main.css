@@ -32,16 +32,6 @@ div.not-chrome-footer {
   color: #ed735e !important;
 }
 
-#demo-popup {
-  background-color: #ffeae8;
-  padding: var(--web3-onload-padding);
-  font: bold 15px verdana;
-  color: #ed735e;
-  text-align: center;
-  border-color: #ff6344;
-  border-style: solid;
-}
-
 #no-web3 {
   font: bold 45px verdana;
 
@@ -60,11 +50,91 @@ div.not-chrome-footer {
   z-index: 2000;
 }
 
-
-
 .disabled-div {
     pointer-events: none;
     opacity: 0.4;
+}
+
+/* --------------------------------------------------------
+  CSS FOR MAKING DEMO POPUP
+-------------------------------------------------------- */
+#demo-popup {
+  background-color: #ffeae8;
+  padding: 3px;
+  font: bold 15px verdana;
+  color: #ed735e;
+  /* text-align: center; */
+  border-color: #ff6344;
+  border-style: solid;
+}
+
+#copy-click {
+  font: 12px verdana;
+  letter-spacing: 0em;
+  text-transform: uppercase;
+}
+
+#popup-text:hover #copy-click {
+  color: #ff6344;
+  border-bottom: 1px solid #ff6344;
+}
+
+#popup-text:active #copy-click {
+  color: #333;
+  border-bottom: 1px solid #333;
+}
+
+#popup-text {
+  padding: 15px;
+  padding-left: 25px;
+}
+
+#seed-phrase {
+  position: absolute;
+  left: -9999px;
+}
+
+#close {
+  width: 12px;
+  height: 12px;
+  position: absolute;
+  border-width: 4px;
+  border-style: solid;
+  border-radius: 100%;
+  color: #ed735e;
+  text-indent: -9999px;
+}
+#close:hover {
+  color: #ff6344;
+}
+.arrow-t-b:after,
+.arrow-t-b:before,
+.arrow-l-r:after,
+.arrow-l-r:before {
+  border-color: transparent;
+  border-style: solid;
+  border-width: 4px;
+  content: "";
+  left: 2px;
+  top: 0px;
+  position: absolute;
+}
+.arrow-t-b:after {
+  border-top-color: inherit;
+}
+.arrow-l-r:after {
+  border-right-color: inherit;
+  left: 4px;
+  top: 2px;
+}
+.arrow-t-b:before {
+  border-bottom-color: inherit;
+  bottom: 0;
+}
+.arrow-l-r:before {
+  border-left-color: inherit;
+  left: 0;
+  top: 2px;
 }
 
 /* --------------------------------------------------------
