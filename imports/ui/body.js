@@ -4,6 +4,9 @@ import topojson from "topojson";
 import BN from 'bn.js';
 import './body.html';
 
+
+
+
 ////////////////////////////////////////////
 // FUNCTIONS RELATED TO WEB3 PAGE STARTUP
 ////////////////////////////////////////////
@@ -1625,3 +1628,8 @@ function parseData(results){
   let sum = a3.reduce((a,c) => a + c);
   return {start:parseInt(a2[a2.length-1][0]),data:a3,avg:sum/10};
 }
+
+  Router.route('/tutorial');
+  Router.route('/', {
+    template: 'console'
+    });
