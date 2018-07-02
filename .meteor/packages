@@ -31,3 +31,4 @@ templates:tabs
 session
 underscore
 http
+iron:router
