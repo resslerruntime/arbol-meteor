@@ -4,8 +4,22 @@ import topojson from "topojson";
 import BN from 'bn.js';
 import './body.html';
 
-
-
+Router.route('/tutorial');
+Router.route('/', {
+  template: 'main-page',
+  onAfterAction:function(){
+    console.log("router onAfterAction")
+    let onHTML = setInterval(function(){
+      console.log("check for loaded HTML")
+      //check if html is loaded
+      let el = $("#map");
+      if(typeof el !== "undefined"){
+        initMainPage();
+        window.clearInterval(onHTML);
+      }
+    }, 100);
+  }
+});
 
 ////////////////////////////////////////////
 // FUNCTIONS RELATED TO WEB3 PAGE STARTUP
@@ -214,94 +228,95 @@ let NOAACODE = -1;
 let MONTHCODE = -1;
 let DURATIONCODE = -1;
 
-if (Meteor.isClient) {
-  Meteor.startup(async function() {
-    console.log('Meteor.startup, width: ',screen.width);
+function initMainPage(){
+  if (Meteor.isClient) {
+    Meteor.startup(async function() {
+      console.log('Meteor.startup, width: ',screen.width);
 
-    //instantiate some interface elements
-    $('.close-click').click(() => $('#demo-popup').slideUp(200));
-    $("#popup-text").click(()=>{
-      var copyText = document.getElementById("seed-phrase");
-      copyText.select();
-      document.execCommand("copy");
-    });
+      //instantiate some interface elements
+      $('.close-click').click(() => $('#demo-popup').slideUp(200));
+      $("#popup-text").click(()=>{
+        var copyText = document.getElementById("seed-phrase");
+        copyText.select();
+        document.execCommand("copy");
+      });
 
-
-    //TODO check for mobile redirect
-    if(screen.width <= 699) {
-      // document.location = "mobile.html";
-    }
-    //check for Chrome browser
-    if(!isChrome()){
-      //display screen to exhort for use of chrome
-      $("#not-chrome").show();
-      $("#header").hide();
-      $("#web3-onload").hide();
-      $("#footer").addClass("not-chrome-footer");
-    }else{
-      $("#user").show();
-      // Checking if Web3 has been injected by the browser (Mist/MetaMask)
-      if (typeof web3 !== 'undefined') {
-        console.log("web3 from current provider: ", web3.currentProvider.constructor.name)
-        // Use Mist/MetaMask's provider
-        web3 = new Web3(web3.currentProvider);
-
-        //show relevant content depending on whether web3 is loaded or not
-        $("#web3-onload").removeClass("disabled-div");
-
-        // check for subsequent account activity, lockout screen if no metamask user is signed in
-        setInterval(async function(){
-          try{
-            user = await promisify(cb => web3.eth.getAccounts(cb));
-            if(typeof user[0] === "undefined") user = [-1];
-            if(user[0] !== pastUser[0]){
-              console.log("_-_-_- CHANGE IN USER _-_-_-")
-              //reset and reload everything for new user
-              // $("#web3-onload").addClass("disabled-div");
-              $('#open-pager-btns').hide();
-              $('#my-pager-btns').hide();
-              resetSessionVars();
-              resetGlobalVariables();
-              let s;
-              if(user[0] !== -1){
-                $('#user-hash').html(user[0]);
-                $('#user-hash').removeClass('red-text');
-                $('#user-hash').addClass('green-text');
-                updateBalance();
-                $('#my-wrapper').removeClass('loading');
-                $('#my-loader').hide();
-              } else {
-                $('#user-hash').html("No current user- log into MetaMask");
-                $('#user-hash').addClass('red-text');
-                $('#user-hash').removeClass('green-text');
-
-                $('#user-balance').html("0.000");
-                $('#user-balance').removeClass('red-text');
-                $('#user-balance').addClass('green-text');
-
-                $('#my-loader').show();
-                $('#my-wrapper').addClass('loading');
-              }
-              loadData();
-            }
-            pastUser = user;
-          } catch (error) {
-            console.log(error)
-          }
-        }, 1000);
-
-        //start drawing svg
-        drawUSA();
-        drawMonths();
-      } else {
-        console.log('No web3? You should consider trying MetaMask!')
-        // fallback - use your fallback strategy (local node / hosted node + in-dapp id mgmt / fail)
-        // web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:7545"));
-        //show relevant content depending on wether web3 is available or not
-        $('#no-web3').show();
+      //TODO check for mobile redirect
+      if(screen.width <= 699) {
+        // document.location = "mobile.html";
       }
-    }
-  });
+      //check for Chrome browser
+      if(!isChrome()){
+        //display screen to exhort for use of chrome
+        $("#not-chrome").show();
+        $("#header").hide();
+        $("#web3-onload").hide();
+        $("#footer").addClass("not-chrome-footer");
+      }else{
+        $("#user").show();
+        // Checking if Web3 has been injected by the browser (Mist/MetaMask)
+        if (typeof web3 !== 'undefined') {
+          console.log("web3 from current provider: ", web3.currentProvider.constructor.name)
+          // Use Mist/MetaMask's provider
+          web3 = new Web3(web3.currentProvider);
+
+          //show relevant content depending on whether web3 is loaded or not
+          $("#web3-onload").removeClass("disabled-div");
+
+          // check for subsequent account activity, lockout screen if no metamask user is signed in
+          setInterval(async function(){
+            try{
+              user = await promisify(cb => web3.eth.getAccounts(cb));
+              if(typeof user[0] === "undefined") user = [-1];
+              if(user[0] !== pastUser[0]){
+                console.log("_-_-_- CHANGE IN USER _-_-_-")
+                //reset and reload everything for new user
+                // $("#web3-onload").addClass("disabled-div");
+                $('#open-pager-btns').hide();
+                $('#my-pager-btns').hide();
+                resetSessionVars();
+                resetGlobalVariables();
+                let s;
+                if(user[0] !== -1){
+                  $('#user-hash').html(user[0]);
+                  $('#user-hash').removeClass('red-text');
+                  $('#user-hash').addClass('green-text');
+                  updateBalance();
+                  $('#my-wrapper').removeClass('loading');
+                  $('#my-loader').hide();
+                } else {
+                  $('#user-hash').html("No current user- log into MetaMask");
+                  $('#user-hash').addClass('red-text');
+                  $('#user-hash').removeClass('green-text');
+
+                  $('#user-balance').html("0.000");
+                  $('#user-balance').removeClass('red-text');
+                  $('#user-balance').addClass('green-text');
+
+                  $('#my-loader').show();
+                  $('#my-wrapper').addClass('loading');
+                }
+                loadData();
+              }
+              pastUser = user;
+            } catch (error) {
+              console.log(error)
+            }
+          }, 1000);
+
+          //start drawing svg
+          drawUSA();
+          drawMonths();
+        } else {
+          console.log('No web3? You should consider trying MetaMask!')
+          // fallback - use your fallback strategy (local node / hosted node + in-dapp id mgmt / fail)
+          // web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:7545"));
+          //show relevant content depending on wether web3 is available or not
+          $('#no-web3').show();
+        }
+      }
+    });
+  }
 }
 
 //begin the process of loading all the data
@@ -1240,7 +1255,7 @@ let selectedRegion = "none";
 let currentHTTP = 0;
 
 async function drawUSA(){
-  let svg = d3.select("svg#map");
+  let svg = d3.select("#map");
   let width = +svg.attr("width");
   let height = +svg.attr("height");
   let path = d3.geoPath();
@@ -1628,8 +1643,3 @@ function parseData(results){
   let sum = a3.reduce((a,c) => a + c);
   return {start:parseInt(a2[a2.length-1][0]),data:a3,avg:sum/10};
 }
-
-  Router.route('/tutorial');
-  Router.route('/', {
-    template: 'console'
-    });

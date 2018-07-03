@@ -2,75 +2,75 @@
     <h2>tutorial</h2>
 </template>
 
-<template name="console">
-<body>
-  <div id="demo-popup">
-    <div id="close" class="arrow-t-b close-click">
-      Close
-      <div class="arrow-l-r close-click"> </div>
+<template name="main-page">
+  <body>
+    <div id="demo-popup">
+      <div id="close" class="arrow-t-b close-click">
+        Close
+        <div class="arrow-l-r close-click"> </div>
+      </div>
+      <div id="popup-text"> New to Arbol? Use this seed phrase to try our demo account that is prestocked with Rinkeby Ether: keep wire primary open recipe primary expand valve need pull item organ
+        <span id="copy-click"> Click to copy seed phrase</span>
+      </div>
+      <input id="seed-phrase" type="text" value="keep wire primary open recipe primary expand valve need pull item organ">
     </div>
-    <div id="popup-text"> New to Arbol? Use this seed phrase to try our demo account that is prestocked with Rinkeby Ether: keep wire primary open recipe primary expand valve need pull item organ
-      <span id="copy-click"> Click to copy seed phrase</span>
+    <div id=header>
+      <div id="user" style="display:none">{{> user}}</div>
     </div>
-    <input id="seed-phrase" type="text" value="keep wire primary open recipe primary expand valve need pull item organ">
-  </div>
-  <div id=header>
-    <div id="user" style="display:none">{{> user}}</div>
-  </div>
-  <div id="content-wrapper">
-    <div id="not-chrome" style="display:none">
-      <!-- Add a page that asks people to use chrome for the development version -->
-      <div id="not-chrome-text">Uh oh, this website is currently only supported for Chrome</div>
+    <div id="content-wrapper">
+      <div id="not-chrome" style="display:none">
+        <!-- Add a page that asks people to use chrome for the development version -->
+        <div id="not-chrome-text">Uh oh, this website is currently only supported for Chrome</div>
+      </div>
+      <div id="no-web3" style="display:none">
+        <table>
+          <tr>
+            <td>
+              This website requires MetaMask:
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <a href="https://metamask.io/">
+                <img src="/images/metamask-link.png" alt="Download MetaMask" height="140">
+              </a>
+            </td>
+          </tr>
+        </table>
+      </div>
+      <div id="web3-onload" class="disabled-div">
+        {{> navigation}}
+      </div>
     </div>
-    <div id="no-web3" style="display:none">
-      <table>
-        <tr>
-          <td>
-            This website requires MetaMask:
-          </td>
-        </tr>
-        <tr>
-          <td>
-            <a href="https://metamask.io/">
-              <img src="/images/metamask-link.png" alt="Download MetaMask" height="140">
-            </a>
-          </td>
-        </tr>
-      </table>
+    <div id=footer>
+      <img id="logo" src="/images/green_circle_line1.png" alt="Arbol">
+      <div id="links">
+        <table>
+          <tr>
+            <td>
+              <a href="https://www.arbolcoin.com/" target=”_blank”> About Arbol </a>
+            </td>
+            <td>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <a href="https://www.arbolcoin.com/" target=”_blank”> FAQ </a>
+            </td>
+            <td>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <a href="https://www.arbolcoin.com/" target=”_blank”> Contact </a>
+            </td>
+            <td>
+            </td>
+          </tr>
+        </table>
+      </div>
     </div>
-    <div id="web3-onload" class="disabled-div">
-      {{> navigation}}
-    </div>
-  </div>
-  <div id=footer>
-    <img id="logo" src="/images/green_circle_line1.png" alt="Arbol">
-    <div id="links">
-      <table>
-        <tr>
-          <td>
-            <a href="https://www.arbolcoin.com/" target=”_blank”> About Arbol </a>
-          </td>
-          <td>
-          </td>
-        </tr>
-        <tr>
-          <td>
-            <a href="https://www.arbolcoin.com/" target=”_blank”> FAQ </a>
-          </td>
-          <td>
-          </td>
-        </tr>
-        <tr>
-          <td>
-            <a href="https://www.arbolcoin.com/" target=”_blank”> Contact </a>
-          </td>
-          <td>
-          </td>
-        </tr>
-      </table>
-    </div>
-  </div>
-</body>
+  </body>
 </template>
 
 <template name="arrow">
