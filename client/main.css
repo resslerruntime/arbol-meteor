@@ -201,6 +201,14 @@ td.inf-name, td.inf div {
   border-bottom: 1px solid #00cc00;
 }
 
+.low-text{
+  color: red;
+}
+
+.high-text{
+  color: #00cc00;
+}
+
 /* --------------------------------------------------------
   CSS FOR MAKING TAB SELECTORS
 -------------------------------------------------------- */
@@ -399,7 +407,7 @@ hr {
 -------------------------------------------------------- */
 
 #form-inner-div {
-  padding-top: 50px;
+  padding-top: 10px;
   padding-left: 25px;
 }
 

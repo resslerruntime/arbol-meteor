@@ -1049,6 +1049,7 @@ Template.formNewProtection.events({
     //   $("#threshold").removeClass("missing-info");
     // }
     changeThreshold();
+    calcTenYrP();
   },
   'input #location'(event) {
     changeRegion(event.currentTarget.value);
@@ -1131,6 +1132,7 @@ Template.formNewProtection.events({
             $('#total-contrib')[0].min = 0;
             //unselect region, reset text value
             clearChart();
+            $("#ten-yr-prob").html("");
             $('#location').val("none");
             d3.selectAll(`path.${selectedRegion}`)
               .attr("fill","none");
@@ -1288,11 +1290,9 @@ async function drawUSA(){
         .attr("stroke-width",5)
         .attr("stroke-miterlimit","1")
         .attr("stroke",locationObj[reg].col)
-        .attr("fill","none")
-        .attr("stroke-dasharray", "20,5");
-        // .attr("stroke","none")
-        // .attr("fill",cols[0])
-        // .attr("fill-opacity", 0.5);
+        .attr("fill",locationObj[reg].col)
+        .attr("fill-opacity",1e-6);
+        // .attr("stroke-dasharray", "20,5");
     }
 
     svg.selectAll("g#areas")
@@ -1308,7 +1308,8 @@ async function drawUSA(){
       let region = d3.select(this).attr("class").split(" ")[1];
       if(region !== selectedRegion){
         d3.selectAll(`path.${region}`)
-          .attr("fill",locationObj[region].col);
+          .attr("fill",locationObj[region].col)
+          .attr("fill-opacity",1);
       }
     }
 
@@ -1317,7 +1318,8 @@ async function drawUSA(){
       let region = d3.select(this).attr("class").split(" ")[1];
       if(region !== selectedRegion){
         d3.selectAll(`path.${region}`)
-          .attr("fill","none");
+          // .attr("fill","none")
+          .attr("fill-opacity",1e-6);
       }
     }
 
@@ -1330,22 +1332,26 @@ async function drawUSA(){
         $('#location').val(region);
         //make previous region go blank
         d3.selectAll(`path.${selectedRegion}`)
-          .attr("fill","none");
+          // .attr("fill","none")
+          .attr("fill-opacity",1e-6);
 
         selectedRegion = region;
         NOAACODE = locationObj[selectedRegion].noaaCode;
         callNOAA();
         d3.selectAll(`path.${selectedRegion}`)
-          .attr("fill","yellow");
+          .attr("fill","yellow")
+          .attr("fill-opacity",1);
       }else{
         //update the form
         $('#location').val("none");
         //update map
         d3.selectAll(`path.${selectedRegion}`)
-          .attr("fill",locationObj[selectedRegion].col);
+          .attr("fill",locationObj[selectedRegion].col)
+          .attr("fill-opacity",1);
 
         currentHTTP += 1;
         clearChart();
+        $("#ten-yr-prob").html("");
         selectedRegion = "none";
         NOAACODE = -1;
         if(NOAACODE !== -1 && MONTHCODE !== -1 && DURATIONCODE !== -1) $("#chart-loader").fadeOut(1000);
@@ -1383,6 +1389,7 @@ function callNOAA(){
       let obj = parseData(results);
       if(check === currentHTTP){
         upDateMonths(obj);
+        calcTenYrP(obj);
         // $(".chart-loader-div").removeClass("chart-loader");
         $("#chart-loader").fadeOut(1000);
       }
@@ -1627,6 +1634,39 @@ function clearChart(){
     .attr("y1",function(d){return y(o.avg);})
     .attr("y2",function(d){return y(o.avg);})
     .attr("opacity",1e-6);
+}
+
+
+var noaaData;
+function calcTenYrP(o = noaaData){
+  noaaData = o;
+  console.log(o,noaaData)
+  //go through data object and decide how many
+  //times in the past 10 years met the threshold
+  let rel = $("#threshold-relation")[0].value;
+  let pct = $("#threshold-percent")[0].value;
+  let avg = $("#threshold-average")[0].value;
+  let rov = threshRelationObj[rel].val;
+  let n = 1 + threshPercentObj[pct].val*threshAverageObj[avg].val;
+
+  let l = noaaData.data.length;
+  let sum = 0;
+  while(l--){
+    noaaData.data[l] >= noaaData.avg*n ? sum += 1 : sum += 0;
+  }
+  console.log(n,sum)
+  //sum * 10 is probability
+  if(!rov) sum = 10 - sum;
+  $("#ten-yr-prob").html(`<span id="pct-span"> ~${sum*10}% </span> chance of payout`);
+
+
+  if(sum <= 3 || sum >= 7){
+    if(sum <= 3) $('#pct-span').addClass('low-text');
+    if(sum >= 7) $('#pct-span').addClass('high-text');
+  }else{
+    $('#pct-span').removeClass('low-text');
+    $('#pct-span').removeClass('high-text');
+  }
 }
 
 function parseData(results){
