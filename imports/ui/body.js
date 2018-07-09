@@ -1376,7 +1376,8 @@ function changeRegion(region){
     NOAACODE = locationObj[selectedRegion].noaaCode;
     callNOAA();
     d3.selectAll(`path.${selectedRegion}`)
-      .attr("fill","yellow");
+      .attr("fill","yellow")
+      .attr("fill-opacity",1);
   }
 }
 
