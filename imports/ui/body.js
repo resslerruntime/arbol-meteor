@@ -1012,26 +1012,45 @@ Template.openProtectionsTable.helpers({
 
 // Dealing with submittal of form
 Template.formNewProtection.events({
-  'input .date-picker'(event) {
-    //TODO uncomment capDate
-    // capDate(event.currentTarget);
-    //update the data that is represented
-    let s = +$('#start-date')[0].value.split("-")[1]
-      ,sy = +$('#start-date')[0].value.split("-")[0];
-    let e = +$('#end-date')[0].value.split("-")[1]
-      ,ey = +$('#end-date')[0].value.split("-")[0];
+  // 'input .date-picker'(event) {
+  //   //TODO uncomment capDate
+  //   // capDate(event.currentTarget);
+  //   //update the data that is represented
+  //   let s = +$('#start-date')[0].value.split("-")[1]
+  //     ,sy = +$('#start-date')[0].value.split("-")[0];
+  //   let e = +$('#end-date')[0].value.split("-")[1]
+  //     ,ey = +$('#end-date')[0].value.split("-")[0];
+  //   console.log("date-picker",s,sy,e,ey);
+  //
+  //   if(s <= e && sy <= ey){
+  //     MONTHCODE = e;
+  //     DURATIONCODE = e - s + 1;
+  //     callNOAA();
+  //   }
+  // },
+  // 'input #start-date'(event){
+  //   $("#start-date").removeClass("missing-info");
+  // },
+  // 'input #end-date'(event){
+  //   $("#end-date").removeClass("missing-info");
+  // },
+  'input .date-input'(event){
+    //TODO cap date, make sure only valid dates are entered
+    let s = +$('#month-start')[0].value
+      ,sy = +$('#year-start')[0].value
+      ,sd = sy + s/12;
+    let e = +$('#month-end')[0].value
+      ,ey = +$('#year-end')[0].value
+      ,ed = ey + e/12;
 
-    if(s <= e && sy <= ey){
+    console.log("date-input",s,sy,e,ey);
+    //
+    if(s*sy*e*ey > 0 && sd <= ed){
       MONTHCODE = e;
-      DURATIONCODE = e - s + 1;
+      DURATIONCODE = Math.round((ed - sd)*12 + 1)%12;
+      console.log(DURATIONCODE)
       callNOAA();
     }
-  },
-  'input #start-date'(event){
-    $("#start-date").removeClass("missing-info");
-  },
-  'input #end-date'(event){
-    $("#end-date").removeClass("missing-info");
   },
   'input #your-contrib'(event){
     capVal(event.currentTarget);
@@ -1637,11 +1656,9 @@ function clearChart(){
     .attr("opacity",1e-6);
 }
 
-
 var noaaData;
 function calcTenYrP(o = noaaData){
   noaaData = o;
-  console.log(o,noaaData)
   //go through data object and decide how many
   //times in the past 10 years met the threshold
   let rel = $("#threshold-relation")[0].value;
@@ -1655,11 +1672,9 @@ function calcTenYrP(o = noaaData){
   while(l--){
     noaaData.data[l] >= noaaData.avg*n ? sum += 1 : sum += 0;
   }
-  console.log(n,sum)
   //sum * 10 is probability
   if(!rov) sum = 10 - sum;
   $("#ten-yr-prob").html(`<span id="pct-span"> ~${sum*10}% </span> chance of payout`);
-
 
   if(sum <= 3 || sum >= 7){
     if(sum <= 3) $('#pct-span').addClass('low-text');
