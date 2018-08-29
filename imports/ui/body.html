@@ -309,8 +309,10 @@
                 <div class="tooltip"> From: <span class="tooltiptext">The starting month of the contract.</span></div>
               </td>
               <td>
-                <select id="month-start" class="date-input">{{> monthOptions}}</select><select id="year-start" class="date-input">{{> yearOptions}}</select>
-                <input type="month" id="start-date" name="start-date" class="date-picker">
+                <div id="start-input">
+                  <select id="month-start" class="date-input">{{> monthOptions}}</select><select id="year-start" class="date-input">{{> yearOptions}}</select>
+                  <!-- <input type="month" id="start-date" name="start-date" class="date-picker"> -->
+                </div>
               </td>
             </tr>
             <tr>
@@ -318,8 +320,10 @@
                 <div class="tooltip"> To: <span class="tooltiptext">The ending month of the contract.</span></div>
               </td>
               <td>
-                <select id="month-end" class="date-input">{{> monthOptions}}</select><select id="year-end" class="date-input">{{> yearOptions}}</select>
-                <input type="month" id="end-date" name="end-date" class="date-picker">
+                <div id="end-input">
+                  <select id="month-end" class="date-input">{{> monthOptions}}</select><select id="year-end" class="date-input">{{> yearOptions}}</select>
+                  <!-- <input type="month" id="end-date" name="end-date" class="date-picker"> -->
+                </div>
               </td>
             </tr>
           </table>

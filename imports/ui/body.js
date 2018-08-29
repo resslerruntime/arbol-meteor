@@ -111,7 +111,10 @@ function Entry(r,owner){
   let totalPayout = `${clipNum(toEth(propose) + toEth(ask))} Eth`;
   let b = `${toEth(ask)}`;
   let b1 = `<button type='button' class='action buyit tableBtn' value='${toEth(ask)},${a.WITID.toNumber()}'>Pay <span class="green-text">${clipNum(toEth(ask))} Eth</span> to accept</button>`;
-
+  //if no user is logged in
+  if(user[0] === -1){
+    b1 = `<button type='button' class='tableBtn' value='${toEth(ask)},${a.WITID.toNumber()}'><span class="green-text">${clipNum(toEth(ask))} Eth</span></button>`;
+  }
   //if the current use is the owner of the proposal don't give them the option to purchase the proposal
   if(owner === user[0]){
     b = "1e99";
@@ -235,10 +238,16 @@ function initMainPage(){
 
       //instantiate some interface elements
       $('.close-click').click(() => $('#demo-popup').slideUp(200));
-      $("#popup-text").click(()=>{
+      $("#popup-text").click(() => {
         var copyText = document.getElementById("seed-phrase");
         copyText.select();
         document.execCommand("copy");
+        // TODO why doesn't this work, JQUERY-UI is installed
+        // $("#seed-phrase").bounce({
+        //     interval: 100,
+        //     distance: 20,
+        //     times: 5
+        // });
       });
 
       //TODO check for mobile redirect
@@ -281,20 +290,20 @@ function initMainPage(){
                   $('#user-hash').html(user[0]);
                   $('#user-hash').removeClass('red-text');
                   $('#user-hash').addClass('green-text');
-                  updateBalance();
+
                   $('#my-wrapper').removeClass('loading');
                   $('#my-loader').hide();
+
+                  updateBalance();
                 } else {
                   $('#user-hash').html("No current user- log into MetaMask");
                   $('#user-hash').addClass('red-text');
                   $('#user-hash').removeClass('green-text');
 
-                  $('#user-balance').html("0.000");
-                  $('#user-balance').removeClass('red-text');
-                  $('#user-balance').addClass('green-text');
-
                   $('#my-loader').show();
                   $('#my-wrapper').addClass('loading');
+
+                  updateBalance();
                 }
                 loadData();
               }
@@ -640,22 +649,28 @@ function dateNum(text){
 }
 
 async function updateBalance(){
-  web3.eth.getBalance(user[0],function (error, result) {
-    if (!error) {
-      var e = toEth(result.plus(21).toString(10));
-      if(e === 0){
-        $('#user-balance').html("0.000");
-        $('#user-balance').removeClass('green-text');
-        $('#user-balance').addClass('red-text');
-      }else{
-        $('#user-balance').html(clipNum(e));
-        $('#user-balance').removeClass('red-text');
-        $('#user-balance').addClass('green-text');
+  if(user[0] === -1){
+    $('#user-balance').html("0.000");
+    $('#user-balance').removeClass('green-text');
+    $('#user-balance').addClass('red-text');
+  } else {
+    web3.eth.getBalance(user[0],function (error, result) {
+      if (!error) {
+        var e = toEth(result.plus(21).toString(10));
+        if(e === 0){
+          $('#user-balance').html("0.000");
+          $('#user-balance').removeClass('green-text');
+          $('#user-balance').addClass('red-text');
+        }else{
+          $('#user-balance').html(clipNum(e));
+          $('#user-balance').removeClass('red-text');
+          $('#user-balance').addClass('green-text');
+        }
+      } else {
+        console.error(error);
       }
-    } else {
-      console.error(error);
-    }
-  });
+    });
+  }
 }
 
 // give number three decimals
@@ -1035,21 +1050,16 @@ Template.formNewProtection.events({
   //   $("#end-date").removeClass("missing-info");
   // },
   'input .date-input'(event){
-    //TODO cap date, make sure only valid dates are entered
-    let s = +$('#month-start')[0].value
-      ,sy = +$('#year-start')[0].value
-      ,sd = sy + s/12;
-    let e = +$('#month-end')[0].value
-      ,ey = +$('#year-end')[0].value
-      ,ed = ey + e/12;
+    //TODO cap date, make sure only valid dates are entered, allow for at most 12 months
+    let d = capDate2(event.currentTarget);
 
-    console.log("date-input",s,sy,e,ey);
-    //
-    if(s*sy*e*ey > 0 && sd <= ed){
-      MONTHCODE = e;
-      DURATIONCODE = Math.round((ed - sd)*12 + 1)%12;
-      console.log(DURATIONCODE)
-      callNOAA();
+    //only make a NOAA call if date inputs are valid
+    if(d.s*d.sy*d.e*d.ey > 0){
+      if(d.ed-d.sd < 1 && d.sd <= d.ed){
+        MONTHCODE = d.e;
+        DURATIONCODE = Math.round((d.ed - d.sd)*12 + 1)%12;
+        callNOAA();
+      }
     }
   },
   'input #your-contrib'(event){
@@ -1091,8 +1101,14 @@ Template.formNewProtection.events({
       const thresholdRelation = target[3].value;
       const thresholdPercent = target[4].value;
       const thresholdAverage = target[5].value;
-      const startDate = target[6].value;
-      const endDate = target[7].value;
+      let sm = target[6].value;
+      const sy = target[7].value;
+      let em = target[8].value;
+      const ey = target[9].value;
+      if(sm.length === 1) sm = "0" + sm;
+      if(em.length === 1) em = "0" + em;
+      const startDate = `${sy}-${sm}`;
+      const endDate = `${ey}-${em}`;
       const index = "Precipitation";
 
       //check if info is missing
@@ -1116,11 +1132,11 @@ Template.formNewProtection.events({
         }
         if(startDate === ""){
           s += "  Start Date \n";
-          $("#start-date").addClass("missing-info");
+          $("#start-input").addClass("missing-info");
         }
         if(endDate === ""){
           s += "  End Date \n";
-          $("#end-date").addClass("missing-info");
+          $("#end-input").addClass("missing-info");
         }
         alert(s);
       }else{
@@ -1226,6 +1242,61 @@ function capDate(target){
   if(id === 'end-date'){
     if(date !== "") $('#start-date')[0].max = date;
   }
+}
+
+function capDate2(target){
+  let s = +$('#month-start')[0].value
+    ,sy = +$('#year-start')[0].value
+    ,sd = sy + s/12;
+  let e = +$('#month-end')[0].value
+    ,ey = +$('#year-end')[0].value
+    ,ed = ey + e/12;
+
+  if(s*sy*e*ey > 0){
+    //if duration is longer than a year
+    if(ed-sd >= 1 || sd > ed){
+      if(target.id === "month-start" || target.id === "year-start"){
+        $('#start-input').removeClass("missing-info");
+        $('#end-input').addClass("missing-info");
+      }
+      if(target.id === "month-end" || target.id === "year-end"){
+        $('#start-input').addClass("missing-info");
+        $('#end-input').removeClass("missing-info");
+      }
+    }
+    if(ed-sd < 1 && sd < ed){
+      $('#start-input').removeClass("missing-info");
+      $('#end-input').removeClass("missing-info");
+    }
+    // //if start date is after end date
+    // if(sd >= ed){
+    //   if(target.id === "month-start" || target.id === "year-start"){
+    //     ey = sy;
+    //     ed = ey + e/12;
+    //     //only change month if necessary
+    //     if(sd >= ed){
+    //       e = s;
+    //       ed = sd;
+    //     }
+    //     $('#month-end')[0].value = e;
+    //     $('#year-end')[0].value = ey;
+    //     //TODO animate to indicate change to user
+    //   }
+    //   if(target.id === "month-end" || target.id === "year-end"){
+    //     sy = ey;
+    //     sd = sy + s/12;
+    //     //only change month if necessary
+    //     if(sd >= ed){
+    //       s = e;
+    //       sd = ed;
+    //     }
+    //     $('#month-start')[0].value = s;
+    //     $('#year-start')[0].value = sy;
+    //     //TODO animate to indicate change to user
+    //   }
+    // }
+  }
+  return {s:s,sy:sy,sd:sd,e:e,ey:ey,ed:ed};
 }
 
 function capVal(target){
@@ -1401,6 +1472,7 @@ function changeRegion(region){
 }
 
 function callNOAA(){
+  console.log("fn: callNOAA")
   $("#chart-loader").fadeIn(500);
   currentHTTP += 1;
   let check = currentHTTP;
@@ -1417,13 +1489,12 @@ function callNOAA(){
   }
 }
 
-var svg, margin, width, height;
+var svg, width, height, margin = {top: 40, right: 50, bottom: 45, left: 50};
 var dataExtents, svgStart, svgEnd;
 var tenYrAvg;
 
 function drawMonths(){
   svg = d3.select("svg#chart");
-  margin = {top: 20, right: 50, bottom: 45, left: 50};
   width = +svg.attr("width") - margin.left - margin.right;
   height = +svg.attr("height") - margin.top - margin.bottom;
 
@@ -1516,24 +1587,34 @@ function drawMonths(){
     .attr("stroke-dasharray","12, 8")
     .attr("opacity",1e-6);
 
-    defaultMonths();
+  //title
+  g.append("text")
+    .attr("class","title")
+    .attr("fill", "#000")
+    .attr("y", -15)
+    .attr("x", width/2)
+    .attr("text-anchor", "middle")
+    .attr("font-size","16px")
+    .attr("font-family","sans-serif")
+    .attr("text-decoration","underline");
+
+  defaultMonths();
 }
 
 function defaultMonths(){
   //select something as default
-  let d1 = new Date().getTime();
-  let d2 = new Date().getTime() + 1000*3600*24*30; //add a month
-  $('#start-date')[0].value = new Date(d1).toISOString().substring(0,7);
-  $('#end-date')[0].value = new Date(d2).toISOString().substring(0,7);
-  let s = +$('#start-date')[0].value.split("-")[1];
-  let e = +$('#end-date')[0].value.split("-")[1];
-  MONTHCODE = e;
-  DURATIONCODE = e - s + 1;
+  // let d1 = new Date().getTime();
+  // let d2 = new Date().getTime() + 1000*3600*24*30; //add a month
+  // $('#start-date')[0].value = new Date(d1).toISOString().substring(0,7);
+  // $('#end-date')[0].value = new Date(d2).toISOString().substring(0,7);
+  // let s = +$('#start-date')[0].value.split("-")[1];
+  // let e = +$('#end-date')[0].value.split("-")[1];
+  // MONTHCODE = e;
+  // DURATIONCODE = e - s + 1;
 }
 
 function upDateMonths(o){
   svg = d3.select("svg#chart");
-  margin = {top: 20, right: 50, bottom: 45, left: 50};
   width = +svg.attr("width") - margin.left - margin.right;
 
   dataExtents = d3.extent(o.data, function(d){return d;});
@@ -1550,6 +1631,10 @@ function upDateMonths(o){
   var ymm = d3.scaleLinear()
       .rangeRound([height, 0])
       .domain([0,dataExtents[1]*25.4]);
+
+  //title
+  d3.selectAll("text.title")
+    .text(o.title);
 
   //yaxis
   d3.selectAll("g.yaxis")
@@ -1686,16 +1771,41 @@ function calcTenYrP(o = noaaData){
 }
 
 function parseData(results){
-  let string = results.content;
-  let values = string.split("values");
-  let array = values[1].split(/\n/g);
-  let la = array.length;
-  let a2 = [];
-  while(la--){
-    let n = array[la].split(",");
-    if(n.length === 3 && a2.length < 10) a2.push(n);
+  if(typeof results != "undefined"){
+    let string = results.content;
+    let title = string.split("title")[1].split(">")[1].split("<")[0];
+    title = shortenTitle(title);
+    let values = string.split("values");
+    let array = values[1].split(/\n/g);
+    let la = array.length;
+    let a2 = [];
+    while(la--){
+      let n = array[la].split(",");
+      if(n.length === 3 && a2.length < 10) a2.push(n);
+    }
+    let a3 = a2.map(d => parseFloat(d[1]));
+    let sum = a3.reduce((a,c) => a + c);
+    return {start:parseInt(a2[a2.length-1][0]),data:a3,avg:sum/10,title:title};
+  }else{
+    console.log("NOAA call failed, try again")
+    //TODO NOAA call failed, replace thinking icon with a retry icon
   }
-  let a3 = a2.map(d => parseFloat(d[1]));
-  let sum = a3.reduce((a,c) => a + c);
-  return {start:parseInt(a2[a2.length-1][0]),data:a3,avg:sum/10};
+}
+
+function shortenTitle(t){
+  t = t.replace('Area-Wtd ','')
+    .replace('Primary ','');
+  t = t.replace('January','Jan')
+    .replace('February','Feb')
+    .replace('March','Mar')
+    .replace('April','Apr')
+    .replace('May','May')
+    .replace('June','Jun')
+    .replace('July','Jul')
+    .replace('August','Aug')
+    .replace('September','Sep')
+    .replace('October','Oct')
+    .replace('November','Nov')
+    .replace('December','Dec');
+  return t;
 }
