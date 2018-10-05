@@ -481,6 +481,7 @@ async function addToken(result){
         let list = Session.get("openProtectionsData");
         console.log("===> proposal offered, id:",id.toNumber());
         list.push(new Entry(result,owner));
+        console.log("all tokens",list.length,list,acceptedList.length,acceptedList)
         list = sortArray(list,Session.get("sortIndex"),Session.get("descending"));
         Session.set("openProtectionsData",list);
 
@@ -1256,12 +1257,12 @@ function capDate2(target){
     //if duration is longer than a year
     if(ed-sd >= 1 || sd > ed){
       if(target.id === "month-start" || target.id === "year-start"){
-        $('#start-input').removeClass("missing-info");
-        $('#end-input').addClass("missing-info");
-      }
-      if(target.id === "month-end" || target.id === "year-end"){
         $('#start-input').addClass("missing-info");
         $('#end-input').removeClass("missing-info");
+      }
+      if(target.id === "month-end" || target.id === "year-end"){
+        $('#start-input').removeClass("missing-info");
+        $('#end-input').addClass("missing-info");
       }
     }
     if(ed-sd < 1 && sd < ed){
@@ -1472,12 +1473,13 @@ function changeRegion(region){
 }
 
 function callNOAA(){
-  console.log("fn: callNOAA")
   $("#chart-loader").fadeIn(500);
   currentHTTP += 1;
   let check = currentHTTP;
   if(NOAACODE !== -1 && MONTHCODE !== -1 && DURATIONCODE !== -1){
+    console.log("fn: callNOAA",NOAACODE,MONTHCODE,DURATIONCODE)
     Meteor.call("glanceNOAA",NOAACODE,MONTHCODE,DURATIONCODE,function(error, results) {
+      console.log("NOAA results",results)
       let obj = parseData(results);
       if(check === currentHTTP){
         upDateMonths(obj);

@@ -613,3 +613,11 @@ button.action:hover {
     50% {transform: scale(1.2) rotate(135deg);}
     100% {transform: scale(1) rotate(135deg);}
   }
+
+  /* --------------------------------------------------------
+    CSS FOR CREATE WIT
+  -------------------------------------------------------- */
+
+  #start-input, #end-input {
+    display: inline-block;
+  }
