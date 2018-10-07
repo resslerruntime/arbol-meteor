@@ -456,6 +456,14 @@ hr {
   align-self: start;
 }
 
+#NOAA-msg {
+  position: relative;
+  top: -225px;
+  left: 95px;
+  font: bold 20px verdana;
+  color: #ed735e;
+}
+
 /* --------------------------------------------------------
   CSS FOR TOOLTIP
 -------------------------------------------------------- */

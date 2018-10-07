@@ -277,6 +277,7 @@ function initMainPage(){
             try{
               user = await promisify(cb => web3.eth.getAccounts(cb));
               if(typeof user[0] === "undefined") user = [-1];
+              console.log(`currentUser: ${user[0]}`, `last check: ${pastUser[0]}`,`user changed? ${user[0] !== pastUser[0]}`)
               if(user[0] !== pastUser[0]){
                 console.log("_-_-_- CHANGE IN USER _-_-_-")
                 //reset and reload everything for new user
@@ -381,7 +382,7 @@ function loadData(){
 
 /*
 
-Ben's happy place. Do not disturb.
+//Ben's happy place. Do not disturb.
     noaaContract = web3.eth.contract(NOAAABI);
     noaaInstance = noaaContract.at(noaaAddress);
 
@@ -583,11 +584,13 @@ async function addAcceptance(result){
     acceptedList.push(idp);
     //if they are already shown remove them
     removeToken(idp);
-    //if they were your proposals update your "my protections"
+
+    //these next 3 lines just resort the my protections table but I am not sure they are required for anything
     let updateList = Session.get("myProtectionsData");
     updateList = sortArray(updateList,Session.get("mySortIndex"),Session.get("descending"));
     Session.set("myProtectionsData",updateList);
 
+    //if they were your proposals update your "my protections"
     let owner = await promisify(cb => witInstance.ownerOf(idObj, cb));
     if(owner === user[0]){
       //hide the loading
@@ -1450,7 +1453,7 @@ async function drawUSA(){
     }
 
   }catch(error){
-    console.log("Error retrieving NOAA data: ",error);
+    console.log("Error retrieving USA topoJSON data: ",error);
   }
 }
 
@@ -1473,19 +1476,32 @@ function changeRegion(region){
 }
 
 function callNOAA(){
-  $("#chart-loader").fadeIn(500);
+  $("#NOAA-msg").fadeOut(500);
+  $("#chart-loader").fadeIn(1000);
   currentHTTP += 1;
   let check = currentHTTP;
   if(NOAACODE !== -1 && MONTHCODE !== -1 && DURATIONCODE !== -1){
     console.log("fn: callNOAA",NOAACODE,MONTHCODE,DURATIONCODE)
     Meteor.call("glanceNOAA",NOAACODE,MONTHCODE,DURATIONCODE,function(error, results) {
-      console.log("NOAA results",results)
-      let obj = parseData(results);
-      if(check === currentHTTP){
-        upDateMonths(obj);
-        calcTenYrP(obj);
-        // $(".chart-loader-div").removeClass("chart-loader");
-        $("#chart-loader").fadeOut(1000);
+      if(results === undefined){
+        console.log("NOAA call failed, try again, returned undefined")
+        $("#chart-loader").fadeOut(500);
+        $("#NOAA-msg").fadeIn(1000);
+      }else if(results.data === null){
+        console.log("NOAA call failed, try again, returned data = null")
+        $("#chart-loader").fadeOut(500);
+        $("#NOAA-msg").fadeIn(1000);
+      }else{
+        console.log("NOAA results",results)
+        let obj = parseData(results);
+        //if a new NOAA call is made before previous one has returned, block the returned info from updating the chart
+        if(check === currentHTTP){
+          upDateMonths(obj);
+          calcTenYrP(obj);
+          // $(".chart-loader-div").removeClass("chart-loader");
+          $("#chart-loader").fadeOut(500);
+        }
+
       }
     });
   }
@@ -1773,25 +1789,20 @@ function calcTenYrP(o = noaaData){
 }
 
 function parseData(results){
-  if(typeof results != "undefined"){
-    let string = results.content;
-    let title = string.split("title")[1].split(">")[1].split("<")[0];
-    title = shortenTitle(title);
-    let values = string.split("values");
-    let array = values[1].split(/\n/g);
-    let la = array.length;
-    let a2 = [];
-    while(la--){
-      let n = array[la].split(",");
-      if(n.length === 3 && a2.length < 10) a2.push(n);
-    }
-    let a3 = a2.map(d => parseFloat(d[1]));
-    let sum = a3.reduce((a,c) => a + c);
-    return {start:parseInt(a2[a2.length-1][0]),data:a3,avg:sum/10,title:title};
-  }else{
-    console.log("NOAA call failed, try again")
-    //TODO NOAA call failed, replace thinking icon with a retry icon
+  let string = results.content;
+  let title = string.split("title")[1].split(">")[1].split("<")[0];
+  title = shortenTitle(title);
+  let values = string.split("values");
+  let array = values[1].split(/\n/g);
+  let la = array.length;
+  let a2 = [];
+  while(la--){
+    let n = array[la].split(",");
+    if(n.length === 3 && a2.length < 10) a2.push(n);
   }
+  let a3 = a2.map(d => parseFloat(d[1]));
+  let sum = a3.reduce((a,c) => a + c);
+  return {start:parseInt(a2[a2.length-1][0]),data:a3,avg:sum/10,title:title};
 }
 
 function shortenTitle(t){
