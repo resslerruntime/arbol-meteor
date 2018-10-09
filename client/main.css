@@ -279,36 +279,42 @@ hr {
 -------------------------------------------------------- */
 
 #footer {
-  width: 100%;
-  height: var(--footer-height);
   background-color: lightgray;
+  box-sizing:border-box;
+  height: var(--footer-height);
+  width: 100%;
 }
-
-#logo {
-  position:relative;
-  width: 50px;
+#logo-footer {
+  display: inline-block;
   height: 50px;
-  padding-left: 25px;
-  padding-top: 50px;
+  padding: 50px 25px;
+  vertical-align: middle;
+  width: 50px;
 }
-
-#links {
-  position:relative;
-  left: 100px;
-  bottom: 80px;
+#links-footer {
+  display: inline-block;
+  list-style: none;
+  margin: 0px;
+  padding: 0px;
+  vertical-align: middle;
 }
-
-#links table tr td {
-  padding: 10px;
+#links-footer li {
+  display: block;
   font: bold 12px arial;
+  margin: 0px;
+  padding: 10px;
 }
-
-#links table tr td a {
+@media (min-width:400px) {
+  #links-footer li {
+    display: inline-block;
+    vertical-align: middle;
+  }
+}
+#links-footer li a {
   color: black;
   text-decoration: none;
 }
-
-#links table tr td a:hover {
+#links-footer li a:hover {
   border-bottom: 2px solid black;
 }
 
