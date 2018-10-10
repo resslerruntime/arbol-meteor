@@ -417,6 +417,7 @@ var watchLatestProposal = -1;
 function latestProposals(){
   console.log("fn: latestProposals");
   watchLatestProposal = witInstance.ProposalOffered({},{fromBlock: 0, toBlock: 'latest'}).watch(function(error, result){
+    console.log(result)
     updateBalance();
     let id = result.args.WITID.toNumber();
     console.log("===> latest: 'offered', id:",id);
@@ -432,6 +433,7 @@ function latestAcceptances(){
   console.log("fn: latestAcceptance");
   //do something as new proposal is accepted
   watchLatestAcceptance = witInstance.ProposalAccepted({},{fromBlock: 0, toBlock: 'latest'}).watch(function(error, result){
+    console.log(result)
     updateBalance();
     let id = result.args.WITID.toNumber();
     console.log("===> latest: 'accepted', id:",id)
@@ -1483,14 +1485,15 @@ function callNOAA(){
   if(NOAACODE !== -1 && MONTHCODE !== -1 && DURATIONCODE !== -1){
     console.log("fn: callNOAA",NOAACODE,MONTHCODE,DURATIONCODE)
     Meteor.call("glanceNOAA",NOAACODE,MONTHCODE,DURATIONCODE,function(error, results) {
+      console.log(results)
       if(results === undefined){
         console.log("NOAA call failed, try again, returned undefined")
         $("#chart-loader").fadeOut(500);
         $("#NOAA-msg").fadeIn(1000);
-      }else if(results.data === null){
-        console.log("NOAA call failed, try again, returned data = null")
-        $("#chart-loader").fadeOut(500);
-        $("#NOAA-msg").fadeIn(1000);
+      // }else if(results.data === null){
+      //   console.log("NOAA call failed, try again, returned data = null")
+      //   $("#chart-loader").fadeOut(500);
+      //   $("#NOAA-msg").fadeIn(1000);
       }else{
         console.log("NOAA results",results)
         let obj = parseData(results);
