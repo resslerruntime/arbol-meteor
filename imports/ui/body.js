@@ -249,6 +249,9 @@ function initMainPage(){
         //     times: 5
         // });
       });
+      //start drawing svg
+      drawUSA();
+      drawMonths();
 
       //TODO check for mobile redirect
       if(screen.width <= 699) {
@@ -263,8 +266,25 @@ function initMainPage(){
         $("#footer").addClass("not-chrome-footer");
       }else{
         $("#user").show();
-        // Checking if Web3 has been injected by the browser (Mist/MetaMask)
-        if (typeof web3 !== 'undefined') {
+        // Modern dapp browsers...
+        if (window.ethereum) {
+            window.web3 = new Web3(ethereum);
+            try {
+                // Request account access if needed
+                await ethereum.enable();
+                // Acccounts now exposed
+
+                //show relevant content depending on whether web3 is loaded or not
+                $("#web3-onload").removeClass("disabled-div");
+
+                // check for subsequent account activity, lockout screen if no metamask user is signed in
+                setInterval(manageAccounts, 1000);
+            } catch (error) {
+              console.log('Web3 injection was declined by user')
+            }
+        }
+        // Legacy dapp browsers...
+        else if (typeof web3 !== 'undefined') {
           console.log("web3 from current provider: ", web3.currentProvider.constructor.name)
           // Use Mist/MetaMask's provider
           web3 = new Web3(web3.currentProvider);
@@ -273,59 +293,56 @@ function initMainPage(){
           $("#web3-onload").removeClass("disabled-div");
 
           // check for subsequent account activity, lockout screen if no metamask user is signed in
-          setInterval(async function(){
-            try{
-              user = await promisify(cb => web3.eth.getAccounts(cb));
-              if(typeof user[0] === "undefined") user = [-1];
-              console.log(`currentUser: ${user[0]}`, `last check: ${pastUser[0]}`,`user changed? ${user[0] !== pastUser[0]}`)
-              if(user[0] !== pastUser[0]){
-                console.log("_-_-_- CHANGE IN USER _-_-_-")
-                //reset and reload everything for new user
-                // $("#web3-onload").addClass("disabled-div");
-                $('#open-pager-btns').hide();
-                $('#my-pager-btns').hide();
-                resetSessionVars();
-                resetGlobalVariables();
-                let s;
-                if(user[0] !== -1){
-                  $('#user-hash').html(user[0]);
-                  $('#user-hash').removeClass('red-text');
-                  $('#user-hash').addClass('green-text');
-
-                  $('#my-wrapper').removeClass('loading');
-                  $('#my-loader').hide();
-
-                  updateBalance();
-                } else {
-                  $('#user-hash').html("No current user- log into MetaMask");
-                  $('#user-hash').addClass('red-text');
-                  $('#user-hash').removeClass('green-text');
-
-                  $('#my-loader').show();
-                  $('#my-wrapper').addClass('loading');
-
-                  updateBalance();
-                }
-                loadData();
-              }
-              pastUser = user;
-            } catch (error) {
-              console.log(error)
-            }
-          }, 1000);
-
-          //start drawing svg
-          drawUSA();
-          drawMonths();
+          setInterval(manageAccounts, 1000);
         } else {
           console.log('No web3? You should consider trying MetaMask!')
-          // fallback - use your fallback strategy (local node / hosted node + in-dapp id mgmt / fail)
-          // web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:7545"));
-          //show relevant content depending on wether web3 is available or not
+
+          //show relevant content depending on whether web3 is available or not
           $('#no-web3').show();
         }
       }
     });
+  }
+}
+
+async function manageAccounts(){
+  try{
+    user = await promisify(cb => web3.eth.getAccounts(cb));
+    if(typeof user[0] === "undefined") user = [-1];
+    console.log(`currentUser: ${user[0]}`, `last check: ${pastUser[0]}`,`user changed? ${user[0] !== pastUser[0]}`)
+    if(user[0] !== pastUser[0]){
+      console.log("_-_-_- CHANGE IN USER _-_-_-")
+      //reset and reload everything for new user
+      // $("#web3-onload").addClass("disabled-div");
+      $('#open-pager-btns').hide();
+      $('#my-pager-btns').hide();
+      resetSessionVars();
+      resetGlobalVariables();
+      let s;
+      if(user[0] !== -1){
+        $('#user-hash').html(user[0]);
+        $('#user-hash').removeClass('red-text');
+        $('#user-hash').addClass('green-text');
+
+        $('#my-wrapper').removeClass('loading');
+        $('#my-loader').hide();
+
+        updateBalance();
+      } else {
+        $('#user-hash').html("No current user- log into MetaMask");
+        $('#user-hash').addClass('red-text');
+        $('#user-hash').removeClass('green-text');
+
+        $('#my-loader').show();
+        $('#my-wrapper').addClass('loading');
+
+        updateBalance();
+      }
+      loadData();
+    }
+    pastUser = user;
+  } catch (error) {
+    console.log(error)
   }
 }
 
@@ -1357,6 +1374,7 @@ async function drawUSA(){
   let width = +svg.attr("width");
   let height = +svg.attr("height");
   let path = d3.geoPath();
+  console.log("svg",svg)
 
   try{
     let us = await d3.json("USA.json");
