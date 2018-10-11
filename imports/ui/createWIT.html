@@ -1,0 +1,174 @@
+<html>
+  <head>
+    <title>Create WIT</title>
+    <meta charset="utf8">
+		<meta http-equiv="x-ua-compatible" content="ie=edge">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="createWIT.css">
+  </head>
+  <body>
+    <div id="createWIT">
+      <form>
+        <div v-if="step === 1">
+          <div class="frame-status">
+            Create your agreement step-by-step
+          </div>
+          <div class="frame-body grid-cols-2">
+            <div class="grid-col">
+              <h3 class="title-step">1. Select a weather index</h3>
+              <ul class="form-options">
+                <li><label><input type="radio" name="weatherindex" value="Rainfall" v-model="registration.weatherindex"> Rain</label></li>
+                <li><label><input type="radio" name="weatherindex" value="Snowfall" v-model="registration.weatherindex" disabled> Snow</label></li>
+                <li><label><input type="radio" name="weatherindex" value="Wind Speed" v-model="registration.weatherindex" disabled> Wind</label></li>
+                <li><label><input type="radio" name="weatherindex" value="Average Temperature" v-model="registration.weatherindex" disabled> Temperature</label></li>
+              </ul>
+            </div>
+            <div class="grid-col">
+              <div class="frame-helpbox">
+                <h4>Help Title</h4>
+                <p>This is some help text to accompany the current step in the WIT creation process.</p>
+              </div>
+            </div>
+          </div>
+          <nav class="formnav grid-cols-2">
+            <div class="grid-col"><button class="prev arbol-app-button" disabled>Previous</button></div>
+            <div class="grid-col"><button class="next arbol-app-button" @click.prevent="next()">Next</button></div>
+          </nav>
+        </div><!-- end step -->
+
+        <div v-if="step === 2">
+          <div class="frame-status grid-cols-2">
+            <div class="grid-col">Your agreement is for <strong>{{ registration.weatherindex }}</strong></div>
+            <div class="grid-col"><button class="cancel arbol-app-button" @click.prevent="cancel()">Cancel</button></div>
+          </div>
+          <div class="frame-body">
+            <h3 class="title-step">2a. Pick location(s)</h3>
+            <ul class="form-options">
+              <li><label><input type="radio" name="locationtype" value="Weather Stations" v-model="registration.locationtype"> Select by weather stations</label></li>
+              <li><label><input type="radio" name="locationtype" value="Coordinates" v-model="registration.locationtype"> Select by coordinates</label></li>
+              <li><label><input type="radio" name="weatherindex" value="Major Crop Region" v-model="registration.locationtype"> Select by major crop region</label></li>
+            </ul>
+            <div class="frame-helpbox">
+              <h4>Help Title</h4>
+              <p>This is some help text to accompany the current step in the WIT creation process.</p>
+            </div>
+          </div>
+          <nav class="formnav">
+            <button class="prev arbol-app-button" @click.prevent="prev()">Previous</button>
+            <button class="next arbol-app-button" @click.prevent="next()">Next</button>
+          </nav>
+        </div><!-- end step -->
+
+        <div v-if="step === 3">
+          <div class="frame-status">
+            <div class="grid-col">Your agreement is for <strong>{{ registration.weatherindex }}</strong> at <strong>{{ registration.locationtype }}</strong></div>
+            <div class="grid-col"><button class="cancel arbol-app-button" @click.prevent="cancel()">Cancel</button></div>
+          </div>
+          <div class="frame-body">
+            <h3 class="title-step">2b. Pick location(s)</h3>
+            <div class="frame-helpbox">
+              <h4>Help Title</h4>
+              <p>This is some help text to accompany the current step in the WIT creation process.</p>
+            </div>
+          </div>
+          <nav class="formnav">
+            <button class="prev arbol-app-button" @click.prevent="prev()">Previous</button>
+            <button class="next arbol-app-button" @click.prevent="next()">Next</button>
+          </nav>
+        </div><!-- end step -->
+
+        <div v-if="step === 4">
+          <div class="frame-status">
+            <div class="grid-col">Your agreement is for <strong>{{ registration.weatherindex }}</strong> at <strong>{{ registration.locationtype }}</strong></div>
+            <div class="grid-col"><button class="cancel arbol-app-button" @click.prevent="cancel()">Cancel</button></div>
+          </div>
+          <div class="frame-body">
+            <h3 class="title-step">3. Pick time period</h3>
+            <p>
+              <label class="arbol-arbol-app-input-label" for="startdate">Start Date:</label>
+              <vuejs-datepicker v-model="registration.startdate" name="startdate" format="MMMM yyyy" minimum-view="month" input-class="arbol-app-input" wrapper-class="arbol-app-datepicker"></vuejs-datepicker>
+            </p>
+            <p>
+              <label class="arbol-arbol-app-input-label" for="startdate">End Date:</label>
+              <vuejs-datepicker v-model="registration.enddate" name="enddate" format="MMMM yyyy" minimum-view="month" input-class="arbol-app-input" wrapper-class="arbol-app-datepicker"></vuejs-datepicker>
+            </p>
+            <div class="frame-helpbox">
+              <h4>Time Period</h4>
+              <p>The time period for which weather data will be analyzed to determine the outcome of your WIT.</p>
+            </div>
+          </div>
+          <nav class="formnav">
+            <button class="prev arbol-app-button" @click.prevent="prev()">Previous</button>
+            <button class="next arbol-app-button" @click.prevent="next()">Next</button>
+          </nav>
+        </div><!-- end step -->
+
+        <div v-if="step === 5">
+          <div class="frame-status">
+            Your agreement is for
+            <strong>{{ registration.weatherindex }}</strong> at
+            <strong>{{ registration.locationtype }}</strong> from
+            <strong>{{ registration.startdate | formatDate({year:'numeric',month:'long'}) }}</strong> to
+            <strong>{{ registration.enddate | formatDate({year:'numeric',month:'long'}) }}</strong>
+          </div>
+          <div class="frame-body">
+            <h3 class="title-step">4. Pick <span style="text-transform:lowercase">{{registration.weatherindex}}</span> threshold level</h3>
+            <select class="arbol-app-select" id="threshold-relation" v-model="registration.threshold_relation">
+              <option value="greater">Greater than</option>
+              <option value="less">Less than</option>
+            </select>
+            <select class="arbol-app-select" id="threshold-percent" v-model="registration.threshold_percent">
+              <option value="0">0%</option>
+              <option value="10">10%</option>
+              <option value="25">25%</option>
+            </select>
+            <select class="arbol-app-select" id="threshold-average" v-model="registration.threshold_average">
+              <option value="above">above average</option>
+              <option value="below">below average</option>
+            </select>
+          </div>
+          <nav class="formnav">
+            <button class="prev arbol-app-button" @click.prevent="prev()">Previous</button>
+            <button class="next arbol-app-button" @click.prevent="next()">Next</button>
+          </nav>
+        </div><!-- end step -->
+
+         <div v-if="step === 6">
+          <div class="frame-status">
+            Your agreement is for
+            <strong>{{ registration.weatherindex }}</strong> at
+            <strong>{{ registration.locationtype }}</strong> from
+            <strong>{{ registration.startdate | formatDate({year:'numeric',month:'long'}) }}</strong> to
+            <strong>{{ registration.enddate | formatDate({year:'numeric',month:'long'}) }}</strong>
+          </div>
+          <div class="frame-body">
+            <h3 class="title-step">5. Pick contribution and payout amount</h3>
+
+          </div>
+          <nav class="formnav">
+            <button class="prev arbol-app-button" @click.prevent="prev()">Previous</button>
+            <button class="next arbol-app-button" @click.prevent="next()">Next</button>
+          </nav>
+        </div><!-- end step -->
+
+        <div v-if="step === 7">
+          <div class="frame-status">
+            Your agreement is for
+            <strong>{{ registration.weatherindex }}</strong> at
+            <strong>{{ registration.locationtype }}</strong> from
+            <strong>{{ registration.startdate | formatDate({year:'numeric',month:'long'}) }}</strong> to
+            <strong>{{ registration.enddate | formatDate({year:'numeric',month:'long'}) }}</strong>
+          </div>
+          <div class="frame-body">
+          </div>
+          <nav class="formnav">
+            <button class="prev arbol-app-button" @click.prevent="prev()">Previous</button>
+            <button class="submit arbol-app-button" @click.prevent="submit()">Confirm</button>
+          </nav>
+        </div><!-- end step -->
+
+      </form>
+      <div class="debug">Debug: {{registration}}</div>
+    </div>
+  </body>
+</html>
