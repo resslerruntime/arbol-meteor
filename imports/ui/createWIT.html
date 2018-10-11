@@ -180,6 +180,14 @@
           <div class="frame-body grid-cols-2">
             <div class="grid-col">
               <h3 class="title-step">5. Pick contribution and payout amount</h3>
+              <p>
+                <label class="arbol-app-input-label" for="contribution">Your Contribution (Eth):</label>
+                <input type="number" id="contribution" name="contribution" class="arbol-app-input" step="0.001" value="0" min="0" v-model="newwit.contribution" @change="capVal">
+              </p>
+              <p>
+                <label class="arbol-app-input-label" for="contribution">Total Payout (Eth):</label>
+                <input type="number" id="payout" name="payout" class="arbol-app-input" step="0.001" value="0" min="0" v-model="newwit.payout">
+              </p>
             </div>
             <div class="grid-col">
               <div class="frame-helpbox">
@@ -207,11 +215,7 @@
             </div>
             <div class="grid-col"><button class="cancel arbol-app-button" @click.prevent="cancel()">Cancel</button></div>
           </div>
-          <div class="frame-body grid-cols-2">
-            <div class="grid-col">
-            </div>
-            <div class="grid-col">
-            </div>
+          <div class="frame-body">
           </div>
           <nav class="formnav grid-cols-2">
             <div class="grid-col"><button class="prev arbol-app-button" @click.prevent="prev()">Previous</button></div>

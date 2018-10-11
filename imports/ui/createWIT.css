@@ -48,7 +48,8 @@ body {
   margin:0;
   padding:3px;
 }
-.arbol-app-input-label + .app-datepicker {
+.arbol-app-input-label + .arbol-app-datepicker,
+.arbol-app-input-label + .arbol-app-input {
   margin-top:5px;
 }
 .arbol-app-select {
