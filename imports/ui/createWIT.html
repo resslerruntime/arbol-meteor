@@ -166,16 +166,28 @@
         </div><!-- end step -->
 
          <div v-if="step === 6">
-          <div class="frame-status">
-            Your agreement is for
-            <strong>{{ newwit.weatherindex }}</strong> at
-            <strong>{{ newwit.locationtype }}</strong> from
-            <strong>{{ newwit.startdate | formatDate({year:'numeric',month:'long'}) }}</strong> to
-            <strong>{{ newwit.enddate | formatDate({year:'numeric',month:'long'}) }}</strong>
-          </div>
-          <div class="frame-body">
-            <h3 class="title-step">5. Pick contribution and payout amount</h3>
-
+           <div class="frame-status grid-cols-2">
+             <div class="grid-col">
+               Your agreement is for
+               <strong>{{ newwit.weatherindex }}</strong> at
+               <strong>{{ newwit.locationtype }}</strong> from
+               <strong>{{ newwit.startdate | formatDate({year:'numeric',month:'long'}) }}</strong> to
+               <strong>{{ newwit.enddate | formatDate({year:'numeric',month:'long'}) }}</strong>,
+               <strong>{{ newwit.threshold_relation }} {{ newwit.threshold_percent }}% {{ newwit.threshold_average }} average</strong>
+             </div>
+             <div class="grid-col"><button class="cancel arbol-app-button" @click.prevent="cancel()">Cancel</button></div>
+           </div>
+          <div class="frame-body grid-cols-2">
+            <div class="grid-col">
+              <h3 class="title-step">5. Pick contribution and payout amount</h3>
+            </div>
+            <div class="grid-col">
+              <div class="frame-helpbox">
+                <h4>This WIT will enter the marketplace as:</h4>
+                <p class="rating">AAA rated WIT</p>
+                <p>Chance of return for a prospective buyer will be 75%, and they will receive a 50% return over the course of 2 months. Very desirable.</p>
+              </div>
+            </div>
           </div>
           <nav class="formnav grid-cols-2">
             <div class="grid-col"><button class="prev arbol-app-button" @click.prevent="prev()">Previous</button></div>
@@ -184,15 +196,22 @@
         </div><!-- end step -->
 
         <div v-if="step === 7">
-          <div class="frame-status">
-            Your agreement is for
-            <strong>{{ newwit.weatherindex }}</strong> at
-            <strong>{{ newwit.locationtype }}</strong> from
-            <strong>{{ newwit.startdate | formatDate({year:'numeric',month:'long'}) }}</strong> to
-            <strong>{{ newwit.enddate | formatDate({year:'numeric',month:'long'}) }}</strong>,
-            <strong>{{ newwit.threshold_relation }} {{ newwit.threshold_percent }}% </strong>
+          <div class="frame-status grid-cols-2">
+            <div class="grid-col">
+              Your agreement is for
+              <strong>{{ newwit.weatherindex }}</strong> at
+              <strong>{{ newwit.locationtype }}</strong> from
+              <strong>{{ newwit.startdate | formatDate({year:'numeric',month:'long'}) }}</strong> to
+              <strong>{{ newwit.enddate | formatDate({year:'numeric',month:'long'}) }}</strong>,
+              <strong>{{ newwit.threshold_relation }} {{ newwit.threshold_percent }}% {{ newwit.threshold_average }} average</strong>
+            </div>
+            <div class="grid-col"><button class="cancel arbol-app-button" @click.prevent="cancel()">Cancel</button></div>
           </div>
-          <div class="frame-body">
+          <div class="frame-body grid-cols-2">
+            <div class="grid-col">
+            </div>
+            <div class="grid-col">
+            </div>
           </div>
           <nav class="formnav grid-cols-2">
             <div class="grid-col"><button class="prev arbol-app-button" @click.prevent="prev()">Previous</button></div>

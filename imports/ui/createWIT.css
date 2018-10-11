@@ -22,11 +22,20 @@ body {
   padding:5px;
   text-align:center;
 }
+.arbol-app-button:not([disabled]):hover {
+  background-color:var(--app-color-shaded-active);
+  border:2px var(--app-color-border-active) solid;
+  color:var(--app-color-text-active);
+  padding:4px;
+}
 .arbol-app-button.submit {
   font-weight:bold;
   letter-spacing:0.05em;
   padding:7px;
   text-transform:uppercase;
+}
+.arbol-app-button.submit:not([disabled]):hover {
+  padding:6px;
 }
 .arbol-app-input-label {
   display:block;
@@ -41,12 +50,6 @@ body {
 }
 .arbol-app-input-label + .app-datepicker {
   margin-top:5px;
-}
-.arbol-app-button:not([disabled]):hover {
-  background-color:var(--app-color-shaded-active);
-  border:2px var(--app-color-border-active) solid;
-  color:var(--app-color-text-active);
-  padding:4px;
 }
 .arbol-app-select {
   display:block;
