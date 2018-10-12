@@ -3,6 +3,7 @@ import * as d3 from "d3";
 import topojson from "topojson";
 import BN from 'bn.js';
 import './body.html';
+import './createProtection.html';
 
 Router.route('/tutorial');
 Router.route('/', {
@@ -1048,6 +1049,10 @@ Template.openProtectionsTable.helpers({
 // FUNCTIONS RELATED TO "CREATE A PROTECTION"
 ////////////////////////////////////////////
 
+Template.formNewProtection.onCreated(function () {
+  this.createWITstep = 1;
+  console.log('step = '+this.createWITstep);
+});
 // Dealing with submittal of form
 Template.formNewProtection.events({
   // 'input .date-picker'(event) {
@@ -1072,6 +1077,18 @@ Template.formNewProtection.events({
   // 'input #end-date'(event){
   //   $("#end-date").removeClass("missing-info");
   // },
+  'click .prev'(event){
+    event.preventDefault();
+    self = Template.instance();
+    self.createWITstep--;
+    console.log('create WIT step = '+self.createWITstep);
+  },
+  'click .next'(event){
+    event.preventDefault();
+    self = Template.instance();
+    self.createWITstep++;
+    console.log('create WIT step = '+self.createWITstep);
+  },
   'input .date-input'(event){
     //TODO cap date, make sure only valid dates are entered, allow for at most 12 months
     let d = capDate2(event.currentTarget);
