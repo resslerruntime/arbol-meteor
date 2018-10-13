@@ -1,4 +1,5 @@
 import { Template } from 'meteor/templating';
+import { ReactiveVar } from 'meteor/reactive-var';
 import * as d3 from "d3";
 import topojson from "topojson";
 import BN from 'bn.js';
@@ -1050,50 +1051,31 @@ Template.openProtectionsTable.helpers({
 ////////////////////////////////////////////
 
 Template.formNewProtection.onCreated(function () {
-  this.createWITstep = 1;
-  console.log('step = '+this.createWITstep);
+  this.createWITstep = new ReactiveVar();
+  this.createWITstep.set(1);
+  console.log('create WIT step = '+this.createWITstep.get());
+});
+Template.formNewProtection.helpers({
+  step() {
+    return Template.instance().createWITstep.get();
+  }
 });
 // Dealing with submittal of form
 Template.formNewProtection.events({
-  // 'input .date-picker'(event) {
-  //   //TODO uncomment capDate
-  //   // capDate(event.currentTarget);
-  //   //update the data that is represented
-  //   let s = +$('#start-date')[0].value.split("-")[1]
-  //     ,sy = +$('#start-date')[0].value.split("-")[0];
-  //   let e = +$('#end-date')[0].value.split("-")[1]
-  //     ,ey = +$('#end-date')[0].value.split("-")[0];
-  //   console.log("date-picker",s,sy,e,ey);
-  //
-  //   if(s <= e && sy <= ey){
-  //     MONTHCODE = e;
-  //     DURATIONCODE = e - s + 1;
-  //     callNOAA();
-  //   }
-  // },
-  // 'input #start-date'(event){
-  //   $("#start-date").removeClass("missing-info");
-  // },
-  // 'input #end-date'(event){
-  //   $("#end-date").removeClass("missing-info");
-  // },
   'click .prev'(event){
     event.preventDefault();
     self = Template.instance();
-    self.createWITstep--;
-    console.log('create WIT step = '+self.createWITstep);
+    self.createWITstep.set(self.createWITstep.get() - 1);
+    console.log('create WIT step = '+self.createWITstep.get());
   },
   'click .next'(event){
     event.preventDefault();
     self = Template.instance();
-    self.createWITstep++;
-    console.log('create WIT step = '+self.createWITstep);
+    self.createWITstep.set(self.createWITstep.get() + 1);
+    console.log('create WIT step = '+self.createWITstep.get());
   },
   'input .date-input'(event){
-    //TODO cap date, make sure only valid dates are entered, allow for at most 12 months
     let d = capDate2(event.currentTarget);
-
-    //only make a NOAA call if date inputs are valid
     if(d.s*d.sy*d.e*d.ey > 0){
       if(d.ed-d.sd < 1 && d.sd <= d.ed){
         MONTHCODE = d.e;
@@ -1110,13 +1092,6 @@ Template.formNewProtection.events({
     $("#total-contrib").removeClass("missing-info");
   },
   'input #threshold'(event) {
-    // const target = event.currentTarget;
-    // const thresholdRelation = target[3].value;
-    // const thresholdPercent = target[4].value;
-    // const thresholdAverage = target[5].value;
-    // if(thresholdRelation !== "" || thresholdPercent !== "" || thresholdAverage !== ""){
-    //   $("#threshold").removeClass("missing-info");
-    // }
     changeThreshold();
     calcTenYrP();
   },
@@ -1125,15 +1100,12 @@ Template.formNewProtection.events({
     $("#location").removeClass("missing-info");
   },
   'submit .new-protection'(event) {
-    if(user[0] === -1){
+    if (user[0] === -1){
       alert("Please login to MetaMask to create a proposal.");
-      //prevent form from submitting
       return false;
-    }else{
-      // Prevent default browser form submit
+    }
+    else {
       event.preventDefault();
-
-      // Get value from form element
       const target = event.currentTarget;
       const yourContr = parseFloat(target[0].value);
       const totalPayout = parseFloat(target[1].value);
@@ -1179,7 +1151,8 @@ Template.formNewProtection.events({
           $("#end-input").addClass("missing-info");
         }
         alert(s);
-      }else{
+      }
+      else {
         //ask for confirmation
         const confirmed = confirm ( "Please confirm your selection: \n\n"
           + "  Your Contribution (Eth): " + yourContr + "\n"
@@ -1190,7 +1163,7 @@ Template.formNewProtection.events({
           + "  End Date: " + endDate + "\n"
         );
 
-        if(confirmed){
+        if (confirmed) {
           //call back that clears the form
           var clearForm = function(){
             //clear form if succesful
@@ -1219,7 +1192,8 @@ Template.formNewProtection.events({
 
           //submit info
           createProposal(startDate,endDate,yourContr,totalPayout,location,index,thresholdRelation,thresholdPercent,thresholdAverage,clearForm);
-        }else{
+        }
+        else {
           //let user continue to edit
         }
       }

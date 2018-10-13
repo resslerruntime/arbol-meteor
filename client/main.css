@@ -1,5 +1,3 @@
-
-
 body {
   -webkit-touch-callout: none; /* iOS Safari */
     -webkit-user-select: none; /* Safari */
@@ -448,12 +446,12 @@ hr {
 }
 
 .grid-el {
-  height: 300px;
+  /*height: 300px;
   width: 515px;
   border: 4px solid #f2f0e3;
   border-radius: 6px;
   background: #ffffff;
-  align-self: start;
+  align-self: start;*/
 }
 
 #NOAA-msg {
@@ -629,3 +627,68 @@ button.action:hover {
   #start-input, #end-input {
     display: inline-block;
   }
+
+.new-protection {
+  --app-color-text-active:#0069ff;
+  --app-color-background:#f9f9ef;
+  --app-color-border:#999999;
+  --app-color-border-active:#0069ff;
+  --app-color-shaded:#e6e6e6;
+  --app-color-shaded-active:#c4dcff;
+}
+.new-protection .frame-status {
+  background-color:var(--app-color-shaded);
+  border:1px var(--app-color-border) solid;
+  box-sizing:border-box;
+  display:grid;
+  font-size:14px;
+  grid-column-gap:20px;
+  grid-template-columns:auto auto;
+  min-height:60px;
+  padding:10px 20px;
+}
+.new-protection .frame-status .grid-el {
+  align-self:center;
+}
+.new-protection .frame-status .grid-el:nth-child(2) {
+  justify-self:end;
+}
+.new-protection .frame-body {
+  box-sizing:border-box;
+  background-color:white;
+  border:1px var(--app-color-border) solid;
+  border-top:0;
+  display:grid;
+  grid-column-gap:20px;
+  grid-template-columns:auto auto;
+  min-height:360px;
+  padding:20px;
+  position:relative;
+}
+.new-protection .frame-body .grid-el:nth-child(2) {
+  justify-self:end;
+}
+.new-protection .frame-nav {
+  box-sizing:border-box;
+  display:grid;
+  grid-column-gap:20px;
+  grid-template-columns:auto auto;
+  min-height:40px;
+  padding:10px;
+  position:relative;
+}
+.new-protection .frame-nav .grid-el {
+  align-self:center;
+  justify-self:center;
+}
+.new-protection .frame-nav .arbol-app-button {
+  width:90px;
+}
+
+#map-div {
+  height:300px;
+  width:500px;
+}
+#map-inner-div {
+  padding-left:0;
+}
