@@ -1,35 +1,35 @@
 <!-- TEMPLATES FOR "CREATE A PROTECTION FORM" -->
 <template name="formNewProtection">
-  <form id="createWIT" class="new-protection">
+  <form id="createwit" class="new-protection">
     <div>Hello world {{ step }}</div>
-    <div id="createWIT-cancel"><button class="createwit-button">Cancel</button></div>
+    <div id="createwit-cancel"><button class="createwit-button">Cancel</button></div>
 
-    <div class="frame-createWIT" data-step="1">
-      <div class="frame-status">
-        <div class="grid-el">Construct your agreement step by step.</div>
+    <div class="createwit-frame" data-step="1">
+      <div class="createwit-frame-status">
+        <div class="createwit-grid-el">Construct your agreement step by step.</div>
       </div>
-      <div class="frame-body">
-        <div class="grid-el">
+      <div class="createwit-frame-body">
+        <div class="createwit-grid-el">
           <h3>1. Pick a weather index</h3>
         </div>
       </div>
     </div>
 
-    <div class="frame-createWIT" data-step="2">
-      <div class="frame-status">
+    <div class="createwit-frame" data-step="2">
+      <div class="createwit-frame-status">
       </div>
-      <div class="frame-body">
-        <div class="grid-el">
+      <div class="createwit-frame-body">
+        <div class="createwit-grid-el">
           <h3>2a. Pick location(s)</h3>
         </div>
       </div>
     </div>
 
-    <div class="frame-createWIT" data-step="3">
-      <div class="frame-status">
+    <div class="createwit-frame" data-step="3">
+      <div class="createwit-frame-status">
       </div>
-      <div class="frame-body">
-        <div class="grid-el">
+      <div class="createwit-frame-body">
+        <div class="createwit-grid-el">
           <h3>2b. Pick location(s)</h3>
           <div class="tooltip"> Location: <span class="tooltiptext">Select the geographic area covered by the contract.</span></div>
           <select id="location" name="location">
@@ -39,7 +39,7 @@
             <option value="us-redwinter-belt">US Red Winter Wheat Belt</option>
           </select>
         </div>
-        <div class="grid-el">
+        <div class="createwit-grid-el">
           <div id="map-div">
             <div id="map-inner-div">
               <svg id="map" width="500" height="300">
@@ -185,11 +185,11 @@
       </div>
     </div>
 
-    <div class="frame-createWIT" data-step="4">
-      <div class="frame-status">
+    <div class="createwit-frame" data-step="4">
+      <div class="createwit-frame-status">
       </div>
-      <div class="frame-body">
-        <div class="grid-el">
+      <div class="createwit-frame-body">
+        <div class="createwit-grid-el">
           <h3>3. Pick time period</h3>
           <div class="tooltip"> From: <span class="tooltiptext">The starting month of the contract.</span></div>
           <select id="month-start" class="date-input">{{> monthOptions}}</select><select id="year-start" class="date-input">{{> yearOptions}}</select>
@@ -199,11 +199,11 @@
       </div>
     </div>
 
-    <div class="frame-createWIT" data-step="5">
-      <div class="frame-status">
+    <div class="createwit-frame" data-step="5">
+      <div class="createwit-frame-status">
       </div>
-      <div class="frame-body">
-        <div class="grid-el">
+      <div class="createwit-frame-body">
+        <div class="createwit-grid-el">
           <h3>4. Pick threshold level</h3>
           <div class="tooltip"> Threshold: <span class="tooltiptext">Choose payout threshold.</span></div>
           <div id="threshold">
@@ -227,7 +227,7 @@
           <div class="tooltip"> Ten Year Probability: <span class="tooltiptext">Percent of the time in last 10 yrs threshold was met.</span></div>
           <div id="ten-yr-prob"></div>
         </div>
-        <div class="grid-el">
+        <div class="createwit-grid-el">
           <div id="chart-div">
             <svg id="chart" width="500" height="300"></svg>
             <div class="chart-loader-div" style="height:50px">
@@ -239,11 +239,11 @@
       </div>
     </div>
 
-    <div class="frame-createWIT" data-step="6">
-      <div class="frame-status">
+    <div class="createwit-frame" data-step="6">
+      <div class="createwit-frame-status">
       </div>
-      <div class="frame-body">
-        <div class="grid-el">
+      <div class="createwit-frame-body">
+        <div class="createwit-grid-el">
           <h3>5. Pick contribution and payout amounts</h3>
           <div class="tooltip"> Your Contribution (Eth):<span class="tooltiptext">The amount of Eth you contribute to the contract.</span></div>
           <input type="number" id="your-contrib" name="buyer" class="contribution" step="0.001" value="0" min="0" style="width:200px">
@@ -253,22 +253,20 @@
       </div>
     </div>
 
-    <div class="frame-createWIT" data-step="7">
-      <div class="frame-status">
+    <div class="createwit-frame" data-step="7">
+      <div class="createwit-frame-status">
       </div>
-      <div class="frame-body">
-      </div>
-      <nav class="frame-nav">
-        <div class="grid-el">
+      <div class="createwit-frame-body">
+        <div class="createwit-grid-el">
           <input type="submit" id="create-proposal" value="Create Proposal">
         </div>
-      </nav>
+      </div>
     </div>
 
-    <nav class="createWIT-nav">
-      <div id="createWIT-prev" class="grid-el"><button class="createwit-button">Previous</button></div>
-      <div id="createWIT-next" class="grid-el"><button class="createwit-button">Next</button></div>
-      <div id="createWIT-submit" class="grid-el"><button class="createwit-button ">Confirm</button></div>
+    <nav id="createwit-nav">
+      <div id="createwit-prev" class="createwit-grid-el"><button class="createwit-button">Previous</button></div>
+      <div id="createwit-next" class="createwit-grid-el"><button class="createwit-button">Next</button></div>
+      <div id="createwit-submit" class="createwit-grid-el"><button class="createwit-button ">Confirm</button></div>
     </nav>
   </form>
 </template>
