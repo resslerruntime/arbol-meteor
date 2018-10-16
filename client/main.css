@@ -628,7 +628,7 @@ button.action:hover {
     display: inline-block;
   }
 
-.new-protection {
+#createWIT {
   --app-color-text-active:#0069ff;
   --app-color-background:#f9f9ef;
   --app-color-border:#999999;
@@ -636,7 +636,13 @@ button.action:hover {
   --app-color-shaded:#e6e6e6;
   --app-color-shaded-active:#c4dcff;
 }
-.new-protection .frame-status {
+#createWIT .frame-createWIT {
+  display:none;
+}
+#createWIT .frame-createWIT.showing {
+  display:block;
+}
+#createWIT .frame-status {
   background-color:var(--app-color-shaded);
   border:1px var(--app-color-border) solid;
   box-sizing:border-box;
@@ -647,13 +653,13 @@ button.action:hover {
   min-height:60px;
   padding:10px 20px;
 }
-.new-protection .frame-status .grid-el {
+#createWIT .frame-status .grid-el {
   align-self:center;
 }
-.new-protection .frame-status .grid-el:nth-child(2) {
+#createWIT .frame-status .grid-el:nth-child(2) {
   justify-self:end;
 }
-.new-protection .frame-body {
+#createWIT .frame-body {
   box-sizing:border-box;
   background-color:white;
   border:1px var(--app-color-border) solid;
@@ -665,10 +671,10 @@ button.action:hover {
   padding:20px;
   position:relative;
 }
-.new-protection .frame-body .grid-el:nth-child(2) {
+#createWIT .frame-body .grid-el:nth-child(2) {
   justify-self:end;
 }
-.new-protection .frame-nav {
+#createWIT .frame-nav {
   box-sizing:border-box;
   display:grid;
   grid-column-gap:20px;
@@ -677,11 +683,11 @@ button.action:hover {
   padding:10px;
   position:relative;
 }
-.new-protection .frame-nav .grid-el {
+#createWIT .frame-nav .grid-el {
   align-self:center;
   justify-self:center;
 }
-.new-protection .frame-nav .arbol-app-button {
+#createWIT .frame-nav .arbol-app-button {
   width:90px;
 }
 

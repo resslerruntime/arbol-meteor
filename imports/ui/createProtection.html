@@ -1,9 +1,10 @@
 <!-- TEMPLATES FOR "CREATE A PROTECTION FORM" -->
 <template name="formNewProtection">
-  <form class="new-protection">
+  <form id="createWIT" class="new-protection">
     <div>Hello world {{ step }}</div>
+    <div id="createWIT-cancel"><button class="createwit-button">Cancel</button></div>
 
-    <div class="frame-createWIT">
+    <div class="frame-createWIT" data-step="1">
       <div class="frame-status">
         <div class="grid-el">Construct your agreement step by step.</div>
       </div>
@@ -12,13 +13,9 @@
           <h3>1. Pick a weather index</h3>
         </div>
       </div>
-      <nav class="frame-nav">
-        <div class="grid-el"><button class="prev arbol-app-button">Previous</button></div>
-        <div class="grid-el"><button class="next arbol-app-button">Next</button></div>
-      </nav>
     </div>
 
-    <div class="frame-createWIT">
+    <div class="frame-createWIT" data-step="2">
       <div class="frame-status">
       </div>
       <div class="frame-body">
@@ -26,11 +23,9 @@
           <h3>2a. Pick location(s)</h3>
         </div>
       </div>
-      <nav class="frame-nav">
-      </nav>
     </div>
 
-    <div class="frame-createWIT">
+    <div class="frame-createWIT" data-step="3">
       <div class="frame-status">
       </div>
       <div class="frame-body">
@@ -188,11 +183,9 @@
           </div>
         </div>
       </div>
-      <nav class="frame-nav">
-      </nav>
     </div>
 
-    <div class="frame-createWIT">
+    <div class="frame-createWIT" data-step="4">
       <div class="frame-status">
       </div>
       <div class="frame-body">
@@ -204,16 +197,14 @@
           <select id="month-end" class="date-input">{{> monthOptions}}</select><select id="year-end" class="date-input">{{> yearOptions}}</select>
         </div>
       </div>
-      <nav class="frame-nav">
-      </nav>
     </div>
 
-    <div class="frame-createWIT">
+    <div class="frame-createWIT" data-step="5">
       <div class="frame-status">
       </div>
       <div class="frame-body">
         <div class="grid-el">
-          <h3>2a. Pick threshold level</h3>
+          <h3>4. Pick threshold level</h3>
           <div class="tooltip"> Threshold: <span class="tooltiptext">Choose payout threshold.</span></div>
           <div id="threshold">
             <select id="threshold-relation">
@@ -246,27 +237,23 @@
           </div>
         </div>
       </div>
-      <nav class="frame-nav">
-      </nav>
     </div>
 
-    <div class="frame-createWIT">
+    <div class="frame-createWIT" data-step="6">
       <div class="frame-status">
       </div>
       <div class="frame-body">
         <div class="grid-el">
-          <h3>3. Pick contribution and payout amounts</h3>
+          <h3>5. Pick contribution and payout amounts</h3>
           <div class="tooltip"> Your Contribution (Eth):<span class="tooltiptext">The amount of Eth you contribute to the contract.</span></div>
           <input type="number" id="your-contrib" name="buyer" class="contribution" step="0.001" value="0" min="0" style="width:200px">
           <div class="tooltip"> Total Payout (Eth): <span class="tooltiptext">The total Eth payout of the contract.</span></div>
           <input type="number" id="total-contrib" name="seller" class="contribution" step="0.001" value="0" min="0" style="width:200px">
         </div>
       </div>
-      <nav class="frame-nav">
-      </nav>
     </div>
 
-    <div class="frame-createWIT">
+    <div class="frame-createWIT" data-step="7">
       <div class="frame-status">
       </div>
       <div class="frame-body">
@@ -277,6 +264,12 @@
         </div>
       </nav>
     </div>
+
+    <nav class="createWIT-nav">
+      <div id="createWIT-prev" class="grid-el"><button class="createwit-button">Previous</button></div>
+      <div id="createWIT-next" class="grid-el"><button class="createwit-button">Next</button></div>
+      <div id="createWIT-submit" class="grid-el"><button class="createwit-button ">Confirm</button></div>
+    </nav>
   </form>
 </template>
 
