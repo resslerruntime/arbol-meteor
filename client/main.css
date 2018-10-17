@@ -635,7 +635,29 @@ button.action:hover {
   --app-color-border-active:#0069ff;
   --app-color-shaded:#e6e6e6;
   --app-color-shaded-active:#c4dcff;
+  position:relative;
 }
+#createwit .createwit-button {
+  background-color:var(--app-color-shaded);
+  border:1px var(--app-color-border) solid;
+  border-radius:3px;
+  cursor:pointer;
+  font-size:12px;
+  line-height:10px;
+  outline:none;
+  padding:5px;
+  text-align:center;
+}
+#createwit .createwit-button[disabled] {
+  color:var(--app-color-border);
+}
+#createwit .createwit-button:not([disabled]):hover {
+  background-color:var(--app-color-shaded-active);
+  border:2px var(--app-color-border-active) solid;
+  color:var(--app-color-text-active);
+  padding:4px;
+}
+
 #createwit .createwit-frame {
   display:none;
 }
@@ -649,7 +671,7 @@ button.action:hover {
   display:grid;
   font-size:14px;
   grid-column-gap:20px;
-  grid-template-columns:auto auto;
+  grid-template-columns:auto 60px;
   min-height:60px;
   padding:10px 20px;
 }
@@ -674,6 +696,9 @@ button.action:hover {
 #createwit .createwit-frame-body .createwit-grid-el:nth-child(2) {
   justify-self:end;
 }
+#createwit .createwit-frame-body h3 {
+  margin-top:0;
+}
 #createwit-nav {
   box-sizing:border-box;
   display:grid;
@@ -689,6 +714,12 @@ button.action:hover {
 }
 #createwit-nav .createwit-button {
   width:90px;
+}
+#createwit-cancel {
+  position:absolute;
+  right:20px;
+  top:20px;
+  z-index:3;
 }
 
 #map-div {

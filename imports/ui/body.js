@@ -1054,15 +1054,15 @@ Template.formNewProtection.onCreated(function () {
   // declare and set reactive variable that indicates the form step
   this.createWITstep = new ReactiveVar();
   this.createWITstep.set(1);
-  console.log('create WIT step = '+this.createWITstep.get());
+  console.log('Current Create WIT step = '+this.createWITstep.get());
 });
 Template.formNewProtection.onRendered(function(){
   // show the first step
-  $("#createWIT .frame-createWIT[data-step='1']").addClass('showing');
+  $("#createwit .createwit-frame[data-step='1']").addClass('showing');
   // disable the previous button since this is the first step
-  $("#createWIT #createWIT-prev button").attr('disabled','disabled');
+  $("#createwit-prev button").attr('disabled','disabled');
   // hide the submit button since this is the first step
-  $("#createWIT #createWIT-submit").hide();
+  $("#createwit-submit").hide();
 });
 
 Template.formNewProtection.helpers({
@@ -1073,64 +1073,76 @@ Template.formNewProtection.helpers({
 // Dealing with submittal of form
 Template.formNewProtection.events({
   // click action for previous button
-  'click #createWIT-prev button'(event){
+  'click #createwit-prev button'(event){
     event.preventDefault();
     self = Template.instance();
     // decrement the step number
     self.createWITstep.set(self.createWITstep.get() - 1);
-    console.log('create WIT step = '+self.createWITstep.get());
+    console.log('Current Create WIT step = '+self.createWITstep.get());
     // show the correct step
-    $("#createWIT .frame-createWIT.showing").removeClass('showing');
-    $("#createWIT .frame-createWIT[data-step='" + self.createWITstep.get() + "']").addClass('showing');
+    $("#createwit .createwit-frame.showing").removeClass('showing');
+    $("#createwit .createwit-frame[data-step='" + self.createWITstep.get() + "']").addClass('showing');
     // if this is the first step, disable the previous button
     if (self.createWITstep.get() < 2) {
-      $("#createWIT #createWIT-prev button").attr('disabled','disabled');
+      $("#createwit-prev button").attr('disabled','disabled');
+      $("#createwit-submit").hide();
     }
     // if this is the last step, hide the next button and show the confirm button
-    else if (self.createWITstep.get() >= $("#createWIT .frame-createWIT").length) {
-      $("#createWIT #createWIT-prev button").show().removeAttr('disabled');
-      $("#createWIT #createWIT-next").hide();
-      $("#createWIT #createWIT-submit").show();
+    else if (self.createWITstep.get() >= $("#createwit .createwit-frame").length) {
+      $("#createwit-prev button").show().removeAttr('disabled');
+      $("#createwit-next").hide();
+      $("#createwit-submit").show();
     }
     // otherwise, hide the confirm button, show the next button and enable the previous button
     else {
-      $("#createWIT #createWIT-prev button").show().removeAttr('disabled');
-      $("#createWIT #createWIT-next").show();
-      $("#createWIT #createWIT-submit").hide();
+      $("#createwit-prev button").show().removeAttr('disabled');
+      $("#createwit-next").show();
+      $("#createwit-submit").hide();
     }
   },
-  'click #createWIT-next button'(event){
+  'click #createwit-next button'(event){
     event.preventDefault();
     self = Template.instance();
     // increment the step button
     self.createWITstep.set(self.createWITstep.get() + 1);
-    console.log('create WIT step = '+self.createWITstep.get());
+    console.log('Current Create WIT step = '+self.createWITstep.get());
     // show the correct step
-    $("#createWIT .frame-createWIT.showing").removeClass('showing');
-    $("#createWIT .frame-createWIT[data-step='" + self.createWITstep.get() + "']").addClass('showing');
-    // if this is the first step, disable the previous button
+    $("#createwit .createwit-frame.showing").removeClass('showing');
+    $("#createwit .createwit-frame[data-step='" + self.createWITstep.get() + "']").addClass('showing');
+    // if this is the first step, disable the previous button and hide the submit button
     if (self.createWITstep.get() < 2) {
-      $("#createWIT #createWIT-prev button").attr('disabled','disabled');
+      $("#createwit-prev button").attr('disabled','disabled');
+      $("#createwit-submit").hide();
     }
     // if this is the last step, hide the next button and show the confirm button
-    else if (self.createWITstep.get() >= $("#createWIT .frame-createWIT").length) {
-      $("#createWIT #createWIT-prev button").show().removeAttr('disabled');
-      $("#createWIT #createWIT-next").hide();
-      $("#createWIT #createWIT-submit").show();
+    else if (self.createWITstep.get() >= $("#createwit .createwit-frame").length) {
+      $("#createwit-prev button").show().removeAttr('disabled');
+      $("#createwit-next").hide();
+      $("#createwit-submit").show();
     }
     // otherwise, hide the confirm button, show the next button and enable the previous button
     else {
-      $("#createWIT #createWIT-prev button").show().removeAttr('disabled');
-      $("#createWIT #createWIT-next").show();
-      $("#createWIT #createWIT-submit").hide();
+      $("#createwit-prev button").show().removeAttr('disabled');
+      $("#createwit-next").show();
+      $("#createwit-submit").hide();
     }
   },
-  'click #createWIT-cancel button'(event){
+  'click #createwit-cancel button'(event){
+    event.preventDefault();
+    // reset the step to 1
     self = Template.instance();
     self.createWITstep.set(1);
+    // show the correct step
+    $("#createwit .createwit-frame.showing").removeClass('showing');
+    $("#createwit .createwit-frame[data-step='" + self.createWITstep.get() + "']").addClass('showing');
+    // since we are resetting to the first step, disable the previous button and hide the submit button
+    $("#createwit-prev button").attr('disabled','disabled');
+    $("#createwit-submit").hide();
+    // borrowed from button action for app menu buttons, scroll to top of page
     $('html, body').animate({
       scrollTop: $('#arbol-wrapper').height()
     }, 500);
+    // reset the showing/hiding of tabs to default state
     $("#open-protections").show();
     $("#create-protection").hide();
     $("#your-protections").hide();

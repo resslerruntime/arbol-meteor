@@ -1,7 +1,6 @@
 <!-- TEMPLATES FOR "CREATE A PROTECTION FORM" -->
 <template name="formNewProtection">
   <form id="createwit" class="new-protection">
-    <div>Hello world {{ step }}</div>
     <div id="createwit-cancel"><button class="createwit-button">Cancel</button></div>
 
     <div class="createwit-frame" data-step="1">
@@ -269,6 +268,11 @@
       <div id="createwit-submit" class="createwit-grid-el"><button class="createwit-button ">Confirm</button></div>
     </nav>
   </form>
+
+  <div class="debug">
+    <p>createWITstep = {{ step }}</p>
+  </div>
+
 </template>
 
 <template name="monthOptions">
