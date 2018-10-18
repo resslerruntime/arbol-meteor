@@ -1054,7 +1054,10 @@ Template.formNewProtection.onCreated(function () {
   // declare and set reactive variable that indicates the form step
   this.createWITstep = new ReactiveVar();
   this.createWITstep.set(1);
+  this.createWITdata = new ReactiveVar();
+  this.createWITdata.set({'weatherIndex':'Rainfall','locationType':'Weather Stations'});
   console.log('Current Create WIT step = '+this.createWITstep.get());
+  console.log('Current Create WIT data = '+this.createWITdata.get());
 });
 Template.formNewProtection.onRendered(function(){
   // show the first step
@@ -1068,6 +1071,9 @@ Template.formNewProtection.onRendered(function(){
 Template.formNewProtection.helpers({
   step() {
     return Template.instance().createWITstep.get();
+  },
+  data(key) {
+    return Template.instance().createWITdata.get()[key];
   }
 });
 // Dealing with submittal of form
@@ -1146,6 +1152,12 @@ Template.formNewProtection.events({
     $("#open-protections").show();
     $("#create-protection").hide();
     $("#your-protections").hide();
+  },
+  'input [name="weatherIndex"]'(event){
+    self = Template.instance();
+    selfdata = self.createWITdata.get();
+    selfdata.weatherIndex = $('[name="weatherIndex"]:checked').val();
+    self.createWITdata.set(selfdata);
   },
   'input .date-input'(event){
     let d = capDate2(event.currentTarget);

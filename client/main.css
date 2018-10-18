@@ -628,14 +628,19 @@ button.action:hover {
     display: inline-block;
   }
 
+
 #createwit {
   --app-color-text-active:#0069ff;
+  --app-color-text-disabled:#999999;
   --app-color-background:#f9f9ef;
   --app-color-border:#999999;
   --app-color-border-active:#0069ff;
   --app-color-shaded:#e6e6e6;
   --app-color-shaded-active:#c4dcff;
   position:relative;
+}
+#createwit [disabled] {
+  color:var(--app-color-text-disabled);
 }
 #createwit .createwit-button {
   background-color:var(--app-color-shaded);
@@ -647,9 +652,6 @@ button.action:hover {
   outline:none;
   padding:5px;
   text-align:center;
-}
-#createwit .createwit-button[disabled] {
-  color:var(--app-color-border);
 }
 #createwit .createwit-button:not([disabled]):hover {
   background-color:var(--app-color-shaded-active);
@@ -698,6 +700,15 @@ button.action:hover {
 }
 #createwit .createwit-frame-body h3 {
   margin-top:0;
+}
+#createwit .form-options {
+  display:block;
+  list-style:none;
+  margin:0;
+  padding:0;
+}
+#createwit .form-options li + li {
+  margin-top:5px;
 }
 #createwit-nav {
   box-sizing:border-box;

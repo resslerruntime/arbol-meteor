@@ -10,6 +10,12 @@
       <div class="createwit-frame-body">
         <div class="createwit-grid-el">
           <h3>1. Pick a weather index</h3>
+          <ul class="form-options">
+            <li><label><input type="radio" name="weatherIndex" value="Rainfall" v-model="newwit.weatherindex"> Rain</label></li>
+            <li><label><input type="radio" name="weatherIndex" value="Snowfall" v-model="newwit.weatherindex"> Snow</label></li>
+            <li><label disabled="disabled"><input type="radio" name="weatherIndex" value="Wind Speed" v-model="newwit.weatherindex" disabled> Wind</label></li>
+            <li><label disabled="disabled"><input type="radio" name="weatherIndex" value="Average Temperature" v-model="newwit.weatherindex" disabled> Temperature</label></li>
+          </ul>
         </div>
       </div>
     </div>
@@ -271,6 +277,8 @@
 
   <div class="debug">
     <p>createWITstep = {{ step }}</p>
+    <p>weatherIndex = {{ data 'weatherIndex' }}</p>
+    <p>locationType = {{ data 'locationType' }}</p>
   </div>
 
 </template>
