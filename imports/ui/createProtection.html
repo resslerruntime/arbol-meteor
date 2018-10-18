@@ -11,10 +11,10 @@
         <div class="createwit-grid-el">
           <h3>1. Pick a weather index</h3>
           <ul class="form-options">
-            <li><label><input type="radio" name="weatherIndex" value="Rainfall" v-model="newwit.weatherindex"> Rain</label></li>
-            <li><label><input type="radio" name="weatherIndex" value="Snowfall" v-model="newwit.weatherindex"> Snow</label></li>
-            <li><label disabled="disabled"><input type="radio" name="weatherIndex" value="Wind Speed" v-model="newwit.weatherindex" disabled> Wind</label></li>
-            <li><label disabled="disabled"><input type="radio" name="weatherIndex" value="Average Temperature" v-model="newwit.weatherindex" disabled> Temperature</label></li>
+            <li><label><input type="radio" name="weatherIndex" value="Rainfall" checked> Rain</label></li>
+            <li><label><input type="radio" name="weatherIndex" value="Snowfall"> Snow</label></li>
+            <li><label disabled="disabled"><input type="radio" name="weatherIndex" value="Wind Speed" disabled> Wind</label></li>
+            <li><label disabled="disabled"><input type="radio" name="weatherIndex" value="Average Temperature" disabled> Temperature</label></li>
           </ul>
         </div>
       </div>
@@ -22,16 +22,30 @@
 
     <div class="createwit-frame" data-step="2">
       <div class="createwit-frame-status">
+        <div class="createwit-grid-el">
+          Your agreement is for
+          <strong class="data-weatherIndex">{{ data 'weatherIndex' }}</strong>.
+        </div>
       </div>
       <div class="createwit-frame-body">
         <div class="createwit-grid-el">
           <h3>2a. Pick location(s)</h3>
+          <ul class="form-options">
+            <li><label><input type="radio" name="locationType" value="Weather Stations" checked> Select by weather stations</label></li>
+            <li><label><input type="radio" name="locationType" value="Coordinates"> Select by coordinates</label></li>
+            <li><label><input type="radio" name="locationType" value="Major Crop Region"> Select by major crop region</label></li>
+          </ul>
         </div>
       </div>
     </div>
 
     <div class="createwit-frame" data-step="3">
       <div class="createwit-frame-status">
+        <div class="createwit-grid-el">
+          Your agreement is for
+          <strong class="data-weatherIndex">{{ data 'weatherIndex' }}</strong> at
+          <strong class="data-locationType">{{ data 'locationType' }}</strong>.
+        </div>
       </div>
       <div class="createwit-frame-body">
         <div class="createwit-grid-el">
@@ -192,6 +206,11 @@
 
     <div class="createwit-frame" data-step="4">
       <div class="createwit-frame-status">
+        <div class="createwit-grid-el">
+          Your agreement is for
+          <strong class="data-weatherIndex">{{ data 'weatherIndex' }}</strong> at
+          <strong class="data-locationType">{{ data 'locationRegion' }}</strong>.
+        </div>
       </div>
       <div class="createwit-frame-body">
         <div class="createwit-grid-el">
@@ -276,9 +295,10 @@
   </form>
 
   <div class="debug">
-    <p>createWITstep = {{ step }}</p>
-    <p>weatherIndex = {{ data 'weatherIndex' }}</p>
-    <p>locationType = {{ data 'locationType' }}</p>
+    <div>createWITstep = {{ step }}</div>
+    <div>weatherIndex = {{ data 'weatherIndex' }}</div>
+    <div>locationType = {{ data 'locationType' }}</div>
+    <div>locationType = {{ data 'locationRegion' }}</div>
   </div>
 
 </template>

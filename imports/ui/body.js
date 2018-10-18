@@ -795,7 +795,7 @@ Template.tabs.events({
     $('html, body').animate({
       scrollTop: $('#arbol-wrapper').height()
     }, 500);
-    if(e.currentTarget.id === "open-tab"){
+      if(e.currentTarget.id === "open-tab"){
       $("#open-protections").show();
       $("#create-protection").hide();
       $("#your-protections").hide();
@@ -1055,7 +1055,11 @@ Template.formNewProtection.onCreated(function () {
   this.createWITstep = new ReactiveVar();
   this.createWITstep.set(1);
   this.createWITdata = new ReactiveVar();
-  this.createWITdata.set({'weatherIndex':'Rainfall','locationType':'Weather Stations'});
+  this.createWITdata.set({
+    'weatherIndex':'Rainfall',
+    'locationType':'Weather Stations',
+    'locationRegion':'US Corn Belt'
+  });
   console.log('Current Create WIT step = '+this.createWITstep.get());
   console.log('Current Create WIT data = '+this.createWITdata.get());
 });
@@ -1159,6 +1163,12 @@ Template.formNewProtection.events({
     selfdata.weatherIndex = $('[name="weatherIndex"]:checked').val();
     self.createWITdata.set(selfdata);
   },
+  'input [name="locationType"]'(event){
+    self = Template.instance();
+    selfdata = self.createWITdata.get();
+    selfdata.locationType = $('[name="locationType"]:checked').val();
+    self.createWITdata.set(selfdata);
+  },
   'input .date-input'(event){
     let d = capDate2(event.currentTarget);
     if(d.s*d.sy*d.e*d.ey > 0){
@@ -1183,6 +1193,21 @@ Template.formNewProtection.events({
   'input #location'(event) {
     changeRegion(event.currentTarget.value);
     $("#location").removeClass("missing-info");
+    self = Template.instance();
+    selfdata = self.createWITdata.get();
+    selfdata.locationRegion = $(event.currentTarget).find('option:selected').text();
+    self.createWITdata.set(selfdata);
+  },
+  'click .ag-areas'(event) {
+    self = Template.instance();
+    selfdata = self.createWITdata.get();
+    targetclasses = $(event.currentTarget).attr('class').split(/\s+/);
+    for (x=0;x<targetclasses.length;x++) {
+      if ($('option[value="'+targetclasses[x]+'"]').length > 0) {
+        selfdata.locationRegion = $('option[value="'+targetclasses[x]+'"]').text();
+        self.createWITdata.set(selfdata);
+      }
+    }
   },
   'submit .new-protection'(event) {
     if (user[0] === -1){
@@ -1491,7 +1516,7 @@ async function drawUSA(){
       .on("mouseout",handleMOut)
       .on("click", handleClick);
 
-    changeRegion("us-corn-belt");
+      changeRegion("us-corn-belt");
 
     function handleMOver(){
       let v = +d3.select(this).attr("value");
