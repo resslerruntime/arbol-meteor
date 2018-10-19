@@ -1058,7 +1058,11 @@ Template.formNewProtection.onCreated(function () {
   this.createWITdata.set({
     'weatherIndex':'Rainfall',
     'locationType':'Weather Stations',
-    'locationRegion':'US Corn Belt'
+    'locationRegion':'US Corn Belt',
+    'month-start':null,
+    'year-start':null,
+    'month-end':null,
+    'year-end':null
   });
   console.log('Current Create WIT step = '+this.createWITstep.get());
   console.log('Current Create WIT data = '+this.createWITdata.get());
@@ -1178,6 +1182,11 @@ Template.formNewProtection.events({
         callNOAA();
       }
     }
+    self = Template.instance();
+    selfdata = self.createWITdata.get();
+    targetid = $(event.currentTarget).attr('id');
+    selfdata[targetid] = $(event.currentTarget).find('option:selected').text();
+    self.createWITdata.set(selfdata);
   },
   'input #your-contrib'(event){
     capVal(event.currentTarget);

@@ -215,16 +215,27 @@
       <div class="createwit-frame-body">
         <div class="createwit-grid-el">
           <h3>3. Pick time period</h3>
-          <div class="tooltip"> From: <span class="tooltiptext">The starting month of the contract.</span></div>
-          <select id="month-start" class="date-input">{{> monthOptions}}</select><select id="year-start" class="date-input">{{> yearOptions}}</select>
-          <div class="tooltip"> To: <span class="tooltiptext">The ending month of the contract.</span></div>
-          <select id="month-end" class="date-input">{{> monthOptions}}</select><select id="year-end" class="date-input">{{> yearOptions}}</select>
+          <p>
+            <span class="tooltip"> From: <span class="tooltiptext">The starting month of the contract.</span></span>
+            <select id="month-start" class="date-input">{{> monthOptions}}</select> <select id="year-start" class="date-input">{{> yearOptions}}</select>
+          </p>
+          <p>
+            <span class="tooltip"> To: <span class="tooltiptext">The ending month of the contract.</span></span>
+            <select id="month-end" class="date-input">{{> monthOptions}}</select><select id="year-end" class="date-input">{{> yearOptions}}</select>
+          </p>
         </div>
       </div>
     </div>
 
     <div class="createwit-frame" data-step="5">
       <div class="createwit-frame-status">
+        <div class="createwit-grid-el">
+          Your agreement is for
+          <strong class="data-weatherIndex">{{ data 'weatherIndex' }}</strong> at
+          <strong class="data-locationType">{{ data 'locationRegion' }}</strong>,
+          <strong class="data-start">{{ data 'month-start' }} {{ data 'year-start' }}</strong> to
+          <strong class="data-end">{{ data 'month-end' }} {{ data 'year-end' }}</strong>.
+        </div>
       </div>
       <div class="createwit-frame-body">
         <div class="createwit-grid-el">
@@ -299,6 +310,8 @@
     <div>weatherIndex = {{ data 'weatherIndex' }}</div>
     <div>locationType = {{ data 'locationType' }}</div>
     <div>locationType = {{ data 'locationRegion' }}</div>
+    <div>start = {{ data 'month-start' }} {{ data 'year-start' }}</div>
+    <div>end = {{ data 'month-end' }} {{ data 'year-end' }}</div>
   </div>
 
 </template>
