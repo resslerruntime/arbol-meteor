@@ -659,6 +659,13 @@ button.action:hover {
   color:var(--app-color-text-active);
   padding:4px;
 }
+#createwit .createwit-select {
+  display:block;
+  width:20em;
+}
+#createwit * + .createwit-select {
+  margin-top:10px;
+}
 
 #createwit .createwit-frame {
   display:none;
@@ -739,4 +746,7 @@ button.action:hover {
 }
 #map-inner-div {
   padding-left:0;
+}
+.chart-loader-div {
+  height:0;
 }

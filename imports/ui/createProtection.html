@@ -240,24 +240,26 @@
       <div class="createwit-frame-body">
         <div class="createwit-grid-el">
           <h3>4. Pick threshold level</h3>
-          <div class="tooltip"> Threshold: <span class="tooltiptext">Choose payout threshold.</span></div>
-          <div id="threshold">
-            <select id="threshold-relation">
-              <option value="" hidden disabled>________</option>
-              <option value="greater" selected>Greater than</option>
-              <option value="less">Less than</option>
-            </select>
-            <select id="threshold-percent">
-              <option value="" hidden disabled>________</option>
-              <option value="zero" selected>0%</option>
-              <option value="ten">10%</option>
-              <option value="twenty-five">25%</option>
-            </select>
-            <select id="threshold-average">
-              <option value="" hidden disabled>________</option>
-              <option value="above-average" selected>above average</option>
-              <option value="below-average">below average</option>
-            </select>
+          <div>
+            <label class="tooltip"> Threshold: <span class="tooltiptext">Choose payout threshold.</span></label>
+            <div id="threshold">
+              <select id="threshold-relation" class="createwit-select">
+                <option value="" hidden disabled>________</option>
+                <option value="greater" selected>Greater than</option>
+                <option value="less">Less than</option>
+              </select>
+              <select id="threshold-percent" class="createwit-select">
+                <option value="" hidden disabled>________</option>
+                <option value="zero" selected>0%</option>
+                <option value="ten">10%</option>
+                <option value="twenty-five">25%</option>
+              </select>
+              <select id="threshold-average" class="createwit-select">
+                <option value="" hidden disabled>________</option>
+                <option value="above-average" selected>above average</option>
+                <option value="below-average">below average</option>
+              </select>
+            </div>
           </div>
           <div class="tooltip"> Ten Year Probability: <span class="tooltiptext">Percent of the time in last 10 yrs threshold was met.</span></div>
           <div id="ten-yr-prob"></div>
@@ -265,7 +267,7 @@
         <div class="createwit-grid-el">
           <div id="chart-div">
             <svg id="chart" width="500" height="300"></svg>
-            <div class="chart-loader-div" style="height:50px">
+            <div class="chart-loader-div">
               <div id="chart-loader" class="loader-icon" style="display:none"></div>
             </div>
             <div id="NOAA-msg" style="display:none">NOAA Call Failed, Try Again</div>
@@ -312,6 +314,9 @@
     <div>locationType = {{ data 'locationRegion' }}</div>
     <div>start = {{ data 'month-start' }} {{ data 'year-start' }}</div>
     <div>end = {{ data 'month-end' }} {{ data 'year-end' }}</div>
+    <div>threshold-relation = {{ data 'threshold-relation' }}</div>
+    <div>threshold-percent = {{ data 'threshold-percent' }}</div>
+    <div>threshold-average = {{ data 'threshold-average' }}</div>
   </div>
 
 </template>

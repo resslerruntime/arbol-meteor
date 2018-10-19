@@ -1062,7 +1062,10 @@ Template.formNewProtection.onCreated(function () {
     'month-start':null,
     'year-start':null,
     'month-end':null,
-    'year-end':null
+    'year-end':null,
+    'threshold-relation':null,
+    'threshold-percent':null,
+    'threshold-average':null
   });
   console.log('Current Create WIT step = '+this.createWITstep.get());
   console.log('Current Create WIT data = '+this.createWITdata.get());
@@ -1196,8 +1199,16 @@ Template.formNewProtection.events({
     $("#total-contrib").removeClass("missing-info");
   },
   'input #threshold'(event) {
-    changeThreshold();
-    calcTenYrP();
+    //changeThreshold();
+    //calcTenYrP();
+    self = Template.instance();
+    selfdata = self.createWITdata.get();
+    fields = $(event.currentTarget).find('select');
+    for (x=0;x<fields.length;x++) {
+      fieldid = fields.eq(x).attr('id');
+      selfdata[fieldid] = fields.eq(x).find('option:selected').text();
+    }
+    self.createWITdata.set(selfdata);
   },
   'input #location'(event) {
     changeRegion(event.currentTarget.value);
