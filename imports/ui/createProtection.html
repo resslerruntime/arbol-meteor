@@ -288,23 +288,51 @@
 
     <div class="createwit-frame" data-step="6">
       <div class="createwit-frame-status">
+        <div class="createwit-grid-el">
+          Your agreement is for
+          <strong class="data-threshold">{{ data 'threshold-relation' }} {{ data 'threshold-percent' }} {{ data 'threshold-average' }}</strong>
+          <strong class="data-weatherIndex">{{ data 'weatherIndex' }}</strong> at
+          <strong class="data-locationType">{{ data 'locationRegion' }}</strong>,
+          <strong class="data-start">{{ data 'month-start' }} {{ data 'year-start' }}</strong> to
+          <strong class="data-end">{{ data 'month-end' }} {{ data 'year-end' }}</strong>.
+        </div>
       </div>
       <div class="createwit-frame-body">
         <div class="createwit-grid-el">
           <h3>5. Pick contribution and payout amounts</h3>
           <div class="tooltip"> Your Contribution (Eth):<span class="tooltiptext">The amount of Eth you contribute to the contract.</span></div>
-          <input type="number" id="your-contrib" name="buyer" class="contribution" step="0.001" value="0" min="0" style="width:200px">
+          <input type="number" id="your-contrib" name="buyer" class="contribution" step="0.001" value="0" min="0">
           <div class="tooltip"> Total Payout (Eth): <span class="tooltiptext">The total Eth payout of the contract.</span></div>
-          <input type="number" id="total-contrib" name="seller" class="contribution" step="0.001" value="0" min="0" style="width:200px">
+          <input type="number" id="total-contrib" name="seller" class="contribution" step="0.001" value="0" min="0">
         </div>
       </div>
     </div>
 
     <div class="createwit-frame" data-step="7">
       <div class="createwit-frame-status">
+        <div class="createwit-grid-el">
+          Your agreement is for
+          <strong class="data-threshold">{{ data 'threshold-relation' }} {{ data 'threshold-percent' }} {{ data 'threshold-average' }}</strong>
+          <strong class="data-weatherIndex">{{ data 'weatherIndex' }}</strong> at
+          <strong class="data-locationType">{{ data 'locationRegion' }}</strong>,
+          <strong class="data-start">{{ data 'month-start' }} {{ data 'year-start' }}</strong> to
+          <strong class="data-end">{{ data 'month-end' }} {{ data 'year-end' }}</strong>.
+        </div>
       </div>
       <div class="createwit-frame-body">
         <div class="createwit-grid-el">
+          <p>I am contributing {{ data 'your-contrib' }} Ether</p>
+          <p>I will receive {{ data 'total-contrib' }} Ether if the following conditions are met, and 0 Ether if they are not:</p>
+          <p>
+            <strong>
+              {{ data 'weatherIndex' }} at
+              {{ data 'locationRegion' }} is
+              {{ data 'threshold-relation' }} {{ data 'threshold-percent' }} {{ data 'threshold-average' }} between
+              {{ data 'month-start' }} {{ data 'year-start' }} and
+              {{ data 'month-end' }} {{ data 'year-end' }}.
+            </strong>
+          </p>
+          <p>My {{ data 'your-contrib' }} Ether will be taken into escrow immediately. I can cancel this WIT and get my Ether back by clicking “cancel” in “Your WITs”.</p>
           <input type="submit" id="create-proposal" value="Create Proposal">
         </div>
       </div>
@@ -327,6 +355,8 @@
     <div>threshold-relation = {{ data 'threshold-relation' }}</div>
     <div>threshold-percent = {{ data 'threshold-percent' }}</div>
     <div>threshold-average = {{ data 'threshold-average' }}</div>
+    <div>your-contrib = {{ data 'your-contrib' }}</div>
+    <div>total-contrib = {{ data 'total-contrib' }}</div>
   </div>
 
 </template>

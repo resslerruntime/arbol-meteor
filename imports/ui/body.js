@@ -1065,7 +1065,9 @@ Template.formNewProtection.onCreated(function () {
     'year-end':null,
     'threshold-relation':null,
     'threshold-percent':null,
-    'threshold-average':null
+    'threshold-average':null,
+    'your-contrib':0,
+    'total-contrib':0
   });
   console.log('Current Create WIT step = '+this.createWITstep.get());
   console.log('Current Create WIT data = '+this.createWITdata.get());
@@ -1194,9 +1196,19 @@ Template.formNewProtection.events({
   'input #your-contrib'(event){
     capVal(event.currentTarget);
     $("#your-contrib").removeClass("missing-info");
+    self = Template.instance();
+    selfdata = self.createWITdata.get();
+    targetid = $(event.currentTarget).attr('id');
+    selfdata[targetid] = event.currentTarget.value;
+    self.createWITdata.set(selfdata);
   },
   'input #total-contrib'(event){
     $("#total-contrib").removeClass("missing-info");
+    self = Template.instance();
+    selfdata = self.createWITdata.get();
+    targetid = $(event.currentTarget).attr('id');
+    selfdata[targetid] = event.currentTarget.value;
+    self.createWITdata.set(selfdata);
   },
   'input #threshold'(event) {
     //changeThreshold();
