@@ -10,6 +10,7 @@ body {
   --header-height: 60px;
   --footer-height: 150px;
   --web3-onload-padding: 25px;
+  font-family:arial,sans-serif;
   margin: 0px;
   overflow-x: hidden;
 }
@@ -642,6 +643,18 @@ button.action:hover {
 #createwit [disabled] {
   color:var(--app-color-text-disabled);
 }
+#createwit select,
+#createwit input[type="text"],
+#createwit input[type="number"] {
+  border:1px var(--app-color-border) solid;
+  display:block;
+  font-size:16px;
+  max-width:20em;
+  min-width:10em;
+}
+#createwit .inline-block {
+  display:inline-block;
+}
 #createwit .createwit-button {
   background-color:var(--app-color-shaded);
   border:1px var(--app-color-border) solid;
@@ -658,13 +671,6 @@ button.action:hover {
   border:2px var(--app-color-border-active) solid;
   color:var(--app-color-text-active);
   padding:4px;
-}
-#createwit .createwit-select {
-  display:block;
-  width:20em;
-}
-#createwit * + .createwit-select {
-  margin-top:10px;
 }
 
 #createwit .createwit-frame {
@@ -702,6 +708,10 @@ button.action:hover {
   padding:20px;
   position:relative;
 }
+#createwit .createwit-frame-body .createwit-grid-el:nth-child(1) * + *:not(.inline-block) {
+  margin-bottom:0;
+  margin-top:10px;
+}
 #createwit .createwit-frame-body .createwit-grid-el:nth-child(2) {
   justify-self:end;
 }
@@ -713,9 +723,6 @@ button.action:hover {
   list-style:none;
   margin:0;
   padding:0;
-}
-#createwit .form-options li + li {
-  margin-top:5px;
 }
 #createwit-nav {
   box-sizing:border-box;
@@ -739,7 +746,6 @@ button.action:hover {
   top:20px;
   z-index:3;
 }
-
 #map-div {
   height:300px;
   width:500px;
