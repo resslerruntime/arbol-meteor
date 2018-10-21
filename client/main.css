@@ -640,6 +640,10 @@ button.action:hover {
   --app-color-shaded-active:#c4dcff;
   position:relative;
 }
+#createwit * {
+  margin-bottom:0;
+  margin-top:0;
+}
 #createwit [disabled] {
   color:var(--app-color-text-disabled);
 }
@@ -652,10 +656,25 @@ button.action:hover {
   max-width:20em;
   min-width:10em;
 }
+#createwit * + select:not(.inline-block),
+#createwit * + input[type="text"]:not(.inline-block),
+#createwit * + input[type="number"]:not(.inline-block) {
+  margin-top:5px;
+}
+#createwit * + .field {
+  margin-top:20px;
+}
+#createwit label {
+  display:block;
+  font-weight:bold;
+}
+#createwit label + * {
+  margin-top:10px;
+}
 #createwit .inline-block {
   display:inline-block;
 }
-#createwit .createwit-button {
+#createwit button {
   background-color:var(--app-color-shaded);
   border:1px var(--app-color-border) solid;
   border-radius:3px;
@@ -666,20 +685,23 @@ button.action:hover {
   padding:5px;
   text-align:center;
 }
-#createwit .createwit-button:not([disabled]):hover {
+#createwit button:not([disabled]):hover {
   background-color:var(--app-color-shaded-active);
   border:2px var(--app-color-border-active) solid;
   color:var(--app-color-text-active);
   padding:4px;
 }
-
-#createwit .createwit-frame {
+#createwit h3 {
+  font-size:22px;
+  margin-bottom:20px;
+}
+#createwit .step {
   display:none;
 }
-#createwit .createwit-frame.showing {
+#createwit .step.showing {
   display:block;
 }
-#createwit .createwit-frame-status {
+#createwit .status {
   background-color:var(--app-color-shaded);
   border:1px var(--app-color-border) solid;
   box-sizing:border-box;
@@ -690,13 +712,13 @@ button.action:hover {
   min-height:60px;
   padding:10px 20px;
 }
-#createwit .createwit-frame-status .createwit-grid-el {
+#createwit .status .cell {
   align-self:center;
 }
-#createwit .createwit-frame-status .createwit-grid-el:nth-child(2) {
+#createwit .status .cell:nth-child(2) {
   justify-self:end;
 }
-#createwit .createwit-frame-body {
+#createwit .step-body {
   box-sizing:border-box;
   background-color:white;
   border:1px var(--app-color-border) solid;
@@ -708,21 +730,26 @@ button.action:hover {
   padding:20px;
   position:relative;
 }
-#createwit .createwit-frame-body .createwit-grid-el:nth-child(1) * + *:not(.inline-block) {
-  margin-bottom:0;
-  margin-top:10px;
-}
-#createwit .createwit-frame-body .createwit-grid-el:nth-child(2) {
+#createwit .step-body .cell:nth-child(2) {
   justify-self:end;
-}
-#createwit .createwit-frame-body h3 {
-  margin-top:0;
 }
 #createwit .form-options {
   display:block;
   list-style:none;
   margin:0;
   padding:0;
+}
+#createwit .helpbox {
+  box-sizing:border-box;
+  background-color:white;
+  border:1px var(--app-color-border) solid;
+  color:#666;
+  margin-top:20px;
+  max-width:300px;
+  padding:20px;
+}
+#createwit .helpbox * + * {
+  margin-top:10px;
 }
 #createwit-nav {
   box-sizing:border-box;
@@ -733,11 +760,11 @@ button.action:hover {
   padding:10px;
   position:relative;
 }
-#createwit-nav .createwit-grid-el {
+#createwit-nav .cell {
   align-self:center;
   justify-self:center;
 }
-#createwit-nav .createwit-button {
+#createwit-nav button {
   width:90px;
 }
 #createwit-cancel {

@@ -1074,7 +1074,7 @@ Template.formNewProtection.onCreated(function () {
 });
 Template.formNewProtection.onRendered(function(){
   // show the first step
-  $("#createwit .createwit-frame[data-step='1']").addClass('showing');
+  $("#createwit .step").eq(0).addClass('showing');
   // disable the previous button since this is the first step
   $("#createwit-prev button").attr('disabled','disabled');
   // hide the submit button since this is the first step
@@ -1099,15 +1099,16 @@ Template.formNewProtection.events({
     self.createWITstep.set(self.createWITstep.get() - 1);
     console.log('Current Create WIT step = '+self.createWITstep.get());
     // show the correct step
-    $("#createwit .createwit-frame.showing").removeClass('showing');
-    $("#createwit .createwit-frame[data-step='" + self.createWITstep.get() + "']").addClass('showing');
+    $("#createwit .step.showing").removeClass('showing');
+    $("#createwit .step").eq((self.createWITstep.get() - 1)).addClass('showing');
     // if this is the first step, disable the previous button
     if (self.createWITstep.get() < 2) {
       $("#createwit-prev button").attr('disabled','disabled');
+      $("#createwit-next").show();
       $("#createwit-submit").hide();
     }
     // if this is the last step, hide the next button and show the confirm button
-    else if (self.createWITstep.get() >= $("#createwit .createwit-frame").length) {
+    else if (self.createWITstep.get() >= $("#createwit .step").length) {
       $("#createwit-prev button").show().removeAttr('disabled');
       $("#createwit-next").hide();
       $("#createwit-submit").show();
@@ -1126,15 +1127,16 @@ Template.formNewProtection.events({
     self.createWITstep.set(self.createWITstep.get() + 1);
     console.log('Current Create WIT step = '+self.createWITstep.get());
     // show the correct step
-    $("#createwit .createwit-frame.showing").removeClass('showing');
-    $("#createwit .createwit-frame[data-step='" + self.createWITstep.get() + "']").addClass('showing');
+    $("#createwit .step.showing").removeClass('showing');
+    $("#createwit .step").eq((self.createWITstep.get() - 1)).addClass('showing');
     // if this is the first step, disable the previous button and hide the submit button
     if (self.createWITstep.get() < 2) {
       $("#createwit-prev button").attr('disabled','disabled');
+      $("#createwit-next").show();
       $("#createwit-submit").hide();
     }
     // if this is the last step, hide the next button and show the confirm button
-    else if (self.createWITstep.get() >= $("#createwit .createwit-frame").length) {
+    else if (self.createWITstep.get() >= $("#createwit .step").length) {
       $("#createwit-prev button").show().removeAttr('disabled');
       $("#createwit-next").hide();
       $("#createwit-submit").show();
@@ -1152,10 +1154,11 @@ Template.formNewProtection.events({
     self = Template.instance();
     self.createWITstep.set(1);
     // show the correct step
-    $("#createwit .createwit-frame.showing").removeClass('showing');
-    $("#createwit .createwit-frame[data-step='" + self.createWITstep.get() + "']").addClass('showing');
+    $("#createwit .step.showing").removeClass('showing');
+    $("#createwit .step").eq(0).addClass('showing');
     // since we are resetting to the first step, disable the previous button and hide the submit button
     $("#createwit-prev button").attr('disabled','disabled');
+    $("#createwit-next").show();
     $("#createwit-submit").hide();
     // borrowed from button action for app menu buttons, scroll to top of page
     $('html, body').animate({
@@ -1211,8 +1214,8 @@ Template.formNewProtection.events({
     self.createWITdata.set(selfdata);
   },
   'input #threshold'(event) {
-    //changeThreshold();
-    //calcTenYrP();
+    changeThreshold();
+    calcTenYrP();
     self = Template.instance();
     selfdata = self.createWITdata.get();
     fields = $(event.currentTarget).find('select');
@@ -1408,9 +1411,17 @@ function capDate2(target){
     ,ey = +$('#year-end')[0].value
     ,ed = ey + e/12;
 
-  if(s*sy*e*ey > 0){
-    //if duration is longer than a year
-    if(ed-sd >= 1 || sd > ed){
+  console.log('s = '+s);
+  console.log('sy = '+sy);
+  console.log('sd = '+sd);
+  console.log('e = '+e);
+  console.log('ey = '+ey);
+  console.log('ed = '+ed);
+  console.log('s*sy*e*ey = ' + s*sy*e*ey);
+  console.log('ed-sd = ' + (ed - sd));
+
+  if (s*sy*e*ey > 0) { // checks that all 4 date fields have a value
+    if(ed-sd >= 0.9 || sd > ed) { // check if duration is more than 11 months OR if the start date is greater than the end date
       if(target.id === "month-start" || target.id === "year-start"){
         $('#start-input').addClass("missing-info");
         $('#end-input').removeClass("missing-info");
