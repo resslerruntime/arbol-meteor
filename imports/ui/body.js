@@ -1183,12 +1183,14 @@ Template.formNewProtection.events({
   },
   'input .date-input'(event){
     let d = capDate2(event.currentTarget);
-    if(d.s*d.sy*d.e*d.ey > 0){
-      if(d.ed-d.sd < 1 && d.sd <= d.ed){
+    // should probably make a choice here about either running these checks in the capDate2 function or just running theme here and using capDate2 to create the date object
+    if(d.s*d.sy*d.e*d.ey > 0){ // runnning duplicate check from the capDate2 function
+      if(d.ed-d.sd < 0.91 && d.sd <= d.ed){ // running duplicate check from the capDate2 function
         MONTHCODE = d.e;
         DURATIONCODE = Math.round((d.ed - d.sd)*12 + 1)%12;
         callNOAA();
       }
+      // need else statement here with error message about improper date selections
     }
     self = Template.instance();
     selfdata = self.createWITdata.get();
@@ -1388,6 +1390,7 @@ function padToBytes32(n) {
     return "0x" + n;
 }
 
+// this function can be removed and replaced with a date picker
 function capDate(target){
   //change properties of the other date picker so that incorrect values can't be chosen
   var date = target.value;
