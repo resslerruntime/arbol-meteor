@@ -1079,6 +1079,10 @@ Template.formNewProtection.onRendered(function(){
   $("#createwit-prev button").attr('disabled','disabled');
   // hide the submit button since this is the first step
   $("#createwit-submit").hide();
+  // datepicker
+  $('[data-toggle="datepicker"]').datepicker({
+    format: 'mm/yyyy'
+  });
 });
 
 Template.formNewProtection.helpers({
@@ -1180,6 +1184,9 @@ Template.formNewProtection.events({
     selfdata = self.createWITdata.get();
     selfdata.locationType = $('[name="locationType"]:checked').val();
     self.createWITdata.set(selfdata);
+  },
+  'input [data-toggle="datepicker"]'(event){
+    console.log('datepicker value = ' + event.currentTarget.value);
   },
   'input .date-input'(event){
     let d = capDate2(event.currentTarget);
