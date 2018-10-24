@@ -1082,8 +1082,8 @@ Template.formNewProtection.onRendered(function(){
   // datepicker
   $('[data-toggle="datepicker"]').datepicker({
     format: 'mm/yyyy',
-    startDate: '01/2017',
-    endDate: '12/2020'
+    startDate: new Date(2017, 0, 1),
+    endDate: new Date(2020, 11, 31)
   });
 });
 
@@ -1191,18 +1191,19 @@ Template.formNewProtection.events({
     console.log('datepicker value = ' + event.currentTarget.value);
     if ($(event.currentTarget).attr('id') == "date-start") {
       // get selected date
-      let limitStart = $(event.currentTarget).datepicker('getDate');
+      let limitStart = $(event.currentTarget).datepicker('getDate'); console.log(limitStart);
       // add 11 months
-      let limitEnd = limitStart;
+      let limitEnd = $(event.currentTarget).datepicker('getDate');
       limitEnd.setMonth(limitEnd.getMonth() + 11);
       // use these dates to constrain the selection for the end date
       let limitStart_year = limitStart.getFullYear();
-      let limitStart_month = (limitStart.getMonth() < 10) ? '0' + limitStart.getMonth() : limitStart.getMonth();
+      let limitStart_month = limitStart.getMonth();
       let limitEnd_year = limitEnd.getFullYear();
-      let limitEnd_month = (limitEnd.getMonth() < 10) ? '0' + limitEnd.getMonth() : limitEnd.getMonth();
-      $('#date-end').datepicker({
-        startDate: limitStart_month + '/' + limitStart_year,
-        endDate: limitEnd_month + '/' + limitEnd_year
+      let limitEnd_month = limitEnd.getMonth();
+      $('#date-end').datepicker('destroy').datepicker({
+        format: 'mm/yyyy',
+        startDate: new Date(limitStart_year,limitStart_month,1),
+        endDate: new Date(limitEnd_year,limitEnd_month,1)
       });
     }
   },
