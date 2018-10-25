@@ -661,6 +661,13 @@ button.action:hover {
 #createwit * + input[type="number"]:not(.inline-block) {
   margin-top:5px;
 }
+#createwit select.missing-info,
+#createwit input[type="text"].missing-info,
+#createwit input[type="number"].missing-info {
+  border-color:red;
+  border-radius:0;
+  border-width:2px;
+}
 #createwit * + .field {
   margin-top:20px;
 }

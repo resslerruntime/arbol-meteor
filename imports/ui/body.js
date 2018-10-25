@@ -1129,29 +1129,33 @@ Template.formNewProtection.events({
   'click #createwit-next button'(event){
     event.preventDefault();
     self = Template.instance();
-    // increment the step button
-    self.createWITstep.set(self.createWITstep.get() + 1);
-    console.log('Current Create WIT step = '+self.createWITstep.get());
-    // show the correct step
-    $("#createwit .step.showing").removeClass('showing');
-    $("#createwit .step").eq((self.createWITstep.get() - 1)).addClass('showing');
-    // if this is the first step, disable the previous button and hide the submit button
-    if (self.createWITstep.get() < 2) {
-      $("#createwit-prev button").attr('disabled','disabled');
-      $("#createwit-next").show();
-      $("#createwit-submit").hide();
-    }
-    // if this is the last step, hide the next button and show the confirm button
-    else if (self.createWITstep.get() >= $("#createwit .step").length) {
-      $("#createwit-prev button").show().removeAttr('disabled');
-      $("#createwit-next").hide();
-      $("#createwit-submit").show();
-    }
-    // otherwise, hide the confirm button, show the next button and enable the previous button
-    else {
-      $("#createwit-prev button").show().removeAttr('disabled');
-      $("#createwit-next").show();
-      $("#createwit-submit").hide();
+    // validate step
+    let validates = validateCreateWITStep((self.createWITstep.get() - 1));
+    if (validates) {
+      // increment the step button
+      self.createWITstep.set(self.createWITstep.get() + 1);
+      console.log('Current Create WIT step = '+self.createWITstep.get());
+      // show the correct step
+      $("#createwit .step.showing").removeClass('showing');
+      $("#createwit .step").eq((self.createWITstep.get() - 1)).addClass('showing');
+      // if this is the first step, disable the previous button and hide the submit button
+      if (self.createWITstep.get() < 2) {
+        $("#createwit-prev button").attr('disabled','disabled');
+        $("#createwit-next").show();
+        $("#createwit-submit").hide();
+      }
+      // if this is the last step, hide the next button and show the confirm button
+      else if (self.createWITstep.get() >= $("#createwit .step").length) {
+        $("#createwit-prev button").show().removeAttr('disabled');
+        $("#createwit-next").hide();
+        $("#createwit-submit").show();
+      }
+      // otherwise, hide the confirm button, show the next button and enable the previous button
+      else {
+        $("#createwit-prev button").show().removeAttr('disabled');
+        $("#createwit-next").show();
+        $("#createwit-submit").hide();
+      }
     }
   },
   'click #createwit-cancel button'(event){
@@ -1188,7 +1192,6 @@ Template.formNewProtection.events({
     self.createWITdata.set(selfdata);
   },
   'input [data-toggle="datepicker"]'(event){
-    console.log('datepicker value = ' + event.currentTarget.value);
     if ($(event.currentTarget).attr('id') == "date-start") {
       // get selected date
       let limitStart = $(event.currentTarget).datepicker('getDate'); console.log(limitStart);
@@ -1205,6 +1208,9 @@ Template.formNewProtection.events({
         startDate: new Date(limitStart_year,limitStart_month,1),
         endDate: new Date(limitEnd_year,limitEnd_month,1)
       });
+    }
+    if (event.currentTarget.value != '') {
+      $(event.currentTarget).removeClass('missing-info');
     }
   },
   'input .date-input'(event){
@@ -1648,6 +1654,20 @@ async function drawUSA(){
   }catch(error){
     console.log("Error retrieving USA topoJSON data: ",error);
   }
+}
+function validateCreateWITStep(step) {
+  let validates = false;
+  if ($("#createwit .step").eq(step).length > 0) {
+    console.log("valid step number to validate");
+    validates = true;
+    $("#createwit .step").eq(step).find('input,select').each(function(){
+      if ($(this).val() === null || $(this).val() === '') {
+        validates = false;
+        $(this).addClass('missing-info');
+      }
+    });
+  }
+  return validates;
 }
 
 function changeRegion(region){
