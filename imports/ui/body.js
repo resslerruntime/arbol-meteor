@@ -1065,9 +1065,9 @@ Template.formNewProtection.onCreated(function () {
     'year-end':null,
     'date-start':null,
     'date-end':null,
-    'threshold-relation':null,
-    'threshold-percent':null,
-    'threshold-average':null,
+    'threshold-relation':'Greater than',
+    'threshold-percent':'0%',
+    'threshold-average':'above average',
     'your-contrib':0,
     'total-contrib':0
   });
@@ -1229,6 +1229,14 @@ Template.formNewProtection.events({
     self.createWITdata.set(selfdata);
     // check date values
     let d = capDate2(event.currentTarget);
+    if(d.s*d.sy*d.e*d.ey > 0){ // runnning duplicate check from the capDate2 function
+      if(d.ed-d.sd < 0.91 && d.sd <= d.ed){ // running duplicate check from the capDate2 function
+        MONTHCODE = d.e;
+        DURATIONCODE = Math.round((d.ed - d.sd)*12 + 1)%12;
+        callNOAA();
+      }
+      // need else statement here with error message about improper date selections
+    }
   },
   'input .date-input'(event){
     let d = capDate2(event.currentTarget);
@@ -1249,6 +1257,7 @@ Template.formNewProtection.events({
   },
   'input #your-contrib'(event){
     capVal(event.currentTarget);
+    calculateContrib(event.currentTarget);
     $("#your-contrib").removeClass("missing-info");
     self = Template.instance();
     selfdata = self.createWITdata.get();
@@ -1473,6 +1482,11 @@ function capVal(target){
 
   let tot = parseFloat($('#total-contrib')[0].value);
   if(num >= tot) $('#total-contrib')[0].value = next;
+}
+
+// calculate the requested contribution from either "your contribution" or "total contribution"
+function calculateContrib(target) {
+
 }
 
 ////////////////////////////////////////////
