@@ -1063,6 +1063,8 @@ Template.formNewProtection.onCreated(function () {
     'year-start':null,
     'month-end':null,
     'year-end':null,
+    'date-start':null,
+    'date-end':null,
     'threshold-relation':null,
     'threshold-percent':null,
     'threshold-average':null,
@@ -1081,6 +1083,8 @@ Template.formNewProtection.onRendered(function(){
   $("#createwit-submit").hide();
   // datepicker
   $('[data-toggle="datepicker"]').datepicker({
+    autoHide: true,
+    date: new Date(2017, 0, 1),
     format: 'mm/yyyy',
     startDate: new Date(2017, 0, 1),
     endDate: new Date(2020, 11, 31)
@@ -1192,8 +1196,9 @@ Template.formNewProtection.events({
     self.createWITdata.set(selfdata);
   },
   'input [data-toggle="datepicker"]'(event){
+    // if the input is the start date, use the selected date to limit the end date
     if ($(event.currentTarget).attr('id') == "date-start") {
-      // get selected date
+      // get selected start date
       let limitStart = $(event.currentTarget).datepicker('getDate'); console.log(limitStart);
       // add 11 months
       let limitEnd = $(event.currentTarget).datepicker('getDate');
@@ -1203,15 +1208,27 @@ Template.formNewProtection.events({
       let limitStart_month = limitStart.getMonth();
       let limitEnd_year = limitEnd.getFullYear();
       let limitEnd_month = limitEnd.getMonth();
+      // destroy and recreate the date picker for the end date
       $('#date-end').datepicker('destroy').datepicker({
+        autoHide: true,
+        date: new Date(limitStart_year,limitStart_month,1),
         format: 'mm/yyyy',
         startDate: new Date(limitStart_year,limitStart_month,1),
         endDate: new Date(limitEnd_year,limitEnd_month,1)
       });
     }
+    // if a date has been entered, remove any missing info class
     if (event.currentTarget.value != '') {
       $(event.currentTarget).removeClass('missing-info');
     }
+    // store the date in the reactive variable
+    self = Template.instance();
+    selfdata = self.createWITdata.get();
+    targetid = $(event.currentTarget).attr('id');
+    selfdata[targetid] = $(event.currentTarget).datepicker('getMonthName', true) + " " + $(event.currentTarget).datepicker('getDate').getFullYear();
+    self.createWITdata.set(selfdata);
+    // check date values
+    let d = capDate2(event.currentTarget);
   },
   'input .date-input'(event){
     let d = capDate2(event.currentTarget);
@@ -1422,28 +1439,12 @@ function padToBytes32(n) {
     return "0x" + n;
 }
 
-// this function can be removed and replaced with a date picker
-function capDate(target){
-  //change properties of the other date picker so that incorrect values can't be chosen
-  var date = target.value;
-  var id = target.id;
-  var now = new Date().toISOString().substring(0,7);
-  $('#start-date')[0].min = now;
-  //if start is changed first, then put min on end Date
-  if(id === 'start-date'){
-    if(date !== "") $('#end-date')[0].min = date;
-  }
-  if(id === 'end-date'){
-    if(date !== "") $('#start-date')[0].max = date;
-  }
-}
-
 function capDate2(target){
-  let s = +$('#month-start')[0].value
-    ,sy = +$('#year-start')[0].value
+  let s = +$('#date-start').datepicker('getDate').getMonth() + 1
+    ,sy = +$('#date-start').datepicker('getDate').getFullYear()
     ,sd = sy + s/12;
-  let e = +$('#month-end')[0].value
-    ,ey = +$('#year-end')[0].value
+  let e = +$('#date-end').datepicker('getDate').getMonth() + 1
+    ,ey = +$('#date-end').datepicker('getDate').getFullYear()
     ,ed = ey + e/12;
 
   console.log('s = '+s);
@@ -1457,46 +1458,8 @@ function capDate2(target){
 
   if (s*sy*e*ey > 0) { // checks that all 4 date fields have a value
     if(ed-sd >= 0.9 || sd > ed) { // check if duration is more than 11 months OR if the start date is greater than the end date
-      if(target.id === "month-start" || target.id === "year-start"){
-        $('#start-input').addClass("missing-info");
-        $('#end-input').removeClass("missing-info");
-      }
-      if(target.id === "month-end" || target.id === "year-end"){
-        $('#start-input').removeClass("missing-info");
-        $('#end-input').addClass("missing-info");
-      }
+      $('#'+target.id).addClass("missing-info");
     }
-    if(ed-sd < 1 && sd < ed){
-      $('#start-input').removeClass("missing-info");
-      $('#end-input').removeClass("missing-info");
-    }
-    // //if start date is after end date
-    // if(sd >= ed){
-    //   if(target.id === "month-start" || target.id === "year-start"){
-    //     ey = sy;
-    //     ed = ey + e/12;
-    //     //only change month if necessary
-    //     if(sd >= ed){
-    //       e = s;
-    //       ed = sd;
-    //     }
-    //     $('#month-end')[0].value = e;
-    //     $('#year-end')[0].value = ey;
-    //     //TODO animate to indicate change to user
-    //   }
-    //   if(target.id === "month-end" || target.id === "year-end"){
-    //     sy = ey;
-    //     sd = sy + s/12;
-    //     //only change month if necessary
-    //     if(sd >= ed){
-    //       s = e;
-    //       sd = ed;
-    //     }
-    //     $('#month-start')[0].value = s;
-    //     $('#year-start')[0].value = sy;
-    //     //TODO animate to indicate change to user
-    //   }
-    // }
   }
   return {s:s,sy:sy,sd:sd,e:e,ey:ey,ed:ed};
 }
