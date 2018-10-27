@@ -11,5 +11,10 @@ Meteor.startup(() => {
       this.unblock();
       return HTTP.call("GET",url);
     }
+    ,glanceNASA: function(){
+      let url = `https://climateserv.servirglobal.net/chirps/getParameterTypes/`;
+      this.unblock();
+      return HTTP.call("GET",url);
+    }
   });
 });

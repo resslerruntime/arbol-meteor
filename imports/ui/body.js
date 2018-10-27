@@ -253,6 +253,9 @@ function initMainPage(){
       drawUSA();
       drawMonths();
 
+      //TODO test NASA api
+      callNASA();
+
       //TODO check for mobile redirect
       if(screen.width <= 699) {
         // document.location = "mobile.html";
@@ -1530,6 +1533,12 @@ function callNOAA(){
       }
     });
   }
+}
+
+function callNASA(){
+  Meteor.call("glanceNASA",function(error, results) {
+    console.log("glance NASA",results,error)
+  });
 }
 
 var svg, width, height, margin = {top: 40, right: 50, bottom: 45, left: 50};
