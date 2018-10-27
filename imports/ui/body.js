@@ -1058,21 +1058,20 @@ Template.formNewProtection.onCreated(function () {
   this.createWITdata.set({
     'weatherIndex':'Rainfall',
     'locationType':'Weather Stations',
-    'locationRegion':'US Corn Belt',
+    'locationRegion':null,
     'month-start':null,
     'year-start':null,
     'month-end':null,
     'year-end':null,
     'date-start':null,
     'date-end':null,
-    'threshold-relation':'Greater than',
-    'threshold-percent':'0%',
-    'threshold-average':'above average',
+    'threshold-relation':null,
+    'threshold-percent':null,
+    'threshold-average':null,
     'your-contrib':0,
+    'requested-contrib':0,
     'total-contrib':0
   });
-  console.log('Current Create WIT step = '+this.createWITstep.get());
-  console.log('Current Create WIT data = '+this.createWITdata.get());
 });
 Template.formNewProtection.onRendered(function(){
   // show the first step
@@ -1081,7 +1080,7 @@ Template.formNewProtection.onRendered(function(){
   $("#createwit-prev button").attr('disabled','disabled');
   // hide the submit button since this is the first step
   $("#createwit-submit").hide();
-  // datepicker
+  // initialize datepickers
   $('[data-toggle="datepicker"]').datepicker({
     autoHide: true,
     date: new Date(2017, 0, 1),
@@ -1089,8 +1088,15 @@ Template.formNewProtection.onRendered(function(){
     startDate: new Date(2017, 0, 1),
     endDate: new Date(2020, 11, 31)
   });
+  // get initial values for reactive variables based on rendered form
+  self = Template.instance();
+  selfdata = self.createWITdata.get();
+  selfdata['locationRegion'] = $('#location option:selected').text();
+  selfdata['threshold-relation'] = $('#threshold-relation option:selected').text();
+  selfdata['threshold-percent'] = $('#threshold-percent option:selected').text();
+  selfdata['threshold-average'] = $('#threshold-average option:selected').text();
+  self.createWITdata.set(selfdata);
 });
-
 Template.formNewProtection.helpers({
   step() {
     return Template.instance().createWITstep.get();
@@ -1107,7 +1113,6 @@ Template.formNewProtection.events({
     self = Template.instance();
     // decrement the step number
     self.createWITstep.set(self.createWITstep.get() - 1);
-    console.log('Current Create WIT step = '+self.createWITstep.get());
     // show the correct step
     $("#createwit .step.showing").removeClass('showing');
     $("#createwit .step").eq((self.createWITstep.get() - 1)).addClass('showing');
@@ -1138,7 +1143,6 @@ Template.formNewProtection.events({
     if (validates) {
       // increment the step button
       self.createWITstep.set(self.createWITstep.get() + 1);
-      console.log('Current Create WIT step = '+self.createWITstep.get());
       // show the correct step
       $("#createwit .step.showing").removeClass('showing');
       $("#createwit .step").eq((self.createWITstep.get() - 1)).addClass('showing');
@@ -1198,24 +1202,33 @@ Template.formNewProtection.events({
   'input [data-toggle="datepicker"]'(event){
     // if the input is the start date, use the selected date to limit the end date
     if ($(event.currentTarget).attr('id') == "date-start") {
-      // get selected start date
-      let limitStart = $(event.currentTarget).datepicker('getDate'); console.log(limitStart);
-      // add 11 months
-      let limitEnd = $(event.currentTarget).datepicker('getDate');
-      limitEnd.setMonth(limitEnd.getMonth() + 11);
-      // use these dates to constrain the selection for the end date
-      let limitStart_year = limitStart.getFullYear();
-      let limitStart_month = limitStart.getMonth();
-      let limitEnd_year = limitEnd.getFullYear();
-      let limitEnd_month = limitEnd.getMonth();
-      // destroy and recreate the date picker for the end date
-      $('#date-end').datepicker('destroy').datepicker({
-        autoHide: true,
-        date: new Date(limitStart_year,limitStart_month,1),
-        format: 'mm/yyyy',
-        startDate: new Date(limitStart_year,limitStart_month,1),
-        endDate: new Date(limitEnd_year,limitEnd_month,1)
-      });
+      if (event.currentTarget.value) {
+        // get selected start date
+        let limitStart = $(event.currentTarget).datepicker('getDate');
+        // add 11 months
+        let limitEnd = $(event.currentTarget).datepicker('getDate');
+        limitEnd.setMonth(limitEnd.getMonth() + 11);
+        // use these dates to constrain the selection for the end date
+        let limitStart_year = limitStart.getFullYear();
+        let limitStart_month = limitStart.getMonth();
+        let limitEnd_year = limitEnd.getFullYear();
+        let limitEnd_month = limitEnd.getMonth();
+        // activate the date picker for the end date
+        $('#date-end').removeAttr('disabled');
+        $('#date-end').prev().removeAttr('disabled');
+        // destroy and recreate the date picker for the end date
+        $('#date-end').datepicker('destroy').datepicker({
+          autoHide: true,
+          date: new Date(limitStart_year,limitStart_month,1),
+          format: 'mm/yyyy',
+          startDate: new Date(limitStart_year,limitStart_month,1),
+          endDate: new Date(limitEnd_year,limitEnd_month,1)
+        });
+      }
+      else {
+        $('#date-end').attr('disabled','disabled');
+        $('#date-end').prev().attr('disabled','disabled');
+      }
     }
     // if a date has been entered, remove any missing info class
     if (event.currentTarget.value != '') {
@@ -1238,23 +1251,6 @@ Template.formNewProtection.events({
       // need else statement here with error message about improper date selections
     }
   },
-  'input .date-input'(event){
-    let d = capDate2(event.currentTarget);
-    // should probably make a choice here about either running these checks in the capDate2 function or just running theme here and using capDate2 to create the date object
-    if(d.s*d.sy*d.e*d.ey > 0){ // runnning duplicate check from the capDate2 function
-      if(d.ed-d.sd < 0.91 && d.sd <= d.ed){ // running duplicate check from the capDate2 function
-        MONTHCODE = d.e;
-        DURATIONCODE = Math.round((d.ed - d.sd)*12 + 1)%12;
-        callNOAA();
-      }
-      // need else statement here with error message about improper date selections
-    }
-    self = Template.instance();
-    selfdata = self.createWITdata.get();
-    targetid = $(event.currentTarget).attr('id');
-    selfdata[targetid] = $(event.currentTarget).find('option:selected').text();
-    self.createWITdata.set(selfdata);
-  },
   'input #your-contrib'(event){
     capVal(event.currentTarget);
     calculateContrib(event.currentTarget);
@@ -1266,7 +1262,21 @@ Template.formNewProtection.events({
     self.createWITdata.set(selfdata);
   },
   'input #total-contrib'(event){
-    $("#total-contrib").removeClass("missing-info");
+    if (event.currentTarget.value != '0' && event.currentTarget.value != '') {
+      // remove missing info indication
+      $("#total-contrib").removeClass("missing-info");
+      // enable the other contribution fields
+      $("#your-contrib, #requested-contrib").removeAttr('disabled');
+      $("#your-contrib, #requested-contrib").prev().removeAttr('disabled');
+      // recommend your contribution
+      $('#your-contrib').val(event.currentTarget.value * $('#pct-span').attr('data-tenYrProb'));
+    }
+    else {
+      // disable other contribution fields
+      $("#your-contrib, #requested-contrib").attr('disabled','disabled');
+      $("#your-contrib, #requested-contrib").prev().attr('disabled','disabled');
+    }
+    // assign value to reactive variable
     self = Template.instance();
     selfdata = self.createWITdata.get();
     targetid = $(event.currentTarget).attr('id');
@@ -1968,7 +1978,7 @@ function calcTenYrP(o = noaaData){
   }
   //sum * 10 is probability
   if(!rov) sum = 10 - sum;
-  $("#ten-yr-prob").html(`<span id="pct-span"> ~${sum*10}% </span> chance of payout`);
+  $("#ten-yr-prob").html(`<span id="pct-span" data-tenYrProb="${sum/10}"> ~${sum*10}% </span> chance of payout`);
 
   if(sum <= 3 || sum >= 7){
     if(sum <= 3) $('#pct-span').addClass('low-text');
