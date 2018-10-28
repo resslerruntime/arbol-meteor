@@ -269,21 +269,23 @@ function initMainPage(){
       }else{
         $("#user").show();
         // Modern dapp browsers...
-        if (window.ethereum) {
-            window.web3 = new Web3(ethereum);
-            try {
-                // Request account access if needed
-                await ethereum.enable();
-                // Acccounts now exposed
+        console.log(window)
+        if(window.ethereum) {
+          console.log("Window.ethereum === true")
+          window.web3 = new Web3(ethereum);
+          try {
+              // Request account access if needed
+              await ethereum.enable();
+              // Acccounts now exposed
 
-                //show relevant content depending on whether web3 is loaded or not
-                $("#web3-onload").removeClass("disabled-div");
+              //show relevant content depending on whether web3 is loaded or not
+              $("#web3-onload").removeClass("disabled-div");
 
-                // check for subsequent account activity, lockout screen if no metamask user is signed in
-                setInterval(manageAccounts, 1000);
-            } catch (error) {
-              console.log('Web3 injection was declined by user')
-            }
+              // check for subsequent account activity, lockout screen if no metamask user is signed in
+              setInterval(manageAccounts, 1000);
+          } catch (error) {
+            console.log('Web3 injection was declined by user')
+          }
         }
         // Legacy dapp browsers...
         else if (typeof web3 !== 'undefined') {
@@ -1692,21 +1694,23 @@ function callNOAA(){
         console.log("NOAA call failed, try again, returned undefined")
         $("#chart-loader").fadeOut(500);
         $("#NOAA-msg").fadeIn(1000);
-      // }else if(results.data === null){
-      //   console.log("NOAA call failed, try again, returned data = null")
-      //   $("#chart-loader").fadeOut(500);
-      //   $("#NOAA-msg").fadeIn(1000);
       }else{
-        console.log("NOAA results",results)
         let obj = parseData(results);
-        //if a new NOAA call is made before previous one has returned, block the returned info from updating the chart
-        if(check === currentHTTP){
-          upDateMonths(obj);
-          calcTenYrP(obj);
-          // $(".chart-loader-div").removeClass("chart-loader");
+        console.log("NOAA results",results,obj)
+        if(false){
+          //TODO if obj returned = -99 then show error
+          console.log("NOAA call failed, try again, returned data = -99")
           $("#chart-loader").fadeOut(500);
+          $("#NOAA-msg").fadeIn(1000);
+        }else{
+          //if a new NOAA call is made before previous one has returned, block the returned info from updating the chart
+          if(check === currentHTTP){
+            upDateMonths(obj);
+            calcTenYrP(obj);
+            // $(".chart-loader-div").removeClass("chart-loader");
+            $("#chart-loader").fadeOut(500);
+          }
         }
-
       }
     });
   }
