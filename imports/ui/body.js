@@ -1259,6 +1259,7 @@ Template.formNewProtection.events({
     selfdata = self.createWITdata.get();
     targetid = $(event.currentTarget).attr('id');
     selfdata[targetid] = event.currentTarget.value;
+    selfdata['total-contrib'] = $('#total-contrib').val();
     self.createWITdata.set(selfdata);
   },
   'input #total-contrib'(event){
@@ -1269,10 +1270,13 @@ Template.formNewProtection.events({
       $("#your-contrib, #requested-contrib").removeAttr('disabled');
       $("#your-contrib, #requested-contrib").prev().removeAttr('disabled');
       // recommend your contribution
-      $('#your-contrib').val(event.currentTarget.value * $('#pct-span').attr('data-tenYrProb'));
+      if ($('#your-contrib').val() === '' || $('#your-contrib').val() === 0) {
+        $('#your-contrib').val(event.currentTarget.value * $('#pct-span').attr('data-tenYrProb'));
+      }
       // calculate the requested contribution
       $('#requested-contrib').val(event.currentTarget.value - $('#your-contrib').val());
       // calculate and show wit rating
+      // $('#createwit .witrating').text( CalcWITRating() ).attr('class','witrating witrating-'+CalcWITLevel()); 
       $("#createwit .helpbox.rating").show();
     }
     else {
@@ -1285,6 +1289,7 @@ Template.formNewProtection.events({
     selfdata = self.createWITdata.get();
     targetid = $(event.currentTarget).attr('id');
     selfdata[targetid] = event.currentTarget.value;
+    selfdata['your-contrib'] = $('#your-contrib').val();
     self.createWITdata.set(selfdata);
   },
   'input #threshold'(event) {
@@ -1326,52 +1331,52 @@ Template.formNewProtection.events({
     else {
       event.preventDefault();
       const target = event.currentTarget;
-      const yourContr = parseFloat(target[0].value);
-      const totalPayout = parseFloat(target[1].value);
-      const location = target[2].value;
-      const thresholdRelation = target[3].value;
-      const thresholdPercent = target[4].value;
-      const thresholdAverage = target[5].value;
-      let sm = target[6].value;
-      const sy = target[7].value;
-      let em = target[8].value;
-      const ey = target[9].value;
-      if(sm.length === 1) sm = "0" + sm;
-      if(em.length === 1) em = "0" + em;
+      const yourContr = parseFloat($('#your-contrib').val());
+      const totalPayout = parseFloat($('#total-contrib').val());
+      const location = $('#location').val();
+      const thresholdRelation = $('#threshold-relation').val();
+      const thresholdPercent = $('#threshold-percent').val();
+      const thresholdAverage = $('#threshold-average').val();
+      let sm = $('#date-start').datepicker('getDate').getMonth() + 1; // start month
+      const sy = $('#date-start').datepicker('getDate').getFullYear(); // start year
+      let em = $('#date-end').datepicker('getDate').getMonth() + 1; // end month
+      const ey = $('#date-end').datepicker('getDate').getFullYear(); // end year
+      if(sm.length < 10) sm = "0" + sm;
+      if(em.length < 10) em = "0" + em;
       const startDate = `${sy}-${sm}`;
       const endDate = `${ey}-${em}`;
       const index = "Precipitation";
 
       //check if info is missing
-      if(startDate === "" || endDate === "" || parseFloat(yourContr) === 0 || parseFloat(totalPayout) === 0 || location === "" || index === "" || thresholdRelation === "" || thresholdPercent === "" || thresholdAverage === ""){
-        var s = "Please complete missing elements: \n";
-        if(parseFloat(yourContr) === 0){
-          s += "  Your Contribution \n";
-          $("#your-contrib").addClass("missing-info");
-        }
-        if(parseFloat(totalPayout) === 0){
-          s += "  Total Payout \n";
-          $("#total-contrib").addClass("missing-info");
-        }
-        if(location === ""){
-          s += "  Location \n";
-          $("#location").addClass("missing-info");
-        }
-        if(thresholdRelation === "" || thresholdPercent === "" || thresholdAverage === ""){
-          s += "  Threshold \n";
-          $("#threshold").addClass("missing-info");
-        }
-        if(startDate === ""){
-          s += "  Start Date \n";
-          $("#start-input").addClass("missing-info");
-        }
-        if(endDate === ""){
-          s += "  End Date \n";
-          $("#end-input").addClass("missing-info");
-        }
-        alert(s);
-      }
-      else {
+      // if(startDate === "" || endDate === "" || parseFloat(yourContr) === 0 || parseFloat(totalPayout) === 0 || location === "" || index === "" || thresholdRelation === "" || thresholdPercent === "" || thresholdAverage === ""){
+      //   var s = "Please complete missing elements: \n";
+      //   if(parseFloat(yourContr) === 0){
+      //     s += "  Your Contribution \n";
+      //     $("#your-contrib").addClass("missing-info");
+      //   }
+      //   if(parseFloat(totalPayout) === 0){
+      //     s += "  Total Payout \n";
+      //     $("#total-contrib").addClass("missing-info");
+      //   }
+      //   if(location === ""){
+      //     s += "  Location \n";
+      //     $("#location").addClass("missing-info");
+      //   }
+      //   if(thresholdRelation === "" || thresholdPercent === "" || thresholdAverage === ""){
+      //     s += "  Threshold \n";
+      //     $("#threshold").addClass("missing-info");
+      //   }
+      //   if(startDate === ""){
+      //     s += "  Start Date \n";
+      //     $("#start-input").addClass("missing-info");
+      //   }
+      //   if(endDate === ""){
+      //     s += "  End Date \n";
+      //     $("#end-input").addClass("missing-info");
+      //   }
+      //   alert(s);
+      // }
+      // else {
         //ask for confirmation
         const confirmed = confirm ( "Please confirm your selection: \n\n"
           + "  Your Contribution (Eth): " + yourContr + "\n"
@@ -1415,7 +1420,7 @@ Template.formNewProtection.events({
         else {
           //let user continue to edit
         }
-      }
+      // }
     }
   }
 });
