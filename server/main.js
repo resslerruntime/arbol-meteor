@@ -18,7 +18,7 @@ Meteor.startup(() => {
       this.unblock();
       return HTTP.call("GET",url);
     }
-    ,submitDataRequestNASA: function(begintime,endtime){
+    ,submitDataRequestNASA: function(begintime,endtime,coords){
       // 'datatype'      // (int), the unique datatype number for the dataset which this request operates on
       // 'begintime'     // (string), startDate for processing interval, format ("MM/DD/YYYY")
       // 'endtime'       // (string), endDate for processing interval, format ("MM/DD/YYYY")
@@ -30,7 +30,7 @@ Meteor.startup(() => {
       // 'featureids'(optional)  // the featureids as selected by the user on the current client
       // 'isZip_CurrentDataType'(optional) // (string), Leaving this blank converts to 'False' on the server.  Sending anything through equates to a 'True' value on the server.  This lets the server know that this is a job to zip up and return a full dataset.
 
-      let url = `https://climateserv.servirglobal.net/chirps/submitDataRequest/?datatype=0&begintime=${begintime}&endtime=${endtime}&intervaltype=0&operationtype=4&isZip_CurrentDataType=false&geometry={"type":"Polygon","coordinates":[[[21.533203124999996,-3.1624555302378496],[21.533203124999996,-6.489983332670647],[26.279296874999986,-5.441022303717986],[26.10351562499999,-2.635788574166625],[21.533203124999996,-3.1624555302378496]]]}`;
+      let url = `https://climateserv.servirglobal.net/chirps/submitDataRequest/?datatype=0&begintime=${begintime}&endtime=${endtime}&intervaltype=1&operationtype=4&isZip_CurrentDataType=false&geometry={"type":"Polygon","coordinates":[${coords}]}`;
       this.unblock();
       return HTTP.call("GET",url);
     }

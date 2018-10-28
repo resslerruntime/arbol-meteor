@@ -1536,29 +1536,38 @@ function callNOAA(){
 }
 
 function callNASA(){
-  Meteor.call("submitDataRequestNASA","04/01/2018","06/30/2018",function(error, results) {
-    console.log("data request NASA",results,results.content)
-    let id = getContent(results.content);
-    let checkStatus = setInterval(function(){
-      Meteor.call("getDataRequestProgressNASA",id,function(error, results) {
-        console.log("progress NASA",results)
-        let status = parseFloat(getContent(results.content));
-        if(status === 100){
-          window.clearInterval(checkStatus);
-          Meteor.call("getDataFromRequestNASA",id,function(error, results) {
-            console.log(error, results)
-            console.log("data NASA",results)
-          });
-        }
-      });
-    }, 2000);
-
-
+  Meteor.call("submitDataRequestNASA","04/01/2008","06/30/2018",stringifyCoords([]),function(error, results) {
+    if(typeof results != 'undefined'){
+      console.log("data request NASA",results,results.content)
+      let id = eval(results.content)[0];
+      let checkStatus = setInterval(function(){
+        console.log("getDataRequestProgressNASA",id)
+        Meteor.call("getDataRequestProgressNASA",id,function(error, results) {
+          console.log("progress NASA",results)
+          let status = parseFloat(eval(results.content)[0]);
+          if(status === 100){
+            window.clearInterval(checkStatus);
+            console.log("getDataFromRequestNASA",id)
+            Meteor.call("getDataFromRequestNASA",id,function(error, results) {
+              let d = JSON.parse(results.content)
+              console.log("data NASA",d)
+            });
+          }
+        });
+      }, 2000);
+    }else{
+      console.log("NASA server not responding")
+    }
   });
 }
 
-function getContent(c){
-  return eval(c)[0];
+function stringifyCoords(aa){
+  let a = [[21.533203124999996,-3.1624555302378496],[21.533203124999996,-6.489983332670647],[26.279296874999986,-5.441022303717986],[26.10351562499999,-2.635788574166625],[21.533203124999996,-3.1624555302378496]];
+  let s = "[]";
+  a.map(d => s += `[${d[0]},${d[1]}],`);
+  s = s.substring(0, s.length - 1);
+  s += "]";
+  return s;
 }
 
 var svg, width, height, margin = {top: 40, right: 50, bottom: 45, left: 50};
