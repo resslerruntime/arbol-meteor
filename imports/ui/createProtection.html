@@ -316,6 +316,13 @@
             <input disabled="disabled" type="number" id="requested-contrib" readonly="readonly" name="seller" class="contribution" step="0.001" value="" min="0">
           </div>
         </div>
+        <div class="cell">
+          <div class="helpbox rating">
+            <p> This WIT will in the marketplace as:</p>
+            <p class="witrating witrating-good">AAA-rated WIT</p>
+            <p>Chance of return for a prospective buyer will be 75%, and they will receive a 50% return over the course of 2 months. Very desirable.</p>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -326,25 +333,27 @@
           <strong class="data data-threshold">{{ data 'threshold-relation' }} {{ data 'threshold-percent' }} {{ data 'threshold-average' }}</strong>
           <strong class="data data-weatherIndex">Rainfall</strong> at
           <strong class="data data-locationType">{{ data 'locationRegion' }}</strong>,
-          <strong class="data data-start">{{ data 'month-start' }} {{ data 'year-start' }}</strong> to
-          <strong class="data data-end">{{ data 'month-end' }} {{ data 'year-end' }}</strong>.
+          <strong class="data data-start">{{ data 'date-start' }}</strong> to
+          <strong class="data data-end">{{ data 'date-end' }}</strong>.
         </div>
       </div>
       <div class="step-body">
         <div class="cell">
-          <p>I am contributing {{ data 'your-contrib' }} Ether</p>
-          <p>I will receive {{ data 'total-contrib' }} Ether if the following conditions are met, and 0 Ether if they are not:</p>
-          <p>
-            <strong>
-              {{ data 'weatherIndex' }} at
-              {{ data 'locationRegion' }} is
-              {{ data 'threshold-relation' }} {{ data 'threshold-percent' }} {{ data 'threshold-average' }} between
-              {{ data 'month-start' }} {{ data 'year-start' }} and
-              {{ data 'month-end' }} {{ data 'year-end' }}.
-            </strong>
-          </p>
-          <p>My {{ data 'your-contrib' }} Ether will be taken into escrow immediately. I can cancel this WIT and get my Ether back by clicking “cancel” in “Your WITs”.</p>
-          <input type="submit" id="create-proposal" value="Create Proposal">
+          <div class="summarybox">
+            <p>I am contributing {{ data 'your-contrib' }} Ether</p>
+            <p>I will receive {{ data 'total-contrib' }} Ether if the following conditions are met, and 0 Ether if they are not:</p>
+            <p>
+              <strong>
+                {{ data 'weatherIndex' }} at
+                {{ data 'locationRegion' }} is
+                {{ data 'threshold-relation' }} {{ data 'threshold-percent' }} {{ data 'threshold-average' }} between
+                {{ data 'date-start' }} and
+                {{ data 'date-end' }}.
+              </strong>
+            </p>
+            <p>My {{ data 'your-contrib' }} Ether will be taken into escrow immediately. I can cancel this WIT and get my Ether back by clicking “cancel” in “Your WITs”.</p>
+            <input type="submit" id="create-proposal" value="Create Proposal">
+          </div>
         </div>
       </div>
     </div>

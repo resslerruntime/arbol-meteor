@@ -419,7 +419,7 @@ hr {
 }
 
 #create-proposal {
-  margin-left: 125px;
+  //margin-left: 125px;
   margin-top: 20px;
 
   font: bold 15px arial;
@@ -746,15 +746,19 @@ button.action:hover {
   margin:0;
   padding:0;
 }
-#createwit .helpbox {
+#createwit .helpbox,
+#createwit .summarybox {
   box-sizing:border-box;
   background-color:white;
   border:1px var(--app-color-border) solid;
+  padding:20px;
+}
+#createwit .helpbox {
   color:#666;
   margin-top:20px;
   max-width:300px;
-  padding:20px;
 }
+#createwit .summarybox * + *,
 #createwit .helpbox * + * {
   margin-top:10px;
 }
@@ -789,4 +793,20 @@ button.action:hover {
 }
 .chart-loader-div {
   height:0;
+}
+.helpbox.rating {
+  display:none;
+}
+.witrating {
+  border-width:2px;
+  border-style:solid;
+  font-size:24px;
+  font-weight:bold;
+  padding:10px;
+  text-align:center;
+}
+.witrating.witrating-good {
+  background-color:#c4eec6;
+  border-color:#008800;
+  color:#007700;
 }

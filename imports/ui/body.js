@@ -1253,8 +1253,8 @@ Template.formNewProtection.events({
   },
   'input #your-contrib'(event){
     capVal(event.currentTarget);
-    calculateContrib(event.currentTarget);
     $("#your-contrib").removeClass("missing-info");
+    $('#requested-contrib').val($('#total-contrib').val() - $('#your-contrib').val());
     self = Template.instance();
     selfdata = self.createWITdata.get();
     targetid = $(event.currentTarget).attr('id');
@@ -1270,6 +1270,10 @@ Template.formNewProtection.events({
       $("#your-contrib, #requested-contrib").prev().removeAttr('disabled');
       // recommend your contribution
       $('#your-contrib').val(event.currentTarget.value * $('#pct-span').attr('data-tenYrProb'));
+      // calculate the requested contribution
+      $('#requested-contrib').val(event.currentTarget.value - $('#your-contrib').val());
+      // calculate and show wit rating
+      $("#createwit .helpbox.rating").show();
     }
     else {
       // disable other contribution fields
@@ -1492,11 +1496,6 @@ function capVal(target){
 
   let tot = parseFloat($('#total-contrib')[0].value);
   if(num >= tot) $('#total-contrib')[0].value = next;
-}
-
-// calculate the requested contribution from either "your contribution" or "total contribution"
-function calculateContrib(target) {
-
 }
 
 ////////////////////////////////////////////
