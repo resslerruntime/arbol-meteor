@@ -1536,9 +1536,29 @@ function callNOAA(){
 }
 
 function callNASA(){
-  Meteor.call("glanceNASA",function(error, results) {
-    console.log("glance NASA",results,error)
+  Meteor.call("submitDataRequestNASA","04/01/2018","06/30/2018",function(error, results) {
+    console.log("data request NASA",results,results.content)
+    let id = getContent(results.content);
+    let checkStatus = setInterval(function(){
+      Meteor.call("getDataRequestProgressNASA",id,function(error, results) {
+        console.log("progress NASA",results)
+        let status = parseFloat(getContent(results.content));
+        if(status === 100){
+          window.clearInterval(checkStatus);
+          Meteor.call("getDataFromRequestNASA",id,function(error, results) {
+            console.log(error, results)
+            console.log("data NASA",results)
+          });
+        }
+      });
+    }, 2000);
+
+
   });
+}
+
+function getContent(c){
+  return eval(c)[0];
 }
 
 var svg, width, height, margin = {top: 40, right: 50, bottom: 45, left: 50};
