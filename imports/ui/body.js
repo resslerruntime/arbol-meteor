@@ -1219,7 +1219,7 @@ Template.formNewProtection.events({
         $('#date-end').removeAttr('disabled');
         $('#date-end').prev().removeAttr('disabled');
         // destroy and recreate the date picker for the end date
-        $('#date-end').datepicker('destroy').datepicker({
+        $('#date-end').val('').datepicker('destroy').datepicker({
           autoHide: true,
           date: new Date(limitStart_year,limitStart_month,1),
           format: 'mm/yyyy',

@@ -419,7 +419,7 @@ hr {
 }
 
 #create-proposal {
-  //margin-left: 125px;
+  /* margin-left: 125px; */
   margin-top: 20px;
 
   font: bold 15px arial;
@@ -725,20 +725,20 @@ button.action:hover {
 #createwit .status .cell:nth-child(2) {
   justify-self:end;
 }
+#createwit .step-1col,
 #createwit .step-body {
   box-sizing:border-box;
   background-color:white;
   border:1px var(--app-color-border) solid;
   border-top:0;
-  display:grid;
-  grid-column-gap:20px;
-  grid-template-columns:auto auto;
   min-height:360px;
   padding:20px;
   position:relative;
 }
-#createwit .step-body .cell:nth-child(2) {
-  justify-self:end;
+#createwit .step-body {
+  display:grid;
+  grid-column-gap:20px;
+  grid-template-columns:1fr 1fr;
 }
 #createwit .form-options {
   display:block;
