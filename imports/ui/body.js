@@ -1,8 +1,10 @@
 import { Template } from 'meteor/templating';
+import { ReactiveVar } from 'meteor/reactive-var';
 import * as d3 from "d3";
 import topojson from "topojson";
 import BN from 'bn.js';
 import './body.html';
+import './createProtection.html';
 
 Router.route('/tutorial');
 Router.route('/', {
@@ -798,7 +800,7 @@ Template.tabs.events({
     $('html, body').animate({
       scrollTop: $('#arbol-wrapper').height()
     }, 500);
-    if(e.currentTarget.id === "open-tab"){
+      if(e.currentTarget.id === "open-tab"){
       $("#open-protections").show();
       $("#create-protection").hide();
       $("#your-protections").hide();
@@ -1053,121 +1055,333 @@ Template.openProtectionsTable.helpers({
 // FUNCTIONS RELATED TO "CREATE A PROTECTION"
 ////////////////////////////////////////////
 
+Template.formNewProtection.onCreated(function () {
+  // declare and set reactive variable that indicates the form step
+  this.createWITstep = new ReactiveVar();
+  this.createWITstep.set(1);
+  this.createWITdata = new ReactiveVar();
+  this.createWITdata.set({
+    'weatherIndex':'Rainfall',
+    'locationType':'Weather Stations',
+    'locationRegion':null,
+    'month-start':null,
+    'year-start':null,
+    'month-end':null,
+    'year-end':null,
+    'date-start':null,
+    'date-end':null,
+    'threshold-relation':null,
+    'threshold-percent':null,
+    'threshold-average':null,
+    'your-contrib':0,
+    'requested-contrib':0,
+    'total-contrib':0
+  });
+});
+Template.formNewProtection.onRendered(function(){
+  // show the first step
+  $("#createwit .step").eq(0).addClass('showing');
+  // disable the previous button since this is the first step
+  $("#createwit-prev button").attr('disabled','disabled');
+  // hide the submit button since this is the first step
+  $("#createwit-submit").hide();
+  // initialize datepickers
+  $('[data-toggle="datepicker"]').datepicker({
+    autoHide: true,
+    date: new Date(2017, 0, 1),
+    format: 'mm/yyyy',
+    startDate: new Date(2017, 0, 1),
+    endDate: new Date(2020, 11, 31)
+  });
+  // get initial values for reactive variables based on rendered form
+  self = Template.instance();
+  selfdata = self.createWITdata.get();
+  selfdata['locationRegion'] = $('#location option:selected').text();
+  selfdata['threshold-relation'] = $('#threshold-relation option:selected').text();
+  selfdata['threshold-percent'] = $('#threshold-percent option:selected').text();
+  selfdata['threshold-average'] = $('#threshold-average option:selected').text();
+  self.createWITdata.set(selfdata);
+});
+Template.formNewProtection.helpers({
+  step() {
+    return Template.instance().createWITstep.get();
+  },
+  data(key) {
+    return Template.instance().createWITdata.get()[key];
+  }
+});
 // Dealing with submittal of form
 Template.formNewProtection.events({
-  // 'input .date-picker'(event) {
-  //   //TODO uncomment capDate
-  //   // capDate(event.currentTarget);
-  //   //update the data that is represented
-  //   let s = +$('#start-date')[0].value.split("-")[1]
-  //     ,sy = +$('#start-date')[0].value.split("-")[0];
-  //   let e = +$('#end-date')[0].value.split("-")[1]
-  //     ,ey = +$('#end-date')[0].value.split("-")[0];
-  //   console.log("date-picker",s,sy,e,ey);
-  //
-  //   if(s <= e && sy <= ey){
-  //     MONTHCODE = e;
-  //     DURATIONCODE = e - s + 1;
-  //     callNOAA();
-  //   }
-  // },
-  // 'input #start-date'(event){
-  //   $("#start-date").removeClass("missing-info");
-  // },
-  // 'input #end-date'(event){
-  //   $("#end-date").removeClass("missing-info");
-  // },
-  'input .date-input'(event){
-    //TODO cap date, make sure only valid dates are entered, allow for at most 12 months
+  // click action for previous button
+  'click #createwit-prev button'(event){
+    event.preventDefault();
+    self = Template.instance();
+    // decrement the step number
+    self.createWITstep.set(self.createWITstep.get() - 1);
+    // show the correct step
+    $("#createwit .step.showing").removeClass('showing');
+    $("#createwit .step").eq((self.createWITstep.get() - 1)).addClass('showing');
+    // if this is the first step, disable the previous button
+    if (self.createWITstep.get() < 2) {
+      $("#createwit-prev button").attr('disabled','disabled');
+      $("#createwit-next").show();
+      $("#createwit-submit").hide();
+    }
+    // if this is the last step, hide the next button and show the confirm button
+    else if (self.createWITstep.get() >= $("#createwit .step").length) {
+      $("#createwit-prev button").show().removeAttr('disabled');
+      $("#createwit-next").hide();
+      $("#createwit-submit").show();
+    }
+    // otherwise, hide the confirm button, show the next button and enable the previous button
+    else {
+      $("#createwit-prev button").show().removeAttr('disabled');
+      $("#createwit-next").show();
+      $("#createwit-submit").hide();
+    }
+  },
+  'click #createwit-next button'(event){
+    event.preventDefault();
+    self = Template.instance();
+    // validate step
+    let validates = validateCreateWITStep((self.createWITstep.get() - 1));
+    if (validates) {
+      // increment the step button
+      self.createWITstep.set(self.createWITstep.get() + 1);
+      // show the correct step
+      $("#createwit .step.showing").removeClass('showing');
+      $("#createwit .step").eq((self.createWITstep.get() - 1)).addClass('showing');
+      // if this is the first step, disable the previous button and hide the submit button
+      if (self.createWITstep.get() < 2) {
+        $("#createwit-prev button").attr('disabled','disabled');
+        $("#createwit-next").show();
+        $("#createwit-submit").hide();
+      }
+      // if this is the last step, hide the next button and show the confirm button
+      else if (self.createWITstep.get() >= $("#createwit .step").length) {
+        $("#createwit-prev button").show().removeAttr('disabled');
+        $("#createwit-next").hide();
+        $("#createwit-submit").show();
+      }
+      // otherwise, hide the confirm button, show the next button and enable the previous button
+      else {
+        $("#createwit-prev button").show().removeAttr('disabled');
+        $("#createwit-next").show();
+        $("#createwit-submit").hide();
+      }
+    }
+  },
+  'click #createwit-cancel button'(event){
+    event.preventDefault();
+    // reset the step to 1
+    self = Template.instance();
+    self.createWITstep.set(1);
+    // show the correct step
+    $("#createwit .step.showing").removeClass('showing');
+    $("#createwit .step").eq(0).addClass('showing');
+    // since we are resetting to the first step, disable the previous button and hide the submit button
+    $("#createwit-prev button").attr('disabled','disabled');
+    $("#createwit-next").show();
+    $("#createwit-submit").hide();
+    // borrowed from button action for app menu buttons, scroll to top of page
+    $('html, body').animate({
+      scrollTop: $('#arbol-wrapper').height()
+    }, 500);
+    // reset the showing/hiding of tabs to default state
+    $("#open-protections").show();
+    $("#create-protection").hide();
+    $("#your-protections").hide();
+  },
+  'input [name="weatherIndex"]'(event){
+    self = Template.instance();
+    selfdata = self.createWITdata.get();
+    selfdata.weatherIndex = $('[name="weatherIndex"]:checked').val();
+    self.createWITdata.set(selfdata);
+  },
+  'input [name="locationType"]'(event){
+    self = Template.instance();
+    selfdata = self.createWITdata.get();
+    selfdata.locationType = $('[name="locationType"]:checked').val();
+    self.createWITdata.set(selfdata);
+  },
+  'input [data-toggle="datepicker"]'(event){
+    // if the input is the start date, use the selected date to limit the end date
+    if ($(event.currentTarget).attr('id') == "date-start") {
+      if (event.currentTarget.value) {
+        // get selected start date
+        let limitStart = $(event.currentTarget).datepicker('getDate');
+        // add 11 months
+        let limitEnd = $(event.currentTarget).datepicker('getDate');
+        limitEnd.setMonth(limitEnd.getMonth() + 11);
+        // use these dates to constrain the selection for the end date
+        let limitStart_year = limitStart.getFullYear();
+        let limitStart_month = limitStart.getMonth();
+        let limitEnd_year = limitEnd.getFullYear();
+        let limitEnd_month = limitEnd.getMonth();
+        // activate the date picker for the end date
+        $('#date-end').removeAttr('disabled');
+        $('#date-end').prev().removeAttr('disabled');
+        // destroy and recreate the date picker for the end date
+        $('#date-end').val('').datepicker('destroy').datepicker({
+          autoHide: true,
+          date: new Date(limitStart_year,limitStart_month,1),
+          format: 'mm/yyyy',
+          startDate: new Date(limitStart_year,limitStart_month,1),
+          endDate: new Date(limitEnd_year,limitEnd_month,1)
+        });
+      }
+      else {
+        $('#date-end').attr('disabled','disabled');
+        $('#date-end').prev().attr('disabled','disabled');
+      }
+    }
+    // if a date has been entered, remove any missing info class
+    if (event.currentTarget.value != '') {
+      $(event.currentTarget).removeClass('missing-info');
+    }
+    // store the date in the reactive variable
+    self = Template.instance();
+    selfdata = self.createWITdata.get();
+    targetid = $(event.currentTarget).attr('id');
+    selfdata[targetid] = $(event.currentTarget).datepicker('getMonthName', true) + " " + $(event.currentTarget).datepicker('getDate').getFullYear();
+    self.createWITdata.set(selfdata);
+    // check date values
     let d = capDate2(event.currentTarget);
-
-    //only make a NOAA call if date inputs are valid
-    if(d.s*d.sy*d.e*d.ey > 0){
-      if(d.ed-d.sd < 1 && d.sd <= d.ed){
+    if(d.s*d.sy*d.e*d.ey > 0){ // runnning duplicate check from the capDate2 function
+      if(d.ed-d.sd < 0.91 && d.sd <= d.ed){ // running duplicate check from the capDate2 function
         MONTHCODE = d.e;
         DURATIONCODE = Math.round((d.ed - d.sd)*12 + 1)%12;
         callNOAA();
       }
+      // need else statement here with error message about improper date selections
     }
   },
   'input #your-contrib'(event){
     capVal(event.currentTarget);
     $("#your-contrib").removeClass("missing-info");
+    $('#requested-contrib').val($('#total-contrib').val() - $('#your-contrib').val());
+    self = Template.instance();
+    selfdata = self.createWITdata.get();
+    targetid = $(event.currentTarget).attr('id');
+    selfdata[targetid] = event.currentTarget.value;
+    selfdata['total-contrib'] = $('#total-contrib').val();
+    self.createWITdata.set(selfdata);
   },
   'input #total-contrib'(event){
-    $("#total-contrib").removeClass("missing-info");
+    if (event.currentTarget.value != '0' && event.currentTarget.value != '') {
+      // remove missing info indication
+      $("#total-contrib").removeClass("missing-info");
+      // enable the other contribution fields
+      $("#your-contrib, #requested-contrib").removeAttr('disabled');
+      $("#your-contrib, #requested-contrib").prev().removeAttr('disabled');
+      // recommend your contribution
+      if ($('#your-contrib').val() === '' || $('#your-contrib').val() === 0) {
+        $('#your-contrib').val(event.currentTarget.value * $('#pct-span').attr('data-tenYrProb'));
+      }
+      // calculate the requested contribution
+      $('#requested-contrib').val(event.currentTarget.value - $('#your-contrib').val());
+      // calculate and show wit rating
+      // $('#createwit .witrating').text( CalcWITRating() ).attr('class','witrating witrating-'+CalcWITLevel()); 
+      $("#createwit .helpbox.rating").show();
+    }
+    else {
+      // disable other contribution fields
+      $("#your-contrib, #requested-contrib").attr('disabled','disabled');
+      $("#your-contrib, #requested-contrib").prev().attr('disabled','disabled');
+    }
+    // assign value to reactive variable
+    self = Template.instance();
+    selfdata = self.createWITdata.get();
+    targetid = $(event.currentTarget).attr('id');
+    selfdata[targetid] = event.currentTarget.value;
+    selfdata['your-contrib'] = $('#your-contrib').val();
+    self.createWITdata.set(selfdata);
   },
   'input #threshold'(event) {
-    // const target = event.currentTarget;
-    // const thresholdRelation = target[3].value;
-    // const thresholdPercent = target[4].value;
-    // const thresholdAverage = target[5].value;
-    // if(thresholdRelation !== "" || thresholdPercent !== "" || thresholdAverage !== ""){
-    //   $("#threshold").removeClass("missing-info");
-    // }
     changeThreshold();
     calcTenYrP();
+    self = Template.instance();
+    selfdata = self.createWITdata.get();
+    fields = $(event.currentTarget).find('select');
+    for (x=0;x<fields.length;x++) {
+      fieldid = fields.eq(x).attr('id');
+      selfdata[fieldid] = fields.eq(x).find('option:selected').text();
+    }
+    self.createWITdata.set(selfdata);
   },
   'input #location'(event) {
     changeRegion(event.currentTarget.value);
     $("#location").removeClass("missing-info");
+    self = Template.instance();
+    selfdata = self.createWITdata.get();
+    selfdata.locationRegion = $(event.currentTarget).find('option:selected').text();
+    self.createWITdata.set(selfdata);
+  },
+  'click .ag-areas'(event) {
+    self = Template.instance();
+    selfdata = self.createWITdata.get();
+    targetclasses = $(event.currentTarget).attr('class').split(/\s+/);
+    for (x=0;x<targetclasses.length;x++) {
+      if ($('option[value="'+targetclasses[x]+'"]').length > 0) {
+        selfdata.locationRegion = $('option[value="'+targetclasses[x]+'"]').text();
+        self.createWITdata.set(selfdata);
+      }
+    }
   },
   'submit .new-protection'(event) {
-    if(user[0] === -1){
+    if (user[0] === -1){
       alert("Please login to MetaMask to create a proposal.");
-      //prevent form from submitting
       return false;
-    }else{
-      // Prevent default browser form submit
+    }
+    else {
       event.preventDefault();
-
-      // Get value from form element
       const target = event.currentTarget;
-      const yourContr = parseFloat(target[0].value);
-      const totalPayout = parseFloat(target[1].value);
-      const location = target[2].value;
-      const thresholdRelation = target[3].value;
-      const thresholdPercent = target[4].value;
-      const thresholdAverage = target[5].value;
-      let sm = target[6].value;
-      const sy = target[7].value;
-      let em = target[8].value;
-      const ey = target[9].value;
-      if(sm.length === 1) sm = "0" + sm;
-      if(em.length === 1) em = "0" + em;
+      const yourContr = parseFloat($('#your-contrib').val());
+      const totalPayout = parseFloat($('#total-contrib').val());
+      const location = $('#location').val();
+      const thresholdRelation = $('#threshold-relation').val();
+      const thresholdPercent = $('#threshold-percent').val();
+      const thresholdAverage = $('#threshold-average').val();
+      let sm = $('#date-start').datepicker('getDate').getMonth() + 1; // start month
+      const sy = $('#date-start').datepicker('getDate').getFullYear(); // start year
+      let em = $('#date-end').datepicker('getDate').getMonth() + 1; // end month
+      const ey = $('#date-end').datepicker('getDate').getFullYear(); // end year
+      if(sm.length < 10) sm = "0" + sm;
+      if(em.length < 10) em = "0" + em;
       const startDate = `${sy}-${sm}`;
       const endDate = `${ey}-${em}`;
       const index = "Precipitation";
 
       //check if info is missing
-      if(startDate === "" || endDate === "" || parseFloat(yourContr) === 0 || parseFloat(totalPayout) === 0 || location === "" || index === "" || thresholdRelation === "" || thresholdPercent === "" || thresholdAverage === ""){
-        var s = "Please complete missing elements: \n";
-        if(parseFloat(yourContr) === 0){
-          s += "  Your Contribution \n";
-          $("#your-contrib").addClass("missing-info");
-        }
-        if(parseFloat(totalPayout) === 0){
-          s += "  Total Payout \n";
-          $("#total-contrib").addClass("missing-info");
-        }
-        if(location === ""){
-          s += "  Location \n";
-          $("#location").addClass("missing-info");
-        }
-        if(thresholdRelation === "" || thresholdPercent === "" || thresholdAverage === ""){
-          s += "  Threshold \n";
-          $("#threshold").addClass("missing-info");
-        }
-        if(startDate === ""){
-          s += "  Start Date \n";
-          $("#start-input").addClass("missing-info");
-        }
-        if(endDate === ""){
-          s += "  End Date \n";
-          $("#end-input").addClass("missing-info");
-        }
-        alert(s);
-      }else{
+      // if(startDate === "" || endDate === "" || parseFloat(yourContr) === 0 || parseFloat(totalPayout) === 0 || location === "" || index === "" || thresholdRelation === "" || thresholdPercent === "" || thresholdAverage === ""){
+      //   var s = "Please complete missing elements: \n";
+      //   if(parseFloat(yourContr) === 0){
+      //     s += "  Your Contribution \n";
+      //     $("#your-contrib").addClass("missing-info");
+      //   }
+      //   if(parseFloat(totalPayout) === 0){
+      //     s += "  Total Payout \n";
+      //     $("#total-contrib").addClass("missing-info");
+      //   }
+      //   if(location === ""){
+      //     s += "  Location \n";
+      //     $("#location").addClass("missing-info");
+      //   }
+      //   if(thresholdRelation === "" || thresholdPercent === "" || thresholdAverage === ""){
+      //     s += "  Threshold \n";
+      //     $("#threshold").addClass("missing-info");
+      //   }
+      //   if(startDate === ""){
+      //     s += "  Start Date \n";
+      //     $("#start-input").addClass("missing-info");
+      //   }
+      //   if(endDate === ""){
+      //     s += "  End Date \n";
+      //     $("#end-input").addClass("missing-info");
+      //   }
+      //   alert(s);
+      // }
+      // else {
         //ask for confirmation
         const confirmed = confirm ( "Please confirm your selection: \n\n"
           + "  Your Contribution (Eth): " + yourContr + "\n"
@@ -1178,7 +1392,7 @@ Template.formNewProtection.events({
           + "  End Date: " + endDate + "\n"
         );
 
-        if(confirmed){
+        if (confirmed) {
           //call back that clears the form
           var clearForm = function(){
             //clear form if succesful
@@ -1207,10 +1421,11 @@ Template.formNewProtection.events({
 
           //submit info
           createProposal(startDate,endDate,yourContr,totalPayout,location,index,thresholdRelation,thresholdPercent,thresholdAverage,clearForm);
-        }else{
+        }
+        else {
           //let user continue to edit
         }
-      }
+      // }
     }
   }
 });
@@ -1257,72 +1472,27 @@ function padToBytes32(n) {
     return "0x" + n;
 }
 
-function capDate(target){
-  //change properties of the other date picker so that incorrect values can't be chosen
-  var date = target.value;
-  var id = target.id;
-  var now = new Date().toISOString().substring(0,7);
-  $('#start-date')[0].min = now;
-  //if start is changed first, then put min on end Date
-  if(id === 'start-date'){
-    if(date !== "") $('#end-date')[0].min = date;
-  }
-  if(id === 'end-date'){
-    if(date !== "") $('#start-date')[0].max = date;
-  }
-}
-
 function capDate2(target){
-  let s = +$('#month-start')[0].value
-    ,sy = +$('#year-start')[0].value
+  let s = +$('#date-start').datepicker('getDate').getMonth() + 1
+    ,sy = +$('#date-start').datepicker('getDate').getFullYear()
     ,sd = sy + s/12;
-  let e = +$('#month-end')[0].value
-    ,ey = +$('#year-end')[0].value
+  let e = +$('#date-end').datepicker('getDate').getMonth() + 1
+    ,ey = +$('#date-end').datepicker('getDate').getFullYear()
     ,ed = ey + e/12;
 
-  if(s*sy*e*ey > 0){
-    //if duration is longer than a year
-    if(ed-sd >= 1 || sd > ed){
-      if(target.id === "month-start" || target.id === "year-start"){
-        $('#start-input').addClass("missing-info");
-        $('#end-input').removeClass("missing-info");
-      }
-      if(target.id === "month-end" || target.id === "year-end"){
-        $('#start-input').removeClass("missing-info");
-        $('#end-input').addClass("missing-info");
-      }
+  console.log('s = '+s);
+  console.log('sy = '+sy);
+  console.log('sd = '+sd);
+  console.log('e = '+e);
+  console.log('ey = '+ey);
+  console.log('ed = '+ed);
+  console.log('s*sy*e*ey = ' + s*sy*e*ey);
+  console.log('ed-sd = ' + (ed - sd));
+
+  if (s*sy*e*ey > 0) { // checks that all 4 date fields have a value
+    if(ed-sd >= 0.9 || sd > ed) { // check if duration is more than 11 months OR if the start date is greater than the end date
+      $('#'+target.id).addClass("missing-info");
     }
-    if(ed-sd < 1 && sd < ed){
-      $('#start-input').removeClass("missing-info");
-      $('#end-input').removeClass("missing-info");
-    }
-    // //if start date is after end date
-    // if(sd >= ed){
-    //   if(target.id === "month-start" || target.id === "year-start"){
-    //     ey = sy;
-    //     ed = ey + e/12;
-    //     //only change month if necessary
-    //     if(sd >= ed){
-    //       e = s;
-    //       ed = sd;
-    //     }
-    //     $('#month-end')[0].value = e;
-    //     $('#year-end')[0].value = ey;
-    //     //TODO animate to indicate change to user
-    //   }
-    //   if(target.id === "month-end" || target.id === "year-end"){
-    //     sy = ey;
-    //     sd = sy + s/12;
-    //     //only change month if necessary
-    //     if(sd >= ed){
-    //       s = e;
-    //       sd = ed;
-    //     }
-    //     $('#month-start')[0].value = s;
-    //     $('#year-start')[0].value = sy;
-    //     //TODO animate to indicate change to user
-    //   }
-    // }
   }
   return {s:s,sy:sy,sd:sd,e:e,ey:ey,ed:ed};
 }
@@ -1420,7 +1590,7 @@ async function drawUSA(){
       .on("mouseout",handleMOut)
       .on("click", handleClick);
 
-    changeRegion("us-corn-belt");
+      changeRegion("us-corn-belt");
 
     function handleMOver(){
       let v = +d3.select(this).attr("value");
@@ -1480,6 +1650,20 @@ async function drawUSA(){
   }catch(error){
     console.log("Error retrieving USA topoJSON data: ",error);
   }
+}
+function validateCreateWITStep(step) {
+  let validates = false;
+  if ($("#createwit .step").eq(step).length > 0) {
+    console.log("valid step number to validate");
+    validates = true;
+    $("#createwit .step").eq(step).find('input,select').each(function(){
+      if ($(this).val() === null || $(this).val() === '') {
+        validates = false;
+        $(this).addClass('missing-info');
+      }
+    });
+  }
+  return validates;
 }
 
 function changeRegion(region){
@@ -1840,7 +2024,7 @@ function calcTenYrP(o = noaaData){
   }
   //sum * 10 is probability
   if(!rov) sum = 10 - sum;
-  $("#ten-yr-prob").html(`<span id="pct-span"> ~${sum*10}% </span> chance of payout`);
+  $("#ten-yr-prob").html(`<span id="pct-span" data-tenYrProb="${sum/10}"> ~${sum*10}% </span> chance of payout`);
 
   if(sum <= 3 || sum >= 7){
     if(sum <= 3) $('#pct-span').addClass('low-text');

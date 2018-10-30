@@ -1,5 +1,3 @@
-
-
 body {
   -webkit-touch-callout: none; /* iOS Safari */
     -webkit-user-select: none; /* Safari */
@@ -12,6 +10,7 @@ body {
   --header-height: 60px;
   --footer-height: 150px;
   --web3-onload-padding: 25px;
+  font-family:arial,sans-serif;
   margin: 0px;
   overflow-x: hidden;
 }
@@ -420,7 +419,7 @@ hr {
 }
 
 #create-proposal {
-  margin-left: 125px;
+  /* margin-left: 125px; */
   margin-top: 20px;
 
   font: bold 15px arial;
@@ -448,12 +447,12 @@ hr {
 }
 
 .grid-el {
-  height: 300px;
+  /*height: 300px;
   width: 515px;
   border: 4px solid #f2f0e3;
   border-radius: 6px;
   background: #ffffff;
-  align-self: start;
+  align-self: start;*/
 }
 
 #NOAA-msg {
@@ -629,3 +628,185 @@ button.action:hover {
   #start-input, #end-input {
     display: inline-block;
   }
+
+
+#createwit {
+  --app-color-text-active:#0069ff;
+  --app-color-text-disabled:#999999;
+  --app-color-background:#f9f9ef;
+  --app-color-border:#999999;
+  --app-color-border-active:#0069ff;
+  --app-color-shaded:#e6e6e6;
+  --app-color-shaded-active:#c4dcff;
+  position:relative;
+}
+#createwit * {
+  margin-bottom:0;
+  margin-top:0;
+}
+#createwit [disabled] {
+  color:var(--app-color-text-disabled);
+}
+#createwit select,
+#createwit input[type="text"],
+#createwit input[type="number"] {
+  border:1px var(--app-color-border) solid;
+  display:block;
+  font-size:16px;
+  max-width:20em;
+  min-width:10em;
+}
+#createwit * + select:not(.inline-block),
+#createwit * + input[type="text"]:not(.inline-block),
+#createwit * + input[type="number"]:not(.inline-block) {
+  margin-top:5px;
+}
+#createwit select.missing-info,
+#createwit input[type="text"].missing-info,
+#createwit input[type="number"].missing-info {
+  border-color:red;
+  border-radius:0;
+  border-width:2px;
+}
+#createwit * + .field {
+  margin-top:20px;
+}
+#createwit label {
+  display:block;
+  font-weight:bold;
+}
+#createwit label + * {
+  margin-top:10px;
+}
+#createwit .inline-block {
+  display:inline-block;
+}
+#createwit button {
+  background-color:var(--app-color-shaded);
+  border:1px var(--app-color-border) solid;
+  border-radius:3px;
+  cursor:pointer;
+  font-size:12px;
+  line-height:10px;
+  outline:none;
+  padding:5px;
+  text-align:center;
+}
+#createwit button:not([disabled]):hover {
+  background-color:var(--app-color-shaded-active);
+  border:2px var(--app-color-border-active) solid;
+  color:var(--app-color-text-active);
+  padding:4px;
+}
+#createwit h3 {
+  font-size:22px;
+  margin-bottom:20px;
+}
+#createwit .step {
+  display:none;
+}
+#createwit .step.showing {
+  display:block;
+}
+#createwit .status {
+  background-color:var(--app-color-shaded);
+  border:1px var(--app-color-border) solid;
+  box-sizing:border-box;
+  display:grid;
+  font-size:14px;
+  grid-column-gap:20px;
+  grid-template-columns:auto 60px;
+  min-height:60px;
+  padding:10px 20px;
+}
+#createwit .status .cell {
+  align-self:center;
+}
+#createwit .status .cell:nth-child(2) {
+  justify-self:end;
+}
+#createwit .step-1col,
+#createwit .step-body {
+  box-sizing:border-box;
+  background-color:white;
+  border:1px var(--app-color-border) solid;
+  border-top:0;
+  min-height:360px;
+  padding:20px;
+  position:relative;
+}
+#createwit .step-body {
+  display:grid;
+  grid-column-gap:20px;
+  grid-template-columns:1fr 1fr;
+}
+#createwit .form-options {
+  display:block;
+  list-style:none;
+  margin:0;
+  padding:0;
+}
+#createwit .helpbox,
+#createwit .summarybox {
+  box-sizing:border-box;
+  background-color:white;
+  border:1px var(--app-color-border) solid;
+  padding:20px;
+}
+#createwit .helpbox {
+  color:#666;
+  margin-top:20px;
+  max-width:300px;
+}
+#createwit .summarybox * + *,
+#createwit .helpbox * + * {
+  margin-top:10px;
+}
+#createwit-nav {
+  box-sizing:border-box;
+  display:grid;
+  grid-column-gap:20px;
+  grid-template-columns:auto auto;
+  min-height:40px;
+  padding:10px;
+  position:relative;
+}
+#createwit-nav .cell {
+  align-self:center;
+  justify-self:center;
+}
+#createwit-nav button {
+  width:90px;
+}
+#createwit-cancel {
+  position:absolute;
+  right:20px;
+  top:20px;
+  z-index:3;
+}
+#map-div {
+  height:300px;
+  width:500px;
+}
+#map-inner-div {
+  padding-left:0;
+}
+.chart-loader-div {
+  height:0;
+}
+.helpbox.rating {
+  display:none;
+}
+.witrating {
+  border-width:2px;
+  border-style:solid;
+  font-size:24px;
+  font-weight:bold;
+  padding:10px;
+  text-align:center;
+}
+.witrating.witrating-good {
+  background-color:#c4eec6;
+  border-color:#008800;
+  color:#007700;
+}
