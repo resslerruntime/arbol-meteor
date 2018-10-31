@@ -810,3 +810,9 @@ button.action:hover {
   border-color:#008800;
   color:#007700;
 }
+#your-contrib-hint {
+  color:var(--app-color-text-disabled);
+  display:block;
+  font-size:12px;
+  padding-top:5px;
+}
