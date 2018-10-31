@@ -272,7 +272,6 @@ function initMainPage(){
       }else{
         $("#user").show();
         // Modern dapp browsers...
-        console.log(window)
         if(window.ethereum) {
           console.log("Window.ethereum === true")
           window.web3 = new Web3(ethereum);
@@ -288,6 +287,7 @@ function initMainPage(){
               setInterval(manageAccounts, 1000);
           } catch (error) {
             console.log('Web3 injection was declined by user')
+            // TODO ??? 
           }
         }
         // Legacy dapp browsers...
@@ -1740,7 +1740,7 @@ function callNASA(){
         });
       }, 2000);
     }else{
-      console.log("NASA server not responding")
+      console.log("NASA server not responding: ",error.message)
     }
   });
 }
@@ -1752,6 +1752,13 @@ function stringifyCoords(aa){
   s = s.substring(0, s.length - 1);
   s += "]";
   return s;
+}
+
+function yearlyNASAVals (a,start,end){
+  //we get all monthly values for the entire period of duration
+  //we only want a single yearly value for duration
+
+  return {start:0,data:[],avg:0,title:""};
 }
 
 var svg, width, height, margin = {top: 40, right: 50, bottom: 45, left: 50};
