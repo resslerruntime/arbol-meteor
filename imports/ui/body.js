@@ -1180,14 +1180,31 @@ Template.formNewProtection.events({
     $("#createwit-prev button").attr('disabled','disabled');
     $("#createwit-next").show();
     $("#createwit-submit").hide();
-    // borrowed from button action for app menu buttons, scroll to top of page
-    $('html, body').animate({
-      scrollTop: $('#arbol-wrapper').height()
-    }, 500);
-    // reset the showing/hiding of tabs to default state
-    $("#open-protections").show();
-    $("#create-protection").hide();
-    $("#your-protections").hide();
+    // set all inputs to blank
+    $('#createwit input, #createwit select').val('');
+    // reset the reactive variable data
+    self.createWITdata.set({
+      'weatherIndex':'Rainfall',
+      'locationType':'Weather Stations',
+      'locationRegion':$('#location option:selected').text(),
+      'month-start':null,
+      'year-start':null,
+      'month-end':null,
+      'year-end':null,
+      'date-start':null,
+      'date-end':null,
+      'threshold-relation':$('#threshold-relation option:selected').text(),
+      'threshold-percent':$('#threshold-percent option:selected').text(),
+      'threshold-average':$('#threshold-average option:selected').text(),
+      'your-contrib':0,
+      'requested-contrib':0,
+      'total-contrib':0
+    });
+    // make initial selection for the map
+    changeRegion($('#location option').eq(1).attr('value'));
+    $('#location').trigger('input');
+    // reset the date pickers
+    // reset fields that should be disabled to disabled
   },
   'input [name="weatherIndex"]'(event){
     self = Template.instance();
@@ -1256,7 +1273,7 @@ Template.formNewProtection.events({
   'input #your-contrib'(event){
     capVal(event.currentTarget);
     $("#your-contrib").removeClass("missing-info");
-    $('#requested-contrib').val($('#total-contrib').val() - $('#your-contrib').val());
+    $('#requested-contrib').val(Math.round(($('#total-contrib').val() - $('#your-contrib').val())*1000)/1000);
     self = Template.instance();
     selfdata = self.createWITdata.get();
     targetid = $(event.currentTarget).attr('id');
@@ -1272,17 +1289,19 @@ Template.formNewProtection.events({
       $("#your-contrib, #requested-contrib").removeAttr('disabled');
       $("#your-contrib, #requested-contrib").prev().removeAttr('disabled');
       // recommend your contribution
-      if ($('#your-contrib').val() === '' || $('#your-contrib').val() === 0) {
-        $('#your-contrib').val(event.currentTarget.value * $('#pct-span').attr('data-tenYrProb'));
+      $('#your-contrib-hint-value').text(Math.round((event.currentTarget.value * $('#pct-span').attr('data-tenYrProb'))*1000)/1000).parent().show();
+      if ($('#your-contrib').val() === '' || $('#your-contrib').val() === 0 || $('#your-contrib').val() >= event.currentTarget.value) {
+        $('#your-contrib').val(Math.round((event.currentTarget.value * $('#pct-span').attr('data-tenYrProb'))*1000)/1000);
       }
       // calculate the requested contribution
-      $('#requested-contrib').val(event.currentTarget.value - $('#your-contrib').val());
+      $('#requested-contrib').val(Math.round((event.currentTarget.value - $('#your-contrib').val())*1000)/1000);
       // calculate and show wit rating
       // $('#createwit .witrating').text( CalcWITRating() ).attr('class','witrating witrating-'+CalcWITLevel()); 
       $("#createwit .helpbox.rating").show();
     }
     else {
       // disable other contribution fields
+      $("#your-contrib-hint").hide();
       $("#your-contrib, #requested-contrib").attr('disabled','disabled');
       $("#your-contrib, #requested-contrib").prev().attr('disabled','disabled');
     }
@@ -1588,6 +1607,7 @@ async function drawUSA(){
       .on("click", handleClick);
 
       changeRegion("us-corn-belt");
+      $('#location').trigger('input');
 
     function handleMOver(){
       let v = +d3.select(this).attr("value");
@@ -1691,9 +1711,13 @@ function callNOAA(){
     Meteor.call("glanceNOAA",NOAACODE,MONTHCODE,DURATIONCODE,function(error, results) {
       console.log(results)
       if(results === undefined){
+        // this is the error case
         console.log("NOAA call failed, try again, returned undefined")
         $("#chart-loader").fadeOut(500);
         $("#NOAA-msg").fadeIn(1000);
+        // write out a dummy 10 year probability
+        let dummysum = 5;
+        $("#ten-yr-prob").html(`<span id="pct-span" data-tenYrProb="${dummysum/10}">Historical data is not currently available. We will use a sample probability of ~${dummysum*10}% </span> chance of payout`);
       }else{
         let obj = parseData(results);
         console.log("NOAA results",results,obj)
