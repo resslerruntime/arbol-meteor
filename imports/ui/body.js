@@ -110,7 +110,9 @@ function Entry(r,owner){
   let id = a.WITID.toNumber();
 
   //update for if the contract is for offered for sale or for funding
-  let totalPayout = `${clipNum(toEth(propose) + toEth(ask))} Eth`;
+  let totalPayout = toEth(propose) + toEth(ask);
+  let totalPayoutText = `${clipNum(toEth(propose) + toEth(ask))} Eth`;
+  // button
   let b = `${toEth(ask)}`;
   let b1 = `<button type='button' class='action buyit tableBtn' value='${toEth(ask)},${a.WITID.toNumber()}'>Pay <span class="green-text">${clipNum(toEth(ask))} Eth</span> to accept</button>`;
   //if no user is logged in
@@ -137,7 +139,7 @@ function Entry(r,owner){
       ,{type:"text",key:"NOAA Rainfall",name:"NOAA Rainfall"}
       ,{type:"num",key:a.start.toNumber()*1000,name:dateText(a.start.toNumber()*1000)}
       ,{type:"num",key:a.end.toNumber()*1000,name:dateText(a.end.toNumber()*1000)}
-      ,{type:"num",key:totalPayout,name:totalPayout}
+      ,{type:"num",key:totalPayout,name:totalPayoutText}
       ,{type:"num",key:b,name:b1}
     ];
 }
@@ -157,13 +159,15 @@ function MyEntry(r,a,id,bool){
   let location = locationText(bytes32ToNumString(a.location));
 
   //total payouts
-  let totalPayout = `${clipNum(toEth(propose) + toEth(ask))} Eth`;
+  let totalPayout = toEth(propose) + toEth(ask);
+  let totalPayoutText = `${clipNum(toEth(propose) + toEth(ask))} Eth`;
 
   //your contribution
   let v;
   if(acceptance) v = toEth(ask);
   else v = toEth(propose);
-  let yourContr = `${clipNum(v)} Eth`;
+  let yourContr = v;
+  let yourContrText = `${clipNum(v)} Eth`;
 
   //status
   let now = new Date().getTime();
@@ -194,7 +198,7 @@ function MyEntry(r,a,id,bool){
     if(now < start) status = "Waiting for partner";
     if(now >= start) status = "Stale";
     b = "";
-    b1 = `<button type='button' class='action cancelit tableBtn'> Cancel and redeem <span class="green-text">${yourContr}</span></button>`;
+    b1 = `<button type='button' class='action cancelit tableBtn'> Cancel and redeem <span class="green-text">${yourContrText}</span></button>`;
   }
 
   //get threshold text
@@ -212,8 +216,8 @@ function MyEntry(r,a,id,bool){
       ,{type:"text",key:"NOAA Rainfall",name:"NOAA Rainfall"}
       ,{type:"num",key:a.start.toNumber()*1000,name:dateText(a.start.toNumber()*1000)}
       ,{type:"num",key:a.end.toNumber()*1000,name:dateText(a.end.toNumber()*1000)}
-      ,{type:"num",key:yourContr,name:yourContr}
-      ,{type:"num",key:totalPayout,name:totalPayout}
+      ,{type:"num",key:yourContr,name:yourContrText}
+      ,{type:"num",key:totalPayout,name:totalPayoutText}
       ,{type:"text",key:status,name:status}
       ,{type:"text",key:b,name:b1}
     ];
@@ -909,13 +913,14 @@ Template.headerRow.events({
       let d = Session.get("descending");
       array = Session.get("openProtectionsData");
       //sort array based on the click header
-      if(t.innerText === "LOCATION") colIndex = 0;
-      if(t.innerText === "THRESHOLD") colIndex = 1;
-      if(t.innerText === "INDEX") colIndex = 2;
-      if(t.innerText === "START") colIndex = 3;
-      if(t.innerText === "END") colIndex = 4;
-      if(t.innerText === "TOTAL PAYOUT") colIndex = 5;
-      if(t.innerText === "PRICE") colIndex = 6;
+      if(t.innerText.indexOf("LOCATION") != -1) colIndex = 0;
+      if(t.innerText.indexOf("THRESHOLD") != -1) colIndex = 1;
+      if(t.innerText.indexOf("INDEX") != -1) colIndex = 2;
+      if(t.innerText.indexOf("START") != -1) colIndex = 3;
+      if(t.innerText.indexOf("END") != -1) colIndex = 4;
+      if(t.innerText.indexOf("TOTAL PAYOUT") != -1) colIndex = 5;
+      if(t.innerText.indexOf("PRICE") != -1) colIndex = 6;
+      console.log(`-${t.innerText}-`,colIndex)
       Session.set("sortIndex",colIndex);
       //set variable to new sorted array
       let list = sortArray(array,colIndex,d);
@@ -929,15 +934,15 @@ Template.headerRow.events({
       let d = Session.get("myDescending");
       array = Session.get("myProtectionsData");
       //sort array based on the click header
-      if(t.innerText === "LOCATION") colIndex = 0;
-      if(t.innerText === "THRESHOLD") colIndex = 1;
-      if(t.innerText === "INDEX") colIndex = 2;
-      if(t.innerText === "START") colIndex = 3;
-      if(t.innerText === "END") colIndex = 4;
-      if(t.innerText === "YOUR CONTRIBUTION") colIndex = 5;
-      if(t.innerText === "TOTAL PAYOUT") colIndex = 6;
-      if(t.innerText === "STATUS") colIndex = 7;
-      if(t.innerText === "ACTION") colIndex = 8;
+      if(t.innerText.indexOf("LOCATION") != -1) colIndex = 0;
+      if(t.innerText.indexOf("THRESHOLD") != -1) colIndex = 1;
+      if(t.innerText.indexOf("INDEX") != -1) colIndex = 2;
+      if(t.innerText.indexOf("START") != -1) colIndex = 3;
+      if(t.innerText.indexOf("END") != -1) colIndex = 4;
+      if(t.innerText.indexOf("YOUR CONTRIBUTION") != -1) colIndex = 5;
+      if(t.innerText.indexOf("TOTAL PAYOUT") != -1) colIndex = 6;
+      if(t.innerText.indexOf("STATUS") != -1) colIndex = 7;
+      if(t.innerText.indexOf("ACTION") != -1) colIndex = 8;
       Session.set("mySortIndex",colIndex);
       //set variable to new sorted array
       let list = sortArray(array,colIndex,d);
@@ -953,6 +958,7 @@ Template.headerRow.events({
 function sortArray(array,i,d){
   let sortedArray = _.sortBy(array,function(obj){
     let cell = obj.column[i], key;
+    console.log(cell)
     if(cell.type === "num") return key = parseFloat(cell.key);
     if(cell.type === "text") return key = cell.key;
   });
