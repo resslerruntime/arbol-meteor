@@ -1205,6 +1205,14 @@ Template.formNewProtection.events({
     $('#location').trigger('input');
     // reset the date pickers
     // reset fields that should be disabled to disabled
+    
+    // // clear svg chart
+    // clearChart();
+
+    // // reset NOAA call variables
+    // NOAACODE = -1;
+    // MONTHCODE = -1;
+    // DURATIONCODE = -1;
   },
   'input [name="weatherIndex"]'(event){
     self = Template.instance();
@@ -1409,36 +1417,9 @@ Template.formNewProtection.events({
         );
 
         if (confirmed) {
-          //call back that clears the form
-          var clearForm = function(){
-            //clear form if succesful
-            target[0].value = 0;
-            target[1].value = 0;
-            target[2].value = "";
-            target[3].value = "";
-            target[4].value = "";
-            target[5].value = "";
-            target[6].value = "";
-            target[7].value = "";
-            $('#end-date')[0].min = "";
-            $('#start-date')[0].max = "";
-            $('#total-contrib')[0].min = 0;
-            //unselect region, reset text value
-            clearChart();
-            $("#ten-yr-prob").html("");
-            $('#location').val("none");
-            d3.selectAll(`path.${selectedRegion}`)
-              .attr("fill","none");
-            selectedRegion = "none";
-            NOAACODE = -1;
-            MONTHCODE = -1;
-            DURATIONCODE = -1;
-          }
-
           //submit info
-          createProposal(startDate,endDate,yourContr,totalPayout,location,index,thresholdRelation,thresholdPercent,thresholdAverage,clearForm);
-        }
-        else {
+          createProposal(startDate,endDate,yourContr,totalPayout,location,index,thresholdRelation,thresholdPercent,thresholdAverage);
+        } else {
           //let user continue to edit
         }
       // }
@@ -1446,7 +1427,33 @@ Template.formNewProtection.events({
   }
 });
 
-async function createProposal(startDate,endDate,yourContr,totalPayout,location,index,thresholdRelation,thresholdPercent,thresholdAverage,clearForm){
+//call back that clears the form
+function clearForm(){
+  // //clear form if succesful
+  // target[0].value = 0;
+  // target[1].value = 0;
+  // target[2].value = "";
+  // target[3].value = "";
+  // target[4].value = "";
+  // target[5].value = "";
+  // target[6].value = "";
+  // target[7].value = "";
+  // $('#end-date')[0].min = "";
+  // $('#start-date')[0].max = "";
+  // $('#total-contrib')[0].min = 0;
+  // //unselect region, reset text value
+  // clearChart();
+  // $("#ten-yr-prob").html("");
+  // $('#location').val("none");
+  // d3.selectAll(`path.${selectedRegion}`)
+  //   .attr("fill","none");
+  // selectedRegion = "none";
+  // NOAACODE = -1;
+  // MONTHCODE = -1;
+  // DURATIONCODE = -1;
+}
+
+async function createProposal(startDate,endDate,yourContr,totalPayout,location,index,thresholdRelation,thresholdPercent,thresholdAverage){
   console.log("createProposal")
   const d1 = (new Date(startDate)).getTime()/1000; //convert to UNIX timestamp
   let dd2 = new Date(endDate);
@@ -1463,7 +1470,7 @@ async function createProposal(startDate,endDate,yourContr,totalPayout,location,i
 
   try {
     await promisify(cb => witInstance.createWITProposal(ethPropose, ethAsk, above, noaaAddress, numPPTH, location32, d1, d2, makeStale, {value: ethPropose, from:user[0]}, cb));
-    clearForm();
+    //clearForm();
   } catch (error) {
     console.log(error)
   }
