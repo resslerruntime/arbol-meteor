@@ -920,7 +920,6 @@ Template.headerRow.events({
       if(t.innerText.indexOf("END") != -1) colIndex = 4;
       if(t.innerText.indexOf("TOTAL PAYOUT") != -1) colIndex = 5;
       if(t.innerText.indexOf("PRICE") != -1) colIndex = 6;
-      console.log(`-${t.innerText}-`,colIndex)
       Session.set("sortIndex",colIndex);
       //set variable to new sorted array
       let list = sortArray(array,colIndex,d);
@@ -958,7 +957,6 @@ Template.headerRow.events({
 function sortArray(array,i,d){
   let sortedArray = _.sortBy(array,function(obj){
     let cell = obj.column[i], key;
-    console.log(cell)
     if(cell.type === "num") return key = parseFloat(cell.key);
     if(cell.type === "text") return key = cell.key;
   });
