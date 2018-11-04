@@ -1285,7 +1285,7 @@ Template.formNewProtection.events({
   'input #your-contrib'(event){
     capVal(event.currentTarget);
     $("#your-contrib").removeClass("missing-info");
-    $('#requested-contrib').val(Math.round(($('#total-contrib').val() - $('#your-contrib').val())*1000)/1000);
+    $('#requested-contrib').val(Math.round(($('#total-contrib').val() - $('#your-contrib').val())*10000)/10000);
     self = Template.instance();
     selfdata = self.createWITdata.get();
     targetid = $(event.currentTarget).attr('id');
@@ -1301,12 +1301,14 @@ Template.formNewProtection.events({
       $("#your-contrib, #requested-contrib").removeAttr('disabled');
       $("#your-contrib, #requested-contrib").prev().removeAttr('disabled');
       // recommend your contribution
-      $('#your-contrib-hint-value').text(Math.round((event.currentTarget.value * $('#pct-span').attr('data-tenYrProb'))*1000)/1000).parent().show();
+      var recommendedValue = Math.round((event.currentTarget.value * $('#pct-span').attr('data-tenYrProb'))*10000)/10000;
+      $('#your-contrib-hint-value').text(recommendedValue).parent().show();
+      // if the your contribution field is blank, zero, or invalid (greater than the total), set to recommended value 
       if ($('#your-contrib').val() === '' || $('#your-contrib').val() === 0 || $('#your-contrib').val() >= event.currentTarget.value) {
-        $('#your-contrib').val(Math.round((event.currentTarget.value * $('#pct-span').attr('data-tenYrProb'))*1000)/1000);
+        $('#your-contrib').val(recommendedValue);
       }
       // calculate the requested contribution
-      $('#requested-contrib').val(Math.round((event.currentTarget.value - $('#your-contrib').val())*1000)/1000);
+      $('#requested-contrib').val(Math.round((event.currentTarget.value - $('#your-contrib').val())*10000)/10000);
       // calculate and show wit rating
       // $('#createwit .witrating').text( CalcWITRating() ).attr('class','witrating witrating-'+CalcWITLevel()); 
       $("#createwit .helpbox.rating").show();
@@ -1324,6 +1326,12 @@ Template.formNewProtection.events({
     selfdata[targetid] = event.currentTarget.value;
     selfdata['your-contrib'] = $('#your-contrib').val();
     self.createWITdata.set(selfdata);
+  },
+  'click #your-contrib-hint-value'(event) {
+    // clicking on the recommended value should reset the your contrib field to this value
+    $('#your-contrib').val($(event.currentTarget).text());
+    // also have to reset the requested contribution
+    $('#requested-contrib').val(Math.round(($('#total-contrib').val() - $('#your-contrib').val())*10000)/10000);
   },
   'input #threshold'(event) {
     changeThreshold();

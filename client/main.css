@@ -821,3 +821,9 @@ button.action:hover {
   font-size:12px;
   padding-top:5px;
 }
+#your-contrib-hint-value {
+  color:var(--app-color-text-active);
+  cursor:pointer;
+  font-weight:bold;
+  text-decoration:underline;
+}
