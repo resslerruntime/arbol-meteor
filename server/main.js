@@ -30,7 +30,11 @@ Meteor.startup(() => {
       // 'featureids'(optional)  // the featureids as selected by the user on the current client
       // 'isZip_CurrentDataType'(optional) // (string), Leaving this blank converts to 'False' on the server.  Sending anything through equates to a 'True' value on the server.  This lets the server know that this is a job to zip up and return a full dataset.
 
+      //https://climateserv.servirglobal.net/chirps/submitDataRequest/?datatype=0&begintime=04/01/2008&endtime=06/30/2018&intervaltype=1&operationtype=4&isZip_CurrentDataType=false&geometry={"type":"Polygon","coordinates":[[[21.533203124999996,-3.1624555302378496],[21.533203124999996,-6.489983332670647],[26.279296874999986,-5.441022303717986],[26.10351562499999,-2.635788574166625],[21.533203124999996,-3.1624555302378496]]]}
+      //https://climateserv.servirglobal.net/chirps/submitDataRequest/?datatype=0&begintime=03/01/2007&endtime=04/01/2016&intervaltype=1&operationtype=4&isZip_CurrentDataType=false&geometry={"type":"Polygon","coordinates":[[[21.533203124999996,-3.1624555302378496],[21.533203124999996,-6.489983332670647],[26.279296874999986,-5.441022303717986],[26.10351562499999,-2.635788574166625],[21.533203124999996,-3.1624555302378496]]]}
+      //https://climateserv.servirglobal.net/chirps/submitDataRequest/?datatype=0&begintime=03/01/2007&endtime=12/01/2016&intervaltype=1&operationtype=4&isZip_CurrentDataType=false&geometry={"type":"Polygon","coordinates":[[[21.533203124999996,-3.1624555302378496],[21.533203124999996,-6.489983332670647],[26.279296874999986,-5.441022303717986],[26.10351562499999,-2.635788574166625],[21.533203124999996,-3.1624555302378496]]]}
       let url = `https://climateserv.servirglobal.net/chirps/submitDataRequest/?datatype=0&begintime=${begintime}&endtime=${endtime}&intervaltype=1&operationtype=4&isZip_CurrentDataType=false&geometry={"type":"Polygon","coordinates":[${coords}]}`;
+      console.log("NASA",url)
       this.unblock();
       return HTTP.call("GET",url);
     }
