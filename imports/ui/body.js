@@ -1185,7 +1185,7 @@ Template.formNewProtection.events({
     $("#createwit-next").show();
     $("#createwit-submit").hide();
     // set all inputs to blank
-    $('#createwit input, #createwit select').val('');
+    $('#createwit input[type="text"], #createwit input[type="number"], #createwit select').val('');
     // reset the reactive variable data
     self.createWITdata.set({
       'weatherIndex':'Rainfall',
