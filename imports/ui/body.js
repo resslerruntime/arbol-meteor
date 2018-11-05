@@ -1185,27 +1185,32 @@ Template.formNewProtection.events({
     $("#createwit-next").show();
     $("#createwit-submit").hide();
     // set all inputs to blank
-    $('#createwit input[type="text"], #createwit input[type="number"], #createwit select').val('');
+    $('#createwit input[type="text"], #createwit input[type="number"]').val('');
+    // set all selects to the first option
+    $('#createwit select').each(function(){
+      var firstVal = $(this).find('option').eq(0).attr('value');
+      $(this).val(firstVal);
+    });
     // reset the reactive variable data
     self.createWITdata.set({
       'weatherIndex':'Rainfall',
       'locationType':'Weather Stations',
-      'locationRegion':$('#location option:selected').text(),
+      'locationRegion':$('#location').val(),
       'month-start':null,
       'year-start':null,
       'month-end':null,
       'year-end':null,
       'date-start':null,
       'date-end':null,
-      'threshold-relation':$('#threshold-relation option:selected').text(),
-      'threshold-percent':$('#threshold-percent option:selected').text(),
-      'threshold-average':$('#threshold-average option:selected').text(),
+      'threshold-relation':$('#threshold-relation').val(),
+      'threshold-percent':$('#threshold-percent').val(),
+      'threshold-average':$('#threshold-average').val(),
       'your-contrib':0,
       'requested-contrib':0,
       'total-contrib':0
     });
     // make initial selection for the map
-    changeRegion($('#location option').eq(1).attr('value'));
+    changeRegion($('#location').val());
     $('#location').trigger('input');
     // reset the date pickers
     // reset fields that should be disabled to disabled
