@@ -1191,6 +1191,22 @@ Template.formNewProtection.events({
       var firstVal = $(this).find('option').eq(0).attr('value');
       $(this).val(firstVal);
     });
+    // reset the datepickers
+    $('[data-toggle="datepicker"]').datepicker('destroy').datepicker({
+      autoHide: true,
+      date: new Date(2017, 0, 1),
+      format: 'mm/yyyy',
+      startDate: new Date(2017, 0, 1),
+      endDate: new Date(2020, 11, 31)
+    });
+    // remove/hide the 10 year average
+    $("#ten-yr-prob").html('');
+    // clear the chart
+    clearChart();
+    // clear variables for NOAA calls
+    let NOAACODE = -1;
+    let MONTHCODE = -1;
+    let DURATIONCODE = -1;
     // reset the reactive variable data
     self.createWITdata.set({
       'weatherIndex':'Rainfall',
