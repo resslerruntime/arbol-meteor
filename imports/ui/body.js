@@ -1207,6 +1207,9 @@ Template.formNewProtection.events({
     let NOAACODE = -1;
     let MONTHCODE = -1;
     let DURATIONCODE = -1;
+    // clear and hide the recommended contribution and wit rating
+    $('#your-contrib-hint-value').text('').parent().hide();
+    $("#createwit .helpbox.rating").hide();
     // reset the reactive variable data
     self.createWITdata.set({
       'weatherIndex':'Rainfall',
@@ -1307,6 +1310,10 @@ Template.formNewProtection.events({
     capVal(event.currentTarget);
     $("#your-contrib").removeClass("missing-info");
     $('#requested-contrib').val(Math.round(($('#total-contrib').val() - $('#your-contrib').val())*10000)/10000);
+    // calculate and show wit rating
+    // $('#createwit .witrating').text( CalcWITRating() ).attr('class','witrating witrating-'+CalcWITLevel()); 
+    $("#createwit .helpbox.rating").show();
+    // assign values to reactive variables
     self = Template.instance();
     selfdata = self.createWITdata.get();
     targetid = $(event.currentTarget).attr('id');
@@ -1322,17 +1329,19 @@ Template.formNewProtection.events({
       $("#your-contrib, #requested-contrib").removeAttr('disabled');
       $("#your-contrib, #requested-contrib").prev().removeAttr('disabled');
       // recommend your contribution
-      var recommendedValue = Math.round((event.currentTarget.value * $('#pct-span').attr('data-tenYrProb'))*10000)/10000;
-      $('#your-contrib-hint-value').text(recommendedValue).parent().show();
-      // if the your contribution field is blank, zero, or invalid (greater than the total), set to recommended value 
-      if ($('#your-contrib').val() === '' || $('#your-contrib').val() === 0 || $('#your-contrib').val() >= event.currentTarget.value) {
-        $('#your-contrib').val(recommendedValue);
+      if ($('#pct-span').attr('data-tenYrProb')) {
+        var recommendedValue = Math.round((event.currentTarget.value * $('#pct-span').attr('data-tenYrProb'))*10000)/10000;
+        $('#your-contrib-hint-value').text(recommendedValue).parent().show();
+        // if the your contribution field is blank, zero, or invalid (greater than the total), set to recommended value 
+        if ($('#your-contrib').val() === '' || $('#your-contrib').val() === 0 || $('#your-contrib').val() >= event.currentTarget.value) {
+          $('#your-contrib').val(recommendedValue);
+        }
+        // calculate the requested contribution
+        $('#requested-contrib').val(Math.round((event.currentTarget.value - $('#your-contrib').val())*10000)/10000);
+        // calculate and show wit rating
+        // $('#createwit .witrating').text( CalcWITRating() ).attr('class','witrating witrating-'+CalcWITLevel()); 
+        $("#createwit .helpbox.rating").show();
       }
-      // calculate the requested contribution
-      $('#requested-contrib').val(Math.round((event.currentTarget.value - $('#your-contrib').val())*10000)/10000);
-      // calculate and show wit rating
-      // $('#createwit .witrating').text( CalcWITRating() ).attr('class','witrating witrating-'+CalcWITLevel()); 
-      $("#createwit .helpbox.rating").show();
     }
     else {
       // disable other contribution fields
