@@ -4,7 +4,8 @@ import BN from 'bn.js';
 import * as d3 from "d3";
 import './NASA-leaflet.js';
 import './NOAA-svg.js';
-import './ten-yr-chart.js'
+import './threshold.js';
+import './ten-yr-chart.js';
 import './body.html';
 import './createProtection.html';
 
@@ -41,44 +42,6 @@ const promisify = (inner) =>
         })
     );
 
-//data objects for display
-const threshRelationObj = {
-  "less":{text:"< ",val:false,caStroke:"red",caFill:"#fcc8b0",cbStroke:"green",cbFill:"#b5ffc0"}
-  ,"greater":{text:"> ",val:true,caStroke:"green",caFill:"#b5ffc0",cbStroke:"red",cbFill:"#fcc8b0"}
-};
-const threshPercentObj = {
-  "zero":{text:"",val:0}
-  ,"ten":{text:"10% ",val:0.1}
-  ,"twenty-five":{text:"25% ",val:0.25}
-};
-const threshAverageObj = {
-  "average":{text: "Average",val:0}
-  ,"below-average":{text: "Below Avg",val:-1}
-  ,"above-average":{text: "Above Avg",val:1}
-};
-
-function threshText(rel,pct,avg){
-  return threshRelationObj[rel].text + threshPercentObj[pct].text + threshAverageObj[avg].text;
-}
-
-function threshValPPTH(pct,avg){
-  return 10000 + threshPercentObj[pct].val * threshAverageObj[avg].val * 10000;
-}
-
-function threshValsToText(above,num){
-  let a = "< ";
-  if(above) a = "> ";
-  let b = "0% ";
-  if(num === 9000 || num === 11000) b = "10% ";
-  if(num === 7500 || num === 12500) b = "25% ";
-  let c = "Below Avg";
-  if(num > 10000) c = "Above Avg";
-  if(num === 10000){
-    b = "";
-    c = "Average";
-  }
-  return a + b + c;
-}
 
 const locationObj = {
       // NOAA codes:
@@ -1461,8 +1424,8 @@ async function createProposal(startDate,endDate,yourContr,totalPayout,location,i
 
   let ethPropose = toWei(yourContr);
   let ethAsk = toWei(totalPayout - yourContr);
-  let above = threshRelationObj[thresholdRelation].val;
-  let numPPTH = threshValPPTH(thresholdPercent,thresholdAverage);
+  let above = threshVal(thresholdRelation);
+  let numPPTH = threshValPPTH(thresholdPercent,thresholdAverage); // = 10000 * threshValFraction(thresholdPercent,thresholdAverage);
   let location32 = numStringToBytes32(locationObj[location].noaaCode);
   let makeStale = false; //TODO for deployment makeStale should be true in default
   console.log(ethPropose, ethAsk, above, noaaAddress, numPPTH, location32, d1, d2, makeStale);
@@ -1548,4 +1511,3 @@ Template.myProtectionsTable.helpers({
     return Session.get("myProtectionsPaginatedData");
   }
 });
-

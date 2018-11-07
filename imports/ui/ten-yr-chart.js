@@ -1,4 +1,9 @@
 import * as d3 from "d3";
+import './threshold.js'
+
+////////////////////////////////////////////
+// svg chart
+////////////////////////////////////////////
 
 var svg, width, height, margin = {top: 40, right: 50, bottom: 45, left: 50};
 var dataExtents, svgStart, svgEnd;
@@ -160,8 +165,8 @@ updateMonths = function (o){
   let rel = $("#threshold-relation")[0].value;
   let pct = $("#threshold-percent")[0].value;
   let avg = $("#threshold-average")[0].value;
-  let ro = threshRelationObj[rel];
-  let n = 1 + threshPercentObj[pct].val*threshAverageObj[avg].val;
+  let ro = threshObj(rel);
+  let n = threshValFraction(pct, avg);
 
   let barWidth = width*0.5/10;
   d3.selectAll("g.bars")
@@ -218,8 +223,8 @@ calcTenYrP = function (o = pData){
   let rel = $("#threshold-relation")[0].value;
   let pct = $("#threshold-percent")[0].value;
   let avg = $("#threshold-average")[0].value;
-  let rov = threshRelationObj[rel].val;
-  let n = 1 + threshPercentObj[pct].val*threshAverageObj[avg].val;
+  let rov = threshVal(rel);
+  let n = threshValFraction(pct, avg);
 
   let l = pData.data.length;
   let sum = 0;

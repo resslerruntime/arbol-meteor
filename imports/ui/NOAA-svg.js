@@ -131,6 +131,7 @@ drawUSA = async function (){
       .on("click", handleClick);
 
       changeRegion("us-corn-belt");
+      $('#location').trigger('input');
 
     function handleMOver(){
       let v = +d3.select(this).attr("value");
