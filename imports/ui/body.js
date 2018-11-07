@@ -112,7 +112,9 @@ function Entry(r,owner){
   let id = a.WITID.toNumber();
 
   //update for if the contract is for offered for sale or for funding
-  let totalPayout = `${clipNum(toEth(propose) + toEth(ask))} Eth`;
+  let totalPayout = toEth(propose) + toEth(ask);
+  let totalPayoutText = `${clipNum(toEth(propose) + toEth(ask))} Eth`;
+  // button
   let b = `${toEth(ask)}`;
   let b1 = `<button type='button' class='action buyit tableBtn' value='${toEth(ask)},${a.WITID.toNumber()}'>Pay <span class="green-text">${clipNum(toEth(ask))} Eth</span> to accept</button>`;
   //if no user is logged in
@@ -139,7 +141,7 @@ function Entry(r,owner){
       ,{type:"text",key:"NOAA Rainfall",name:"NOAA Rainfall"}
       ,{type:"num",key:a.start.toNumber()*1000,name:dateText(a.start.toNumber()*1000)}
       ,{type:"num",key:a.end.toNumber()*1000,name:dateText(a.end.toNumber()*1000)}
-      ,{type:"num",key:totalPayout,name:totalPayout}
+      ,{type:"num",key:totalPayout,name:totalPayoutText}
       ,{type:"num",key:b,name:b1}
     ];
 }
@@ -159,13 +161,15 @@ function MyEntry(r,a,id,bool){
   let location = locationText(bytes32ToNumString(a.location));
 
   //total payouts
-  let totalPayout = `${clipNum(toEth(propose) + toEth(ask))} Eth`;
+  let totalPayout = toEth(propose) + toEth(ask);
+  let totalPayoutText = `${clipNum(toEth(propose) + toEth(ask))} Eth`;
 
   //your contribution
   let v;
   if(acceptance) v = toEth(ask);
   else v = toEth(propose);
-  let yourContr = `${clipNum(v)} Eth`;
+  let yourContr = v;
+  let yourContrText = `${clipNum(v)} Eth`;
 
   //status
   let now = new Date().getTime();
@@ -196,7 +200,7 @@ function MyEntry(r,a,id,bool){
     if(now < start) status = "Waiting for partner";
     if(now >= start) status = "Stale";
     b = "";
-    b1 = `<button type='button' class='action cancelit tableBtn'> Cancel and redeem <span class="green-text">${yourContr}</span></button>`;
+    b1 = `<button type='button' class='action cancelit tableBtn'> Cancel and redeem <span class="green-text">${yourContrText}</span></button>`;
   }
 
   //get threshold text
@@ -214,8 +218,8 @@ function MyEntry(r,a,id,bool){
       ,{type:"text",key:"NOAA Rainfall",name:"NOAA Rainfall"}
       ,{type:"num",key:a.start.toNumber()*1000,name:dateText(a.start.toNumber()*1000)}
       ,{type:"num",key:a.end.toNumber()*1000,name:dateText(a.end.toNumber()*1000)}
-      ,{type:"num",key:yourContr,name:yourContr}
-      ,{type:"num",key:totalPayout,name:totalPayout}
+      ,{type:"num",key:yourContr,name:yourContrText}
+      ,{type:"num",key:totalPayout,name:totalPayoutText}
       ,{type:"text",key:status,name:status}
       ,{type:"text",key:b,name:b1}
     ];
@@ -229,6 +233,7 @@ var noaaAddress;
 
 //TODO can we really rely on the acceptance events always firing before the proposal events and therefore creating a useful acceptedList
 var acceptedList = [];
+let proposedList = [];
 
 //data variables for NOAA calls
 let NOAACODE = -1;
@@ -430,6 +435,7 @@ function resetGlobalVariables(){
   opPagination = 0;
   myPagination = 0;
   acceptedList = [];
+  proposedList = [];
   if(watchLatestProposal !== -1) watchLatestProposal.stopWatching();
   if(watchLatestAcceptance !== -1) watchLatestAcceptance.stopWatching();
   if(watchLatestEvaluation !== -1) watchLatestEvaluation.stopWatching();
@@ -495,63 +501,71 @@ function latestEvaluations(){
 //add token to list
 async function addToken(result){
   try{
-    let id = result.args.WITID;
-    let owner = await promisify(cb => witInstance.ownerOf(id, cb));
+    //TODO change this variable id to idObj.toNumber()
+    let idObj = result.args.WITID;
+    let id = idObj.toNumber();
+    let owner = await promisify(cb => witInstance.ownerOf(idObj, cb));
 
     //add to open protections
-    if(acceptedList.indexOf(id.toNumber()) === -1){
-      //TODO reinstate date filter
-      //only show entries whose starting dates haven't passed
-      // if(new Date(result.args.start.toNumber()) - new Date() > 0){
-      if(true){
-        let list = Session.get("openProtectionsData");
-        console.log("===> proposal offered, id:",id.toNumber());
-        list.push(new Entry(result,owner));
-        console.log("all tokens",list.length,list,acceptedList.length,acceptedList)
-        list = sortArray(list,Session.get("sortIndex"),Session.get("descending"));
-        Session.set("openProtectionsData",list);
+    console.log("acccepted list",acceptedList.indexOf(id))
+    console.log("proposed list",proposedList.indexOf(id))
+    if(proposedList.indexOf(id) === -1){
+      if(acceptedList.indexOf(id) === -1){
+        console.log("new token dtected, add new token")
+        proposedList.push(id);
+        //TODO reinstate date filter
+        //only show entries whose starting dates haven't passed
+        // if(new Date(result.args.start.toNumber()) - new Date() > 0){
+        if(true){
+          let list = Session.get("openProtectionsData");
+          console.log("===> proposal offered, id:",id);
+          list.push(new Entry(result,owner));
+          console.log("all tokens",list.length,list,acceptedList.length,acceptedList)
+          list = sortArray(list,Session.get("sortIndex"),Session.get("descending"));
+          Session.set("openProtectionsData",list);
+
+          //if more than ten items turn on pagination
+          //set max pagination
+          let tblRow = tableRows();
+          if(list.length > tblRow){
+            $("#open-pager-btns").show();
+            $("#open-max").html(Math.ceil(list.length/tblRow));
+            $("#open-current").html(1);
+          }
+
+          //show paginated items
+          let pageList = paginateData(list,opPagination);
+          if(pageList.length > 0){
+            Session.set("openProtectionsPaginatedData",pageList);
+          }else{
+            if(opPagination > 0) opPagination -= 1;
+          }
+        }
+      }
+
+      //add to my protections
+      console.log("my entry", owner, user[0], result)
+      if(owner === user[0]){
+        let list = Session.get("myProtectionsData");
+        list.push(new MyEntry(result,result.args,id,true));
+        list = sortArray(list,Session.get("mySortIndex"),Session.get("descending"));
+        Session.set("myProtectionsData",list);
 
         //if more than ten items turn on pagination
-        //set max pagination
         let tblRow = tableRows();
         if(list.length > tblRow){
-          $("#open-pager-btns").show();
-          $("#open-max").html(Math.ceil(list.length/tblRow));
-          $("#open-current").html(1);
+          $("#my-pager-btns").show();
+          $("#my-max").html(Math.ceil(list.length/tblRow));
+          $("#my-current").html(1);
         }
 
         //show paginated items
-        let pageList = paginateData(list,opPagination);
+        let pageList = paginateData(list,myPagination);
         if(pageList.length > 0){
-          Session.set("openProtectionsPaginatedData",pageList);
+          Session.set("myProtectionsPaginatedData",pageList);
         }else{
-          if(opPagination > 0) opPagination -= 1;
+          if(myPagination > 0) myPagination -= 1;
         }
-      }
-    }
-
-    //add to my protections
-    console.log("my entry", owner, user[0], result)
-    if(owner === user[0]){
-      let list = Session.get("myProtectionsData");
-      list.push(new MyEntry(result,result.args,id.toNumber(),true));
-      list = sortArray(list,Session.get("mySortIndex"),Session.get("descending"));
-      Session.set("myProtectionsData",list);
-
-      //if more than ten items turn on pagination
-      let tblRow = tableRows();
-      if(list.length > tblRow){
-        $("#my-pager-btns").show();
-        $("#my-max").html(Math.ceil(list.length/tblRow));
-        $("#my-current").html(1);
-      }
-
-      //show paginated items
-      let pageList = paginateData(list,myPagination);
-      if(pageList.length > 0){
-        Session.set("myProtectionsPaginatedData",pageList);
-      }else{
-        if(myPagination > 0) myPagination -= 1;
       }
     }
   }catch(error){
@@ -595,57 +609,59 @@ function findIndex(array,cb){
 //add acceptance to my protections
 async function addAcceptance(result){
   // console.log("fn: addAcceptance")
-  try{
-    let outerResult = result;
-    let idpObj = result.args.WITID;
-    let idp = idpObj.toNumber();
+  let outerResult = result;
+  let idpObj = result.args.WITID;
+  let idp = idpObj.toNumber();
 
-    let idObj = result.args.aboveID;
-    if(idp === result.args.aboveID.toNumber()) idObj = result.args.belowID;
-    let id = idObj.toNumber();
+  let idObj = result.args.aboveID;
+  if(idp === result.args.aboveID.toNumber()) idObj = result.args.belowID;
+  let id = idObj.toNumber();
 
-    console.log("===> proposal accepted, id:", id);
-    //prevent previous tokens from being added to list
-    acceptedList.push(idp);
-    //if they are already shown remove them
-    removeToken(idp);
+  if(acceptedList.indexOf(idp) === -1){
+    try{
+      console.log("===> proposal accepted, id:", id);
+      //prevent previous tokens from being added to list
+      acceptedList.push(idp);
+      //if they are already shown remove them
+      removeToken(idp);
 
-    //these next 3 lines just resort the my protections table but I am not sure they are required for anything
-    let updateList = Session.get("myProtectionsData");
-    updateList = sortArray(updateList,Session.get("mySortIndex"),Session.get("descending"));
-    Session.set("myProtectionsData",updateList);
+      //these next 3 lines just resort the my protections table but I am not sure they are required for anything
+      let updateList = Session.get("myProtectionsData");
+      updateList = sortArray(updateList,Session.get("mySortIndex"),Session.get("descending"));
+      Session.set("myProtectionsData",updateList);
 
-    //if they were your proposals update your "my protections"
-    let owner = await promisify(cb => witInstance.ownerOf(idObj, cb));
-    if(owner === user[0]){
-      //hide the loading
-      $('#my-loader').hide();
-      $('#my-wrapper').removeClass('loading');
+      //if they were your proposals update your "my protections"
+      let owner = await promisify(cb => witInstance.ownerOf(idObj, cb));
+      if(owner === user[0]){
+        //hide the loading
+        $('#my-loader').hide();
+        $('#my-wrapper').removeClass('loading');
 
-      //get contract information for associated proposal
-      witInstance.ProposalOffered({WITID:idpObj},{fromBlock: 0, toBlock: 'latest'}).watch(function(error, result){
-        console.log("===> proposal accepted details retrieved, id:",id)
-        let list = Session.get("myProtectionsData");
-        list.push(new MyEntry(outerResult,result.args,id,false));
-        list = sortArray(list,Session.get("mySortIndex"),Session.get("descending"));
-        Session.set("myProtectionsData",list);
+        //get contract information for associated proposal
+        witInstance.ProposalOffered({WITID:idpObj},{fromBlock: 0, toBlock: 'latest'}).watch(function(error, result){
+          console.log("===> proposal accepted details retrieved, id:",id)
+          let list = Session.get("myProtectionsData");
+          list.push(new MyEntry(outerResult,result.args,id,false));
+          list = sortArray(list,Session.get("mySortIndex"),Session.get("descending"));
+          Session.set("myProtectionsData",list);
 
-        //if more than ten items turn on pagination
-        if(list.length > tableRows()){
-          $("#my-pager-btns").show();
-        }
+          //if more than ten items turn on pagination
+          if(list.length > tableRows()){
+            $("#my-pager-btns").show();
+          }
 
-        //show paginated items
-        let pageList = paginateData(list,myPagination);
-        if(pageList.length > 0){
-          Session.set("myProtectionsPaginatedData",pageList);
-        }else{
-          if(myPagination > 0) myPagination -= 1;
-        }
-      });
+          //show paginated items
+          let pageList = paginateData(list,myPagination);
+          if(pageList.length > 0){
+            Session.set("myProtectionsPaginatedData",pageList);
+          }else{
+            if(myPagination > 0) myPagination -= 1;
+          }
+        });
+      }
+    } catch (error) {
+      console.log(error)
     }
-  } catch (error) {
-    console.log(error)
   }
 }
 
@@ -875,13 +891,13 @@ Template.headerRow.events({
       let d = Session.get("descending");
       array = Session.get("openProtectionsData");
       //sort array based on the click header
-      if(t.innerText === "LOCATION") colIndex = 0;
-      if(t.innerText === "THRESHOLD") colIndex = 1;
-      if(t.innerText === "INDEX") colIndex = 2;
-      if(t.innerText === "START") colIndex = 3;
-      if(t.innerText === "END") colIndex = 4;
-      if(t.innerText === "TOTAL PAYOUT") colIndex = 5;
-      if(t.innerText === "PRICE") colIndex = 6;
+      if(t.innerText.indexOf("LOCATION") != -1) colIndex = 0;
+      if(t.innerText.indexOf("THRESHOLD") != -1) colIndex = 1;
+      if(t.innerText.indexOf("INDEX") != -1) colIndex = 2;
+      if(t.innerText.indexOf("START") != -1) colIndex = 3;
+      if(t.innerText.indexOf("END") != -1) colIndex = 4;
+      if(t.innerText.indexOf("TOTAL PAYOUT") != -1) colIndex = 5;
+      if(t.innerText.indexOf("PRICE") != -1) colIndex = 6;
       Session.set("sortIndex",colIndex);
       //set variable to new sorted array
       let list = sortArray(array,colIndex,d);
@@ -895,15 +911,15 @@ Template.headerRow.events({
       let d = Session.get("myDescending");
       array = Session.get("myProtectionsData");
       //sort array based on the click header
-      if(t.innerText === "LOCATION") colIndex = 0;
-      if(t.innerText === "THRESHOLD") colIndex = 1;
-      if(t.innerText === "INDEX") colIndex = 2;
-      if(t.innerText === "START") colIndex = 3;
-      if(t.innerText === "END") colIndex = 4;
-      if(t.innerText === "YOUR CONTRIBUTION") colIndex = 5;
-      if(t.innerText === "TOTAL PAYOUT") colIndex = 6;
-      if(t.innerText === "STATUS") colIndex = 7;
-      if(t.innerText === "ACTION") colIndex = 8;
+      if(t.innerText.indexOf("LOCATION") != -1) colIndex = 0;
+      if(t.innerText.indexOf("THRESHOLD") != -1) colIndex = 1;
+      if(t.innerText.indexOf("INDEX") != -1) colIndex = 2;
+      if(t.innerText.indexOf("START") != -1) colIndex = 3;
+      if(t.innerText.indexOf("END") != -1) colIndex = 4;
+      if(t.innerText.indexOf("YOUR CONTRIBUTION") != -1) colIndex = 5;
+      if(t.innerText.indexOf("TOTAL PAYOUT") != -1) colIndex = 6;
+      if(t.innerText.indexOf("STATUS") != -1) colIndex = 7;
+      if(t.innerText.indexOf("ACTION") != -1) colIndex = 8;
       Session.set("mySortIndex",colIndex);
       //set variable to new sorted array
       let list = sortArray(array,colIndex,d);
@@ -1146,14 +1162,39 @@ Template.formNewProtection.events({
     $("#createwit-prev button").attr('disabled','disabled');
     $("#createwit-next").show();
     $("#createwit-submit").hide();
-    // borrowed from button action for app menu buttons, scroll to top of page
-    $('html, body').animate({
-      scrollTop: $('#arbol-wrapper').height()
-    }, 500);
-    // reset the showing/hiding of tabs to default state
-    $("#open-protections").show();
-    $("#create-protection").hide();
-    $("#your-protections").hide();
+    // set all inputs to blank
+    $('#createwit input, #createwit select').val('');
+    // reset the reactive variable data
+    self.createWITdata.set({
+      'weatherIndex':'Rainfall',
+      'locationType':'Weather Stations',
+      'locationRegion':$('#location option:selected').text(),
+      'month-start':null,
+      'year-start':null,
+      'month-end':null,
+      'year-end':null,
+      'date-start':null,
+      'date-end':null,
+      'threshold-relation':$('#threshold-relation option:selected').text(),
+      'threshold-percent':$('#threshold-percent option:selected').text(),
+      'threshold-average':$('#threshold-average option:selected').text(),
+      'your-contrib':0,
+      'requested-contrib':0,
+      'total-contrib':0
+    });
+    // make initial selection for the map
+    changeRegion($('#location option').eq(1).attr('value'));
+    $('#location').trigger('input');
+    // reset the date pickers
+    // reset fields that should be disabled to disabled
+    
+    // // clear svg chart
+    // clearChart();
+
+    // // reset NOAA call variables
+    // NOAACODE = -1;
+    // MONTHCODE = -1;
+    // DURATIONCODE = -1;
   },
   'input [name="weatherIndex"]'(event){
     self = Template.instance();
@@ -1239,7 +1280,7 @@ Template.formNewProtection.events({
   'input #your-contrib'(event){
     capVal(event.currentTarget);
     $("#your-contrib").removeClass("missing-info");
-    $('#requested-contrib').val($('#total-contrib').val() - $('#your-contrib').val());
+    $('#requested-contrib').val(Math.round(($('#total-contrib').val() - $('#your-contrib').val())*1000)/1000);
     self = Template.instance();
     selfdata = self.createWITdata.get();
     targetid = $(event.currentTarget).attr('id');
@@ -1255,17 +1296,19 @@ Template.formNewProtection.events({
       $("#your-contrib, #requested-contrib").removeAttr('disabled');
       $("#your-contrib, #requested-contrib").prev().removeAttr('disabled');
       // recommend your contribution
-      if ($('#your-contrib').val() === '' || $('#your-contrib').val() === 0) {
-        $('#your-contrib').val(event.currentTarget.value * $('#pct-span').attr('data-tenYrProb'));
+      $('#your-contrib-hint-value').text(Math.round((event.currentTarget.value * $('#pct-span').attr('data-tenYrProb'))*1000)/1000).parent().show();
+      if ($('#your-contrib').val() === '' || $('#your-contrib').val() === 0 || $('#your-contrib').val() >= event.currentTarget.value) {
+        $('#your-contrib').val(Math.round((event.currentTarget.value * $('#pct-span').attr('data-tenYrProb'))*1000)/1000);
       }
       // calculate the requested contribution
-      $('#requested-contrib').val(event.currentTarget.value - $('#your-contrib').val());
+      $('#requested-contrib').val(Math.round((event.currentTarget.value - $('#your-contrib').val())*1000)/1000);
       // calculate and show wit rating
       // $('#createwit .witrating').text( CalcWITRating() ).attr('class','witrating witrating-'+CalcWITLevel()); 
       $("#createwit .helpbox.rating").show();
     }
     else {
       // disable other contribution fields
+      $("#your-contrib-hint").hide();
       $("#your-contrib, #requested-contrib").attr('disabled','disabled');
       $("#your-contrib, #requested-contrib").prev().attr('disabled','disabled');
     }
@@ -1373,36 +1416,9 @@ Template.formNewProtection.events({
         );
 
         if (confirmed) {
-          //call back that clears the form
-          var clearForm = function(){
-            //clear form if succesful
-            target[0].value = 0;
-            target[1].value = 0;
-            target[2].value = "";
-            target[3].value = "";
-            target[4].value = "";
-            target[5].value = "";
-            target[6].value = "";
-            target[7].value = "";
-            $('#end-date')[0].min = "";
-            $('#start-date')[0].max = "";
-            $('#total-contrib')[0].min = 0;
-            //unselect region, reset text value
-            clearChart();
-            $("#ten-yr-prob").html("");
-            $('#location').val("none");
-            d3.selectAll(`path.${selectedRegion}`)
-              .attr("fill","none");
-            selectedRegion = "none";
-            NOAACODE = -1;
-            MONTHCODE = -1;
-            DURATIONCODE = -1;
-          }
-
           //submit info
-          createProposal(startDate,endDate,yourContr,totalPayout,location,index,thresholdRelation,thresholdPercent,thresholdAverage,clearForm);
-        }
-        else {
+          createProposal(startDate,endDate,yourContr,totalPayout,location,index,thresholdRelation,thresholdPercent,thresholdAverage);
+        } else {
           //let user continue to edit
         }
       // }
@@ -1410,7 +1426,33 @@ Template.formNewProtection.events({
   }
 });
 
-async function createProposal(startDate,endDate,yourContr,totalPayout,location,index,thresholdRelation,thresholdPercent,thresholdAverage,clearForm){
+//call back that clears the form
+function clearForm(){
+  // //clear form if succesful
+  // target[0].value = 0;
+  // target[1].value = 0;
+  // target[2].value = "";
+  // target[3].value = "";
+  // target[4].value = "";
+  // target[5].value = "";
+  // target[6].value = "";
+  // target[7].value = "";
+  // $('#end-date')[0].min = "";
+  // $('#start-date')[0].max = "";
+  // $('#total-contrib')[0].min = 0;
+  // //unselect region, reset text value
+  // clearChart();
+  // $("#ten-yr-prob").html("");
+  // $('#location').val("none");
+  // d3.selectAll(`path.${selectedRegion}`)
+  //   .attr("fill","none");
+  // selectedRegion = "none";
+  // NOAACODE = -1;
+  // MONTHCODE = -1;
+  // DURATIONCODE = -1;
+}
+
+async function createProposal(startDate,endDate,yourContr,totalPayout,location,index,thresholdRelation,thresholdPercent,thresholdAverage){
   console.log("createProposal")
   const d1 = (new Date(startDate)).getTime()/1000; //convert to UNIX timestamp
   let dd2 = new Date(endDate);
@@ -1427,7 +1469,7 @@ async function createProposal(startDate,endDate,yourContr,totalPayout,location,i
 
   try {
     await promisify(cb => witInstance.createWITProposal(ethPropose, ethAsk, above, noaaAddress, numPPTH, location32, d1, d2, makeStale, {value: ethPropose, from:user[0]}, cb));
-    clearForm();
+    //clearForm();
   } catch (error) {
     console.log(error)
   }
@@ -1506,11 +1548,4 @@ Template.myProtectionsTable.helpers({
     return Session.get("myProtectionsPaginatedData");
   }
 });
-
-
-
-
-
-
-
 

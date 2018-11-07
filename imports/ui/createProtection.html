@@ -53,7 +53,7 @@
         <div class="cell">
           <h3>Select a Crop Region</h3>
           <select id="location" name="location">
-            <option value="none" hidden disabled selected>Select a region</option>
+            <option value="" hidden disabled selected>Select a region</option>
             <option value="us-corn-belt">US Corn Belt</option>
             <option value="us-soy-belt">US Soy Belt</option>
             <option value="us-redwinter-belt">US Red Winter Wheat Belt</option>
@@ -311,6 +311,7 @@
           <div class="field">
             <label disabled="disabled">Your Contribution (Eth):</label>
             <input disabled="disabled" type="number" id="your-contrib" name="buyer" class="contribution" step="0.001" value="" min="0">
+            <span id="your-contrib-hint" style="display:none;">Suggested contribution based on payout probability is <span id="your-contrib-hint-value"></span></span>
           </div>
           <div class="field">
             <label disabled="disabled">Requested Contribution (Eth):</label>
@@ -351,7 +352,7 @@
                 {{ data 'date-end' }}.
               </strong>
             </p>
-            <p>My {{ data 'your-contrib' }} Ether will be taken into escrow immediately. I can cancel this WIT and get my Ether back by clicking “cancel” in “Your WITs”.</p>
+            <p>My {{ data 'your-contrib' }} Ether will be taken into escrow immediately. I can cancel this WIT and get my Ether back by clicking “Cancel and redeem {{ data 'your-contrib' }}” in “Your WITs”.</p>
             <br>
             <p align="center"><input type="submit" id="create-proposal" value="Create Proposal"></p>
           </div>
@@ -369,7 +370,7 @@
     <div>createWITstep = {{ step }}</div>
     <div>weatherIndex = {{ data 'weatherIndex' }}</div>
     <div>locationType = {{ data 'locationType' }}</div>
-    <div>locationType = {{ data 'locationRegion' }}</div>
+    <div>locationRegion = {{ data 'locationRegion' }}</div>
     <div>start = {{ data 'date-start' }}</div>
     <div>end = {{ data 'date-end' }}</div>
     <div>threshold-relation = {{ data 'threshold-relation' }}</div>
