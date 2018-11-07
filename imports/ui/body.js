@@ -1115,49 +1115,8 @@ Template.formNewProtection.events({
   },
   'click #createwit-cancel button'(event){
     event.preventDefault();
-    // reset the step to 1
     self = Template.instance();
-    self.createWITstep.set(1);
-    // show the correct step
-    $("#createwit .step.showing").removeClass('showing');
-    $("#createwit .step").eq(0).addClass('showing');
-    // since we are resetting to the first step, disable the previous button and hide the submit button
-    $("#createwit-prev button").attr('disabled','disabled');
-    $("#createwit-next").show();
-    $("#createwit-submit").hide();
-    // set all inputs to blank
-    $('#createwit input, #createwit select').val('');
-    // reset the reactive variable data
-    self.createWITdata.set({
-      'weatherIndex':'Rainfall',
-      'locationType':'Weather Stations',
-      'locationRegion':$('#location option:selected').text(),
-      'month-start':null,
-      'year-start':null,
-      'month-end':null,
-      'year-end':null,
-      'date-start':null,
-      'date-end':null,
-      'threshold-relation':$('#threshold-relation option:selected').text(),
-      'threshold-percent':$('#threshold-percent option:selected').text(),
-      'threshold-average':$('#threshold-average option:selected').text(),
-      'your-contrib':0,
-      'requested-contrib':0,
-      'total-contrib':0
-    });
-    // make initial selection for the map
-    changeRegion($('#location option').eq(1).attr('value'));
-    $('#location').trigger('input');
-    // reset the date pickers
-    // reset fields that should be disabled to disabled
-    
-    // // clear svg chart
-    // clearChart();
-
-    // // reset NOAA call variables
-    // NOAACODE = -1;
-    // MONTHCODE = -1;
-    // DURATIONCODE = -1;
+    resetCreateWIT(self);
   },
   'input [name="weatherIndex"]'(event){
     self = Template.instance();
@@ -1243,7 +1202,11 @@ Template.formNewProtection.events({
   'input #your-contrib'(event){
     capVal(event.currentTarget);
     $("#your-contrib").removeClass("missing-info");
-    $('#requested-contrib').val(Math.round(($('#total-contrib').val() - $('#your-contrib').val())*1000)/1000);
+    $('#requested-contrib').val(Math.round(($('#total-contrib').val() - $('#your-contrib').val())*10000)/10000);
+    // calculate and show wit rating
+    // $('#createwit .witrating').text( CalcWITRating() ).attr('class','witrating witrating-'+CalcWITLevel()); 
+    $("#createwit .helpbox.rating").show();
+    // assign values to reactive variables
     self = Template.instance();
     selfdata = self.createWITdata.get();
     targetid = $(event.currentTarget).attr('id');
@@ -1259,15 +1222,19 @@ Template.formNewProtection.events({
       $("#your-contrib, #requested-contrib").removeAttr('disabled');
       $("#your-contrib, #requested-contrib").prev().removeAttr('disabled');
       // recommend your contribution
-      $('#your-contrib-hint-value').text(Math.round((event.currentTarget.value * $('#pct-span').attr('data-tenYrProb'))*1000)/1000).parent().show();
-      if ($('#your-contrib').val() === '' || $('#your-contrib').val() === 0 || $('#your-contrib').val() >= event.currentTarget.value) {
-        $('#your-contrib').val(Math.round((event.currentTarget.value * $('#pct-span').attr('data-tenYrProb'))*1000)/1000);
+      if ($('#pct-span').attr('data-tenYrProb')) {
+        var recommendedValue = Math.round((event.currentTarget.value * $('#pct-span').attr('data-tenYrProb'))*10000)/10000;
+        $('#your-contrib-hint-value').text(recommendedValue).parent().show();
+        // if the your contribution field is blank, zero, or invalid (greater than the total), set to recommended value 
+        if ($('#your-contrib').val() === '' || $('#your-contrib').val() === 0 || $('#your-contrib').val() >= event.currentTarget.value) {
+          $('#your-contrib').val(recommendedValue);
+        }
+        // calculate the requested contribution
+        $('#requested-contrib').val(Math.round((event.currentTarget.value - $('#your-contrib').val())*10000)/10000);
+        // calculate and show wit rating
+        // $('#createwit .witrating').text( CalcWITRating() ).attr('class','witrating witrating-'+CalcWITLevel()); 
+        $("#createwit .helpbox.rating").show();
       }
-      // calculate the requested contribution
-      $('#requested-contrib').val(Math.round((event.currentTarget.value - $('#your-contrib').val())*1000)/1000);
-      // calculate and show wit rating
-      // $('#createwit .witrating').text( CalcWITRating() ).attr('class','witrating witrating-'+CalcWITLevel()); 
-      $("#createwit .helpbox.rating").show();
     }
     else {
       // disable other contribution fields
@@ -1282,6 +1249,12 @@ Template.formNewProtection.events({
     selfdata[targetid] = event.currentTarget.value;
     selfdata['your-contrib'] = $('#your-contrib').val();
     self.createWITdata.set(selfdata);
+  },
+  'click #your-contrib-hint-value'(event) {
+    // clicking on the recommended value should reset the your contrib field to this value
+    $('#your-contrib').val($(event.currentTarget).text());
+    // also have to reset the requested contribution
+    $('#requested-contrib').val(Math.round(($('#total-contrib').val() - $('#your-contrib').val())*10000)/10000);
   },
   'input #threshold'(event) {
     changeThreshold();
@@ -1381,6 +1354,8 @@ Template.formNewProtection.events({
         if (confirmed) {
           //submit info
           createProposal(startDate,endDate,yourContr,totalPayout,location,index,thresholdRelation,thresholdPercent,thresholdAverage);
+          self = Template.instance();
+          resetCreateWIT(self);
         } else {
           //let user continue to edit
         }
@@ -1388,6 +1363,65 @@ Template.formNewProtection.events({
     }
   }
 });
+
+function resetCreateWIT(instance) {
+  // reset the step to 1
+  instance.createWITstep.set(1);
+  // show the correct step
+  $("#createwit .step.showing").removeClass('showing');
+  $("#createwit .step").eq(0).addClass('showing');
+  // since we are resetting to the first step, disable the previous button and hide the submit button
+  $("#createwit-prev button").attr('disabled','disabled');
+  $("#createwit-next").show();
+  $("#createwit-submit").hide();
+  // set all inputs to blank
+  $('#createwit input[type="text"], #createwit input[type="number"]').val('');
+  // set all selects to the first option
+  $('#createwit select').each(function(){
+    var firstVal = $(this).find('option').eq(0).attr('value');
+    $(this).val(firstVal);
+  });
+  // reset the datepickers
+  $('[data-toggle="datepicker"]').datepicker('destroy').datepicker({
+    autoHide: true,
+    date: new Date(2017, 0, 1),
+    format: 'mm/yyyy',
+    startDate: new Date(2017, 0, 1),
+    endDate: new Date(2020, 11, 31)
+  });
+  // remove/hide the 10 year average
+  $("#ten-yr-prob").html('');
+  // clear the chart
+  clearChart();
+  // clear variables for NOAA calls
+  let NOAACODE = -1;
+  let MONTHCODE = -1;
+  let DURATIONCODE = -1;
+  // clear and hide the recommended contribution and wit rating
+  $('#your-contrib-hint-value').text('').parent().hide();
+  $("#createwit .helpbox.rating").hide();
+  // make initial selection for the map
+  changeRegion($('#location').val());
+  $('#location').trigger('input');
+  // reset the reactive variable data
+  instance.createWITdata.set({
+    'weatherIndex':'Rainfall',
+    'locationType':'Weather Stations',
+    'locationRegion':$('#location').val(),
+    'month-start':null,
+    'year-start':null,
+    'month-end':null,
+    'year-end':null,
+    'date-start':null,
+    'date-end':null,
+    'threshold-relation':$('#threshold-relation').val(),
+    'threshold-percent':$('#threshold-percent').val(),
+    'threshold-average':$('#threshold-average').val(),
+    'your-contrib':0,
+    'requested-contrib':0,
+    'total-contrib':0
+  });
+}
 
 //call back that clears the form
 function clearForm(){
@@ -1410,9 +1444,9 @@ function clearForm(){
   // d3.selectAll(`path.${selectedRegion}`)
   //   .attr("fill","none");
   // selectedRegion = "none";
-  // NOAACODE = -1;
-  // MONTHCODE = -1;
-  // DURATIONCODE = -1;
+  NOAACODE = -1;
+  MONTHCODE = -1;
+  DURATIONCODE = -1;
 }
 
 async function createProposal(startDate,endDate,yourContr,totalPayout,location,index,thresholdRelation,thresholdPercent,thresholdAverage){

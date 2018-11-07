@@ -53,8 +53,7 @@
         <div class="cell">
           <h3>Select a Crop Region</h3>
           <select id="location" name="location">
-            <option value="" hidden disabled selected>Select a region</option>
-            <option value="us-corn-belt">US Corn Belt</option>
+            <option selected value="us-corn-belt">US Corn Belt</option>
             <option value="us-soy-belt">US Soy Belt</option>
             <option value="us-redwinter-belt">US Red Winter Wheat Belt</option>
           </select>
@@ -255,19 +254,16 @@
             <label>Threshold:</label>
             <div id="threshold">
               <select id="threshold-relation" class="createwit-select">
-                <option value="" hidden disabled>________</option>
-                <option value="greater" selected>Greater than</option>
+                <option selected value="greater">Greater than</option>
                 <option value="less">Less than</option>
               </select>
               <select id="threshold-percent" class="createwit-select">
-                <option value="" hidden disabled>________</option>
-                <option value="zero" selected>0%</option>
+                <option selected value="zero">0%</option>
                 <option value="ten">10%</option>
                 <option value="twenty-five">25%</option>
               </select>
               <select id="threshold-average" class="createwit-select">
-                <option value="" hidden disabled>________</option>
-                <option value="above-average" selected>above average</option>
+                <option selected value="above-average">above average</option>
                 <option value="below-average">below average</option>
               </select>
             </div>
