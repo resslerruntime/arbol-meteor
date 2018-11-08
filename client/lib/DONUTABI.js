@@ -2,7 +2,7 @@ DONUTABI = [
     {
       "constant": true,
       "inputs": [],
-      "name": "owner",
+      "name": "the_owner",
       "outputs": [
         {
           "name": "",
