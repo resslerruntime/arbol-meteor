@@ -5,24 +5,36 @@ import './body.js';
 // NASA API CALL
 ////////////////////////////////////////////
 
+let submittedDataRequest = false;
+let checkStatus;
+
 callNASA = function (startDate,endDate,location){
   $("#error-msg").fadeOut(500);
   $("#chart-loader").fadeIn(1000);
   console.log("nasa:",startDate.mmddyyyy,endDate.mmddyyyy)
+  //reset call parameters
+  submittedDataRequest = false;
+  window.clearInterval(checkStatus);
+
+  //submit initial data request
   // Meteor.call("submitDataRequestNASA","04/01/2008","06/30/2018",stringifyCoords([]),function(error, results) {
   Meteor.call("submitDataRequestNASA",startDate.mmddyyyy,endDate.mmddyyyy,stringifyCoords([]),function(error, results) {
     if(typeof results != 'undefined'){
       console.log("data request NASA",results,results.content)
       let id = eval(results.content)[0];
-      let checkStatus = setInterval(function(){
+      checkStatus = setInterval(function(){
         console.log("getDataRequestProgressNASA",id)
+        //check status of data request
         Meteor.call("getDataRequestProgressNASA",id,function(error, results) {
           console.log("progress NASA",results)
           let status = parseFloat(eval(results.content)[0]);
-          if(status === 100){
+          if(status === 100 && !submittedDataRequest){
+            submittedDataRequest = true;
             window.clearInterval(checkStatus);
             console.log("getDataFromRequestNASA",id)
+            //when data is ready get data
             Meteor.call("getDataFromRequestNASA",id,function(error, results) {
+              submittedDataRequest = false;
               let d = JSON.parse(results.content)
               console.log("data NASA",d)
               let obj = yearlyNASAVals(d.data,startDate,endDate);
@@ -33,7 +45,7 @@ callNASA = function (startDate,endDate,location){
             });
           }
         });
-      }, 5000);
+      }, 2000);
     }else{
       console.log("NASA server not responding: ",error.message)
       $("#chart-loader").fadeOut(500);
