@@ -374,9 +374,10 @@ function loadData(){
         $("#network-name").removeClass("red-text");
         $("#network-name").addClass("green-text");
         console.log('This is the Rinkeby test network.')
-        witAddress  = "0x8ac71ef838699f2ebe03b00adb1a726aa2153afa";
-        arbolAddress = "0x23b14dd217771f3d9988676df4301cca773853ca";
-        noaaAddress = "0x598ca8a1da8f889a244a6031126fa6bd71acc292";
+        witAddress  = "0x72dc0461f8ef97dbe30595b882846f80e6382189";
+        arbolAddress = "0xced4d4f5b27e2410100403deae9d42bf9b9946de";
+        noaaAddress = "0xe8ca721c10a1947a9344d168c1299dd342f78093";
+        nasaAddress = "0xc0ec4dbd358038c42ef92f9cc9f7e389191280ef";
 
         break
       case "42":
