@@ -196,8 +196,9 @@ changeThreshold = function (){
   let rel = $("#threshold-relation")[0].value;
   let pct = $("#threshold-percent")[0].value;
   let avg = $("#threshold-average")[0].value;
-  let ro = threshRelationObj[rel];
-  let n = 1 + threshPercentObj[pct].val*threshAverageObj[avg].val;
+
+  let ro = threshObj(rel);
+  let n = threshValFraction(pct, avg);
 
   var y = d3.scaleLinear()
       .rangeRound([height, 0])

@@ -222,7 +222,6 @@ function initMainPage(){
         // });
       });
       //start drawing svg
-      drawUSA();
       drawMonths();
 
       //TODO check for mobile redirect
