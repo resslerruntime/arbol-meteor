@@ -222,7 +222,6 @@ function initMainPage(){
         // });
       });
       //start drawing svg
-      drawUSA();
       drawMonths();
 
       //TODO check for mobile redirect
@@ -346,10 +345,12 @@ function loadData(){
         $("#network-name").removeClass("red-text");
         $("#network-name").addClass("green-text");
         console.log('This is the Rinkeby test network.')
+        //original deployment
         witAddress  = "0x8ac71ef838699f2ebe03b00adb1a726aa2153afa";
-        arbolAddress = "0x23b14dd217771f3d9988676df4301cca773853ca";
-        noaaAddress = "0x598ca8a1da8f889a244a6031126fa6bd71acc292";
-
+        arbolAddress = "0x23b14dd217771f3d9988676df4301cca773853ca"; //this line is tagged for deletion
+        noaaAddress = "0x598ca8a1da8f889a244a6031126fa6bd71acc292"; //this line is tagged for deletion
+        //NASA-leaflet deployment- backwards compatible 07-11-2018
+        //witAddress = "0x72dc0461f8ef97dbe30595b882846f80e6382189"
         break
       case "42":
         $("#network-name").html("Kovan");
@@ -362,12 +363,12 @@ function loadData(){
         console.log('This is an unknown network.')
         //ganache-cli
         witAddress  = "0x0a143bdf026eabaf95d3e88abb88169674db92f5";
-        arbolAddress = "0x5dc1e82631a4be896333f38a8214554326c11796";
-        noaaAddress = "0x7cb50610e7e107b09acf3fbb8724c6df3f3e1c1d";
+        arbolAddress = "0x5dc1e82631a4be896333f38a8214554326c11796"; //this line is tagged for deletion
+        noaaAddress = "0x7cb50610e7e107b09acf3fbb8724c6df3f3e1c1d"; //this line is tagged for deletion
         //ganache gui
     }
-    arbolContract = web3.eth.contract(ARBOLABI);
-    arbolInstance = arbolContract.at(arbolAddress);
+    arbolContract = web3.eth.contract(ARBOLABI);     //this line is tagged for deletion
+    arbolInstance = arbolContract.at(arbolAddress);  //this line is tagged for deletion
     witContract = web3.eth.contract(WITABI);
     witInstance = witContract.at(witAddress);
 
