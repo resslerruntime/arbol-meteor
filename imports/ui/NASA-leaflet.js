@@ -94,8 +94,6 @@ function yearlyNASAVals (a,startDate,endDate){
 // leaflet map
 ////////////////////////////////////////////
 
-console.log("leaflet",L)
-
 //find the proper way to make sure that the HTML is fully loaded before leaflet tries to attach the map
 var waitForLeaflet = setInterval(function(){
   let leafletDiv = document.getElementById("leaflet-map");

@@ -190,15 +190,17 @@ function MyEntry(r,a,id,bool){
 
 var user = [-1];
 var pastUser = [-2];
-var arbolAddress, arbolContract, arbolInstance;
+// var arbolAddress, arbolContract, arbolInstance; //tag for deletion
 var witAddress, witContract, witInstance;
-var noaaAddress;
+var noaaAddress, nasaAddress;
+
 
 //TODO can we really rely on the acceptance events always firing before the proposal events and therefore creating a useful acceptedList
 var acceptedList = [];
 let proposedList = [];
 
 //data variables for NOAA calls
+//tag for deletion, and anywhere else that has these variables
 let NOAACODE = -1;
 let MONTHCODE = -1;
 let DURATIONCODE = -1;
@@ -346,11 +348,12 @@ function loadData(){
         $("#network-name").addClass("green-text");
         console.log('This is the Rinkeby test network.')
         //original deployment
-        witAddress  = "0x8ac71ef838699f2ebe03b00adb1a726aa2153afa";
-        arbolAddress = "0x23b14dd217771f3d9988676df4301cca773853ca"; //this line is tagged for deletion
-        noaaAddress = "0x598ca8a1da8f889a244a6031126fa6bd71acc292"; //this line is tagged for deletion
+        // witAddress  = "0x8ac71ef838699f2ebe03b00adb1a726aa2153afa";
+        // noaaAddress = "0x598ca8a1da8f889a244a6031126fa6bd71acc292"; 
         //NASA-leaflet deployment- backwards compatible 07-11-2018
-        //witAddress = "0x72dc0461f8ef97dbe30595b882846f80e6382189"
+        witAddress = "0x72dc0461f8ef97dbe30595b882846f80e6382189";
+        noaaAddress = "0xe8ca721c10a1947a9344d168c1299dd342f78093";
+        nasaAddress = "0xc0ec4dbd358038c42ef92f9cc9f7e389191280ef";
         break
       case "42":
         $("#network-name").html("Kovan");
@@ -363,12 +366,8 @@ function loadData(){
         console.log('This is an unknown network.')
         //ganache-cli
         witAddress  = "0x0a143bdf026eabaf95d3e88abb88169674db92f5";
-        arbolAddress = "0x5dc1e82631a4be896333f38a8214554326c11796"; //this line is tagged for deletion
-        noaaAddress = "0x7cb50610e7e107b09acf3fbb8724c6df3f3e1c1d"; //this line is tagged for deletion
-        //ganache gui
+        noaaAddress = "0x7cb50610e7e107b09acf3fbb8724c6df3f3e1c1d"; 
     }
-    arbolContract = web3.eth.contract(ARBOLABI);     //this line is tagged for deletion
-    arbolInstance = arbolContract.at(arbolAddress);  //this line is tagged for deletion
     witContract = web3.eth.contract(WITABI);
     witInstance = witContract.at(witAddress);
 
@@ -1270,7 +1269,7 @@ Template.formNewProtection.events({
     self.createWITdata.set(selfdata);
   },
   'input #location'(event) {
-    changeRegion(event.currentTarget.value);
+    //changeRegion(event.currentTarget.value);
     $("#location").removeClass("missing-info");
     self = Template.instance();
     selfdata = self.createWITdata.get();
@@ -1402,7 +1401,7 @@ function resetCreateWIT(instance) {
   $('#your-contrib-hint-value').text('').parent().hide();
   $("#createwit .helpbox.rating").hide();
   // make initial selection for the map
-  changeRegion($('#location').val());
+  //changeRegion($('#location').val());
   $('#location').trigger('input');
   // reset the reactive variable data
   instance.createWITdata.set({
@@ -1492,6 +1491,8 @@ function padToBytes32(n) {
     return "0x" + n;
 }
 
+//does this function do anything? I am pretty sure it doesn't
+//tag for review and potential deletion
 function capVal(target){
   //change properties of the other date picker so that incorrect values can't be chosen
   var num = parseFloat(target.value);
