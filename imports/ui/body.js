@@ -1005,7 +1005,7 @@ Template.formNewProtection.onCreated(function () {
   this.createWITdata.set({
     'weatherIndex':'Rainfall',
     'locationType':'Weather Stations',
-    'locationRegion':null,
+    'locationRegion':'test',
     'month-start':null,
     'year-start':null,
     'month-end':null,
@@ -1038,7 +1038,7 @@ Template.formNewProtection.onRendered(function(){
   // get initial values for reactive variables based on rendered form
   self = Template.instance();
   selfdata = self.createWITdata.get();
-  selfdata['locationRegion'] = $('#location option:selected').text();
+  selfdata['locationRegion'] = 'test'; //$('#location option:selected').text();
   selfdata['threshold-relation'] = $('#threshold-relation option:selected').text();
   selfdata['threshold-percent'] = $('#threshold-percent option:selected').text();
   selfdata['threshold-average'] = $('#threshold-average option:selected').text();
@@ -1295,12 +1295,19 @@ Template.formNewProtection.events({
     else {
       event.preventDefault();
       const target = event.currentTarget;
+      console.log("target",target)
       const yourContr = parseFloat($('#your-contrib').val());
+      console.log("yourContr",yourContr)
       const totalPayout = parseFloat($('#total-contrib').val());
-      const location = $('#location').val();
+      console.log("totalPayout",totalPayout)
+      const location = "21.5331234,-3.1621234&0.14255"; //$('#location').val();
+      console.log("location",location)
       const thresholdRelation = $('#threshold-relation').val();
+      console.log("thresholdRelation",thresholdRelation)
       const thresholdPercent = $('#threshold-percent').val();
+      console.log("tresholdPercent",thresholdPercent)
       const thresholdAverage = $('#threshold-average').val();
+      console.log("tresholdAverage",thresholdAverage)
       let sm = $('#date-start').datepicker('getDate').getMonth() + 1; // start month
       const sy = $('#date-start').datepicker('getDate').getFullYear(); // start year
       let em = $('#date-end').datepicker('getDate').getMonth() + 1; // end month
@@ -1345,7 +1352,7 @@ Template.formNewProtection.events({
         const confirmed = confirm ( "Please confirm your selection: \n\n"
           + "  Your Contribution (Eth): " + yourContr + "\n"
           + "  Total Payout (Eth): " + totalPayout + "\n"
-          + "  Location: " + locationObj[location].text + "\n"
+          + "  Location: " + "" // locationObj[location].text + "\n"
           + "  Threshold: " + threshText(thresholdRelation,thresholdPercent,thresholdAverage) + "\n"
           + "  Start Date: " + startDate + "\n"
           + "  End Date: " + endDate + "\n"
@@ -1460,12 +1467,13 @@ async function createProposal(startDate,endDate,yourContr,totalPayout,location,i
   let ethAsk = toWei(totalPayout - yourContr);
   let above = threshVal(thresholdRelation);
   let numPPTH = threshValPPTH(thresholdPercent,thresholdAverage); // = 10000 * threshValFraction(thresholdPercent,thresholdAverage);
-  let location32 = numStringToBytes32(locationObj[location].noaaCode);
+  // let location32 = numStringToBytes32(locationObj[location].noaaCode);
+  let address = nasaAddress;
   let makeStale = false; //TODO for deployment makeStale should be true in default
-  console.log(ethPropose, ethAsk, above, noaaAddress, numPPTH, location32, d1, d2, makeStale);
+  console.log(ethPropose, ethAsk, above, address, numPPTH, location, d1, d2, makeStale);
 
   try {
-    await promisify(cb => witInstance.createWITProposal(ethPropose, ethAsk, above, noaaAddress, numPPTH, location32, d1, d2, makeStale, {value: ethPropose, from:user[0]}, cb));
+    await promisify(cb => witInstance.createWITProposal(ethPropose, ethAsk, above, address, numPPTH, location, d1, d2, makeStale, {value: ethPropose, from:user[0]}, cb));
     //clearForm();
   } catch (error) {
     console.log(error)

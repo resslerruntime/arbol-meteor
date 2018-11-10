@@ -1,4 +1,4 @@
-NOAAABI = [
+NASAABI = [
     {
       "constant": true,
       "inputs": [],
@@ -51,7 +51,7 @@ NOAAABI = [
           "type": "uint256"
         }
       ],
-      "name": "gotNOAAPrecipAggregateCallback",
+      "name": "gotNASACHIRPSCallback",
       "type": "event"
     },
     {
@@ -69,8 +69,18 @@ NOAAABI = [
         },
         {
           "indexed": false,
-          "name": "avgedYearsStartEnd",
-          "type": "string"
+          "name": "num_averaged_years",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "name": "start",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "name": "end",
+          "type": "uint256"
         },
         {
           "indexed": false,
@@ -83,7 +93,7 @@ NOAAABI = [
           "type": "string"
         }
       ],
-      "name": "sentNOAAPrecipAggregateOraclizeComputation",
+      "name": "sentNASACHIRPSOraclizeComputation",
       "type": "event"
     },
     {

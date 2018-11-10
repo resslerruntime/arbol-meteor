@@ -1,4 +1,4 @@
-WITABI = [
+ WITABI = [
     {
       "constant": false,
       "inputs": [
@@ -18,7 +18,7 @@ WITABI = [
       "type": "function"
     },
     {
-      "constant": false,
+      "constant": true,
       "inputs": [],
       "name": "totalSupply",
       "outputs": [
@@ -28,35 +28,7 @@ WITABI = [
         }
       ],
       "payable": false,
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "constant": false,
-      "inputs": [
-        {
-          "name": "dependant",
-          "type": "address"
-        }
-      ],
-      "name": "addDependant",
-      "outputs": [],
-      "payable": false,
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "constant": false,
-      "inputs": [
-        {
-          "name": "newOwner",
-          "type": "address"
-        }
-      ],
-      "name": "decomission",
-      "outputs": [],
-      "payable": false,
-      "stateMutability": "nonpayable",
+      "stateMutability": "view",
       "type": "function"
     },
     {
@@ -101,34 +73,6 @@ WITABI = [
       "constant": false,
       "inputs": [
         {
-          "name": "tokenID",
-          "type": "uint256"
-        }
-      ],
-      "name": "cancelAndRedeem",
-      "outputs": [],
-      "payable": false,
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "constant": true,
-      "inputs": [],
-      "name": "owner",
-      "outputs": [
-        {
-          "name": "",
-          "type": "address"
-        }
-      ],
-      "payable": false,
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "constant": false,
-      "inputs": [
-        {
           "name": "_to",
           "type": "address"
         },
@@ -158,75 +102,17 @@ WITABI = [
       "type": "function"
     },
     {
-      "constant": false,
-      "inputs": [
+      "constant": true,
+      "inputs": [],
+      "name": "the_owner",
+      "outputs": [
         {
-          "name": "arbolAddress",
-          "type": "address"
-        },
-        {
-          "name": "storageAddress",
-          "type": "address"
-        },
-        {
-          "name": "NOAAPrecipAggregate",
+          "name": "",
           "type": "address"
         }
       ],
-      "name": "initialize",
-      "outputs": [],
       "payable": false,
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "constant": false,
-      "inputs": [
-        {
-          "name": "proposalID",
-          "type": "uint256"
-        }
-      ],
-      "name": "createWITAcceptance",
-      "outputs": [],
-      "payable": true,
-      "stateMutability": "payable",
-      "type": "function"
-    },
-    {
-      "constant": false,
-      "inputs": [
-        {
-          "name": "WITID",
-          "type": "uint256"
-        },
-        {
-          "name": "outcome",
-          "type": "string"
-        }
-      ],
-      "name": "evaluatorCallback",
-      "outputs": [],
-      "payable": false,
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "constant": false,
-      "inputs": [
-        {
-          "name": "tokenID",
-          "type": "uint256"
-        },
-        {
-          "name": "runtimeParams",
-          "type": "string"
-        }
-      ],
-      "name": "evaluate",
-      "outputs": [],
-      "payable": false,
-      "stateMutability": "nonpayable",
+      "stateMutability": "view",
       "type": "function"
     },
     {
@@ -247,52 +133,6 @@ WITABI = [
       "constant": false,
       "inputs": [
         {
-          "name": "weiContributing",
-          "type": "uint256"
-        },
-        {
-          "name": "weiAsking",
-          "type": "uint256"
-        },
-        {
-          "name": "aboveOrBelow",
-          "type": "bool"
-        },
-        {
-          "name": "evaluator",
-          "type": "address"
-        },
-        {
-          "name": "thresholdPPTTH",
-          "type": "uint256"
-        },
-        {
-          "name": "location",
-          "type": "bytes32"
-        },
-        {
-          "name": "start",
-          "type": "uint256"
-        },
-        {
-          "name": "end",
-          "type": "uint256"
-        },
-        {
-          "name": "makeStale",
-          "type": "bool"
-        }
-      ],
-      "name": "createWITProposal",
-      "outputs": [],
-      "payable": true,
-      "stateMutability": "payable",
-      "type": "function"
-    },
-    {
-      "constant": false,
-      "inputs": [
-        {
           "name": "newOwner",
           "type": "address"
         }
@@ -302,28 +142,6 @@ WITABI = [
       "payable": false,
       "stateMutability": "nonpayable",
       "type": "function"
-    },
-    {
-      "anonymous": false,
-      "inputs": [
-        {
-          "indexed": true,
-          "name": "WITID",
-          "type": "uint256"
-        },
-        {
-          "indexed": false,
-          "name": "amount",
-          "type": "uint256"
-        },
-        {
-          "indexed": true,
-          "name": "user",
-          "type": "address"
-        }
-      ],
-      "name": "Redemption",
-      "type": "event"
     },
     {
       "anonymous": false,
@@ -388,7 +206,7 @@ WITABI = [
         {
           "indexed": false,
           "name": "location",
-          "type": "bytes32"
+          "type": "string"
         },
         {
           "indexed": false,
@@ -413,22 +231,64 @@ WITABI = [
       "anonymous": false,
       "inputs": [
         {
-          "indexed": false,
+          "indexed": true,
           "name": "WITID",
           "type": "uint256"
         },
         {
+          "indexed": true,
+          "name": "aboveOwner",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "name": "belowOwner",
+          "type": "address"
+        },
+        {
           "indexed": false,
-          "name": "evaluationResult",
-          "type": "string"
+          "name": "beneficiary",
+          "type": "address"
         },
         {
           "indexed": false,
           "name": "weiPayout",
           "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "name": "aboveID",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "name": "belowID",
+          "type": "uint256"
         }
       ],
       "name": "WITEvaluated",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "name": "WITID",
+          "type": "uint256"
+        },
+        {
+          "indexed": true,
+          "name": "owner",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "name": "amountRedeemed",
+          "type": "uint256"
+        }
+      ],
+      "name": "WITCancelled",
       "type": "event"
     },
     {
@@ -525,5 +385,169 @@ WITABI = [
       ],
       "name": "Approval",
       "type": "event"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "name": "arbolAddress",
+          "type": "address"
+        },
+        {
+          "name": "storageAddress",
+          "type": "address"
+        },
+        {
+          "name": "NOAAPrecipAggregate",
+          "type": "address"
+        },
+        {
+          "name": "NASA",
+          "type": "address"
+        }
+      ],
+      "name": "initialize",
+      "outputs": [],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "name": "weiContributing",
+          "type": "uint256"
+        },
+        {
+          "name": "weiAsking",
+          "type": "uint256"
+        },
+        {
+          "name": "aboveOrBelow",
+          "type": "bool"
+        },
+        {
+          "name": "evaluator",
+          "type": "address"
+        },
+        {
+          "name": "thresholdPPTTH",
+          "type": "uint256"
+        },
+        {
+          "name": "location",
+          "type": "string"
+        },
+        {
+          "name": "start",
+          "type": "uint256"
+        },
+        {
+          "name": "end",
+          "type": "uint256"
+        },
+        {
+          "name": "makeStale",
+          "type": "bool"
+        }
+      ],
+      "name": "createWITProposal",
+      "outputs": [],
+      "payable": true,
+      "stateMutability": "payable",
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "name": "proposalID",
+          "type": "uint256"
+        }
+      ],
+      "name": "createWITAcceptance",
+      "outputs": [],
+      "payable": true,
+      "stateMutability": "payable",
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "name": "tokenID",
+          "type": "uint256"
+        },
+        {
+          "name": "runtimeParams",
+          "type": "string"
+        }
+      ],
+      "name": "evaluate",
+      "outputs": [],
+      "payable": true,
+      "stateMutability": "payable",
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "name": "WITID",
+          "type": "uint256"
+        },
+        {
+          "name": "outcome",
+          "type": "string"
+        }
+      ],
+      "name": "evaluatorCallback",
+      "outputs": [],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "name": "tokenID",
+          "type": "uint256"
+        }
+      ],
+      "name": "cancelAndRedeem",
+      "outputs": [],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "name": "dependant",
+          "type": "address"
+        }
+      ],
+      "name": "addDependant",
+      "outputs": [],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "name": "newOwner",
+          "type": "address"
+        }
+      ],
+      "name": "decomission",
+      "outputs": [],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
     }
   ];
