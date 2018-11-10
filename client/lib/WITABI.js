@@ -184,6 +184,16 @@
           "type": "uint256"
         },
         {
+          "indexed": false,
+          "name": "aboveOwner",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "name": "belowOwner",
+          "type": "address"
+        },
+        {
           "indexed": true,
           "name": "weiContributing",
           "type": "uint256"
@@ -311,6 +321,28 @@
         }
       ],
       "name": "ContractDecomissioned",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "name": "WITID",
+          "type": "uint256"
+        },
+        {
+          "indexed": true,
+          "name": "invoker",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "name": "evaluator",
+          "type": "address"
+        }
+      ],
+      "name": "WITEvaluationInvoked",
       "type": "event"
     },
     {

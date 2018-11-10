@@ -311,6 +311,10 @@ function loadData(){
         witAddress = "0x72dc0461f8ef97dbe30595b882846f80e6382189";
         noaaAddress = "0xe8ca721c10a1947a9344d168c1299dd342f78093";
         nasaAddress = "0xc0ec4dbd358038c42ef92f9cc9f7e389191280ef";
+        //NASA-leaflet deployment- backwards compatible 10-11-2018
+        // witAddress = "0x08f1ab9ee2766255ff4ec88054e6f691679cbfe6";
+        // noaaAddress = "0x1a9a084f9cb6d343b447a55b911f674380c7f162";
+        // nasaAddress = "0x03f6389b5a2cc865d70ba9627f7dc074cc5a21e7";
         break
       case "42":
         $("#network-name").html("Kovan");
@@ -612,6 +616,49 @@ function dateNum(text){
     if(months[lm] === a[0]) n = lm;
   }
   return parseInt(a[1]) + n/12;
+}
+
+function updateOpenProposals(list){
+  list = sortArray(list,Session.get("sortIndex"),Session.get("descending"));
+  Session.set("openProtectionsData",list);
+
+  //if more than ten items turn on pagination
+  //set max pagination
+  let tblRow = tableRows();
+  if(list.length > tblRow){
+    $("#open-pager-btns").show();
+    $("#open-max").html(Math.ceil(list.length/tblRow));
+    $("#open-current").html(1);
+  }
+
+  //show paginated items
+  let pageList = paginateData(list,opPagination);
+  if(pageList.length > 0){
+    Session.set("openProtectionsPaginatedData",pageList);
+  }else{
+    if(opPagination > 0) opPagination -= 1;
+  }
+}
+
+function updateMyProposals(list){
+  list = sortArray(list,Session.get("mySortIndex"),Session.get("descending"));
+  Session.set("myProtectionsData",list);
+
+  //if more than ten items turn on pagination
+  let tblRow = tableRows();
+  if(list.length > tblRow){
+    $("#my-pager-btns").show();
+    $("#my-max").html(Math.ceil(list.length/tblRow));
+    $("#my-current").html(1);
+  }
+
+  //show paginated items
+  let pageList = paginateData(list,myPagination);
+  if(pageList.length > 0){
+    Session.set("myProtectionsPaginatedData",pageList);
+  }else{
+    if(myPagination > 0) myPagination -= 1;
+  }  
 }
 
 async function updateBalance(){
