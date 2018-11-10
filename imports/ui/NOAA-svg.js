@@ -2,6 +2,28 @@ import './body.js';
 import * as d3 from "d3";
 import topojson from "topojson";
 
+const locationObj = {
+      // NOAA codes:
+      // Corn                   = 261
+      // Cotton                 = 265
+      // Hard Red Winter Wheat  = 255
+      // Corn and Soybean       = 260
+      // Soybean                = 262
+      // Spring Wheat           = 250
+      // Winter Wheat           = 256
+      "us-corn-belt":{text:"US Corn Belt",noaaCode:"261",col:"#47B98E"}
+      ,"us-soy-belt":{text:"US Soy Belt",noaaCode:"262",col:"#DBB2B2"}
+      ,"us-redwinter-belt":{text:"US Red Winter Wheat Belt",noaaCode:"255",col:"#49F2A9"}
+    };
+
+locationText = function (num){
+  for (var prop in locationObj) {
+    let el = locationObj[prop];
+    if(num === el.noaaCode) return el.text;
+  }
+  return "?";
+}
+
 ////////////////////////////////////////////
 // NOAA API CALL
 ////////////////////////////////////////////

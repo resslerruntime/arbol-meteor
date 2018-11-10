@@ -1,7 +1,8 @@
 import { Template } from 'meteor/templating';
 import { ReactiveVar } from 'meteor/reactive-var';
-import BN from 'bn.js';
-import * as d3 from "d3";
+
+import './utilities.js'
+import './manageWITs.js'
 import './NASA-leaflet.js';
 import './NOAA-svg.js';
 import './threshold.js';
@@ -13,9 +14,7 @@ Router.route('/tutorial');
 Router.route('/', {
   template: 'main-page',
   onAfterAction:function(){
-    console.log("router onAfterAction")
     let onHTML = setInterval(function(){
-      console.log("check for loaded HTML")
       //check if html is loaded
       let el = $("#map");
       if(typeof el !== "undefined"){
@@ -30,46 +29,11 @@ Router.route('/', {
 // FUNCTIONS RELATED TO WEB3 PAGE STARTUP
 ////////////////////////////////////////////
 
-//used for asynchronous web3 calls
-const promisify = (inner) =>
-    new Promise((resolve, reject) =>
-        inner((err, res) => {
-            if (err) {
-                reject(err);
-            } else {
-                resolve(res);
-            }
-        })
-    );
-
-
-const locationObj = {
-      // NOAA codes:
-      // Corn                   = 261
-      // Cotton                 = 265
-      // Hard Red Winter Wheat  = 255
-      // Corn and Soybean       = 260
-      // Soybean                = 262
-      // Spring Wheat           = 250
-      // Winter Wheat           = 256
-      "us-corn-belt":{text:"US Corn Belt",noaaCode:"261",col:"#47B98E"}
-      ,"us-soy-belt":{text:"US Soy Belt",noaaCode:"262",col:"#DBB2B2"}
-      ,"us-redwinter-belt":{text:"US Red Winter Wheat Belt",noaaCode:"255",col:"#49F2A9"}
-    };
-
-function locationText(num){
-  for (var prop in locationObj) {
-    let el = locationObj[prop];
-    if(num === el.noaaCode) return el.text;
-  }
-  return "?";
-}
-
 //table entry constructor open protections
-//event ProposalOffered(uint indexed WITID, uint aboveID, uint belowID, uint indexed weiContributing,  uint indexed weiAsking, address evaluator, uint thresholdPPTTH, bytes32 location, uint start, uint end, bool makeStale);
+//event ProposalOffered(uint indexed WITID, uint aboveID, uint belowID, uint indexed weiContributing,  uint indexed weiAsking, address evaluator, uint thresholdPPTTH, string location, uint start, uint end, bool makeStale);
 function Entry(r,owner){
   let a = r.args;
-  let location = locationText(bytes32ToNumString(a.location));
+  let location = "?"; 
   let ask = a.weiAsking.toNumber();
   let propose = a.weiContributing.toNumber();
   let id = a.WITID.toNumber();
@@ -101,7 +65,7 @@ function Entry(r,owner){
   this.column = [
       {type:"text",key:location,name:location}
       ,{type:"text",key:thresh,name:thresh}
-      ,{type:"text",key:"NOAA Rainfall",name:"NOAA Rainfall"}
+      ,{type:"text",key:"NASA Rainfall",name:"NASA Rainfall"}
       ,{type:"num",key:a.start.toNumber()*1000,name:dateText(a.start.toNumber()*1000)}
       ,{type:"num",key:a.end.toNumber()*1000,name:dateText(a.end.toNumber()*1000)}
       ,{type:"num",key:totalPayout,name:totalPayoutText}
@@ -121,7 +85,7 @@ function MyEntry(r,a,id,bool){
 
   let ask = a.weiAsking.toNumber();
   let propose = a.weiContributing.toNumber();
-  let location = locationText(bytes32ToNumString(a.location));
+  let location = "?"; 
 
   //total payouts
   let totalPayout = toEth(propose) + toEth(ask);
@@ -178,7 +142,7 @@ function MyEntry(r,a,id,bool){
   this.column = [
       {type:"text",key:location,name:location}
       ,{type:"text",key:thresh,name:thresh}
-      ,{type:"text",key:"NOAA Rainfall",name:"NOAA Rainfall"}
+      ,{type:"text",key:"NASA Rainfall",name:"NASA Rainfall"}
       ,{type:"num",key:a.start.toNumber()*1000,name:dateText(a.start.toNumber()*1000)}
       ,{type:"num",key:a.end.toNumber()*1000,name:dateText(a.end.toNumber()*1000)}
       ,{type:"num",key:yourContr,name:yourContrText}
@@ -188,27 +152,21 @@ function MyEntry(r,a,id,bool){
     ];
 }
 
+//manage current user
 var user = [-1];
 var pastUser = [-2];
+
 // var arbolAddress, arbolContract, arbolInstance; //tag for deletion
 var witAddress, witContract, witInstance;
 var noaaAddress, nasaAddress;
-
 
 //TODO can we really rely on the acceptance events always firing before the proposal events and therefore creating a useful acceptedList
 var acceptedList = [];
 let proposedList = [];
 
-//data variables for NOAA calls
-//tag for deletion, and anywhere else that has these variables
-let NOAACODE = -1;
-let MONTHCODE = -1;
-let DURATIONCODE = -1;
-
 function initMainPage(){
   if (Meteor.isClient) {
     Meteor.startup(async function() {
-      console.log('Meteor.startup, width: ',screen.width);
 
       //instantiate some interface elements
       $('.close-click').click(() => $('#demo-popup').slideUp(200));
@@ -241,12 +199,11 @@ function initMainPage(){
         $("#user").show();
         // Modern dapp browsers...
         if(window.ethereum) {
-          console.log("Window.ethereum === true")
+          console.log("User account exposed on users agreement");
           window.web3 = new Web3(ethereum);
           try {
               // Request account access if needed
               await ethereum.enable();
-              // Acccounts now exposed
 
               //show relevant content depending on whether web3 is loaded or not
               $("#web3-onload").removeClass("disabled-div");
@@ -260,7 +217,7 @@ function initMainPage(){
         }
         // Legacy dapp browsers...
         else if (typeof web3 !== 'undefined') {
-          console.log("web3 from current provider: ", web3.currentProvider.constructor.name)
+          console.log("legacy web3 injection", web3.currentProvider.constructor.name)
           // Use Mist/MetaMask's provider
           web3 = new Web3(web3.currentProvider);
 
@@ -288,6 +245,7 @@ async function manageAccounts(){
     if(user[0] !== pastUser[0]){
       console.log("_-_-_- CHANGE IN USER _-_-_-")
       //reset and reload everything for new user
+      setCurrentUser(user[0]); //setCurrentUser for mangeWIT.js
       // $("#web3-onload").addClass("disabled-div");
       $('#open-pager-btns').hide();
       $('#my-pager-btns').hide();
@@ -323,7 +281,6 @@ async function manageAccounts(){
 
 //begin the process of loading all the data
 function loadData(){
-  console.log("fn: loadData")
   //check for network use correct deployed addresses
   web3.version.getNetwork((err, netId) => {
     switch (netId) {
@@ -370,6 +327,7 @@ function loadData(){
     }
     witContract = web3.eth.contract(WITABI);
     witInstance = witContract.at(witAddress);
+    setWitInstance(witInstance);
 
 /*
 
@@ -409,10 +367,12 @@ var watchLatestProposal = -1;
 function latestProposals(){
   console.log("fn: latestProposals");
   watchLatestProposal = witInstance.ProposalOffered({},{fromBlock: 0, toBlock: 'latest'}).watch(function(error, result){
-    console.log(result)
     updateBalance();
+    let store = addInfoFromProposalCreated(result);
     let id = result.args.WITID.toNumber();
-    console.log("===> latest: 'offered', id:",id);
+    let aboveID = result.args.aboveID.toNumber();
+    let belowID = result.args.belowID.toNumber();
+    console.log("===> latest: 'offered', id:",id,"above id:",aboveID,"below id:",belowID,result);
     addToken(result);
     $('#open-loader').hide();
     $('#open-wrapper').removeClass('loading');
@@ -425,10 +385,12 @@ function latestAcceptances(){
   console.log("fn: latestAcceptance");
   //do something as new proposal is accepted
   watchLatestAcceptance = witInstance.ProposalAccepted({},{fromBlock: 0, toBlock: 'latest'}).watch(function(error, result){
-    console.log(result)
     updateBalance();
+    let store = addInfoFromProposalAccepted(result);
     let id = result.args.WITID.toNumber();
-    console.log("===> latest: 'accepted', id:",id)
+    let aboveID = result.args.aboveID.toNumber();
+    let belowID = result.args.belowID.toNumber();    
+    console.log("===> latest: 'accepted', id:",id,"above id:",aboveID,"below id:",belowID,result)
     addAcceptance(result);
   });
 }
@@ -440,8 +402,15 @@ function latestEvaluations(){
   //do something as new evaluation is accepted
   watchLatestEvaluation = witInstance.WITEvaluated({},{fromBlock: 0, toBlock: 'latest'}).watch(function(error, result){
     updateBalance();
-    console.log("===> latest: 'evaluated'")
-    console.log(result)
+    let store = addInfoFromProposalEvaluated(result);
+    let id = result.args.WITID.toNumber();
+    let aboveID = result.args.aboveID.toNumber();
+    let belowID = result.args.belowID.toNumber();
+    let aboveOwner = result.args.aboveOwner;
+    let belowOwner = result.args.belowOwner;
+    let beneficiary = result.args.beneficiary;
+    console.log("===> latest: 'evaluated'","id:",id,"above id:",aboveID,"below id:",belowID,result)
+    console.log("===> latest: 'evaluated'","id:",id,aboveOwner,belowOwner,beneficiary)
     //update status in "my protections pages"
     //go through list, change status update page
     let list = Session.get("myProtectionsData");
@@ -451,7 +420,7 @@ function latestEvaluations(){
       let payout = toEth(result.args.weiPayout.toNumber());
       if(true) outcome = `You received <span class="green-text">${payout}</span>`
       else outcome = "You did not receive the payout";
-      console.log("col",list,index,list[index])
+      console.log("===> update with evaluate",list,index,list[index], outcome)
       list[index].column[7].key = "Evaluation";
       list[index].column[7].name = "Evaluation complete";
       list[index].column[8].key = "Evaluated";
@@ -470,20 +439,16 @@ async function addToken(result){
     let owner = await promisify(cb => witInstance.ownerOf(idObj, cb));
 
     //add to open protections
-    console.log("acccepted list",acceptedList.indexOf(id))
-    console.log("proposed list",proposedList.indexOf(id))
     if(proposedList.indexOf(id) === -1){
       if(acceptedList.indexOf(id) === -1){
-        console.log("new token dtected, add new token")
         proposedList.push(id);
         //TODO reinstate date filter
         //only show entries whose starting dates haven't passed
         // if(new Date(result.args.start.toNumber()) - new Date() > 0){
         if(true){
           let list = Session.get("openProtectionsData");
-          console.log("===> proposal offered, id:",id);
+          // console.log("===> proposal offered, id:",id);
           list.push(new Entry(result,owner));
-          console.log("all tokens",list.length,list,acceptedList.length,acceptedList)
           list = sortArray(list,Session.get("sortIndex"),Session.get("descending"));
           Session.set("openProtectionsData",list);
 
@@ -507,7 +472,7 @@ async function addToken(result){
       }
 
       //add to my protections
-      console.log("my entry", owner, user[0], result)
+      // console.log("my entry", owner, user[0], result)
       if(owner === user[0]){
         let list = Session.get("myProtectionsData");
         list.push(new MyEntry(result,result.args,id,true));
@@ -582,7 +547,7 @@ async function addAcceptance(result){
 
   if(acceptedList.indexOf(idp) === -1){
     try{
-      console.log("===> proposal accepted, id:", id);
+      // console.log("===> proposal accepted, id:", id);
       //prevent previous tokens from being added to list
       acceptedList.push(idp);
       //if they are already shown remove them
@@ -602,7 +567,7 @@ async function addAcceptance(result){
 
         //get contract information for associated proposal
         witInstance.ProposalOffered({WITID:idpObj},{fromBlock: 0, toBlock: 'latest'}).watch(function(error, result){
-          console.log("===> proposal accepted details retrieved, id:",id)
+          // console.log("===> proposal accepted details retrieved, id:",id)
           let list = Session.get("myProtectionsData");
           list.push(new MyEntry(outerResult,result.args,id,false));
           list = sortArray(list,Session.get("mySortIndex"),Session.get("descending"));
@@ -628,14 +593,7 @@ async function addAcceptance(result){
   }
 }
 
-//conversion
-function toEth(n){
-  return n/Math.pow(10,18);
-}
 
-function toWei(n){
-  return n*Math.pow(10,18);
-}
 
 // num = a.start.toNumber()
 let months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
@@ -678,23 +636,6 @@ async function updateBalance(){
         console.error(error);
       }
     });
-  }
-}
-
-// give number three decimals
-function clipNum(n){
-  n = Math.round(n*1000)/1000;
-  if(n < 0.001){
-    return "<0.001";
-  }else{
-    //find out how many digits before zero and how many after
-    let s = `${n}`, a = s.split(".");
-    if(a.length === 1){
-      return s += ".000";
-    }else{
-      while(a[1].length < 3) a[1] += "0";
-      return a[0] + "." + a[1];
-    }
   }
 }
 
@@ -813,9 +754,9 @@ async function acceptProposal(v){
   let id = vals[1];
 
   try {
-    console.log("====> new WIT acceptance");
-    console.log("ethAsk", ethAsk);
-    console.log("proposal token ID", id);
+    // console.log("====> new WIT acceptance");
+    // console.log("ethAsk", ethAsk);
+    // console.log("proposal token ID", id);
 
     //TODO don't let user accept their own proposal
     await promisify(cb => witInstance.createWITAcceptance(id,{from: user[0], value:toWei(ethAsk)},cb));
@@ -829,8 +770,8 @@ async function evaluateWIT(id){
   try {
     let idodd = parseInt(id);
     if(id/2 === Math.round(id/2)) idodd = parseInt(id) - 1;
-    console.log("=================> new WIT evaluation");
-    console.log("token ID", id, idodd, user[0]);
+    // console.log("=================> new WIT evaluation");
+    // console.log("token ID", id, idodd, user[0]);
     await promisify(cb => witInstance.evaluate(idodd,"",{from: user[0]},cb));
   } catch (error) {
     console.log(error)
@@ -1295,19 +1236,19 @@ Template.formNewProtection.events({
     else {
       event.preventDefault();
       const target = event.currentTarget;
-      console.log("target",target)
+      // console.log("target",target)
       const yourContr = parseFloat($('#your-contrib').val());
-      console.log("yourContr",yourContr)
+      // console.log("yourContr",yourContr)
       const totalPayout = parseFloat($('#total-contrib').val());
-      console.log("totalPayout",totalPayout)
+      // console.log("totalPayout",totalPayout)
       const location = "21.5331234,-3.1621234&0.14255"; //$('#location').val();
-      console.log("location",location)
+      // console.log("location",location)
       const thresholdRelation = $('#threshold-relation').val();
-      console.log("thresholdRelation",thresholdRelation)
+      // console.log("thresholdRelation",thresholdRelation)
       const thresholdPercent = $('#threshold-percent').val();
-      console.log("tresholdPercent",thresholdPercent)
+      // console.log("tresholdPercent",thresholdPercent)
       const thresholdAverage = $('#threshold-average').val();
-      console.log("tresholdAverage",thresholdAverage)
+      // console.log("tresholdAverage",thresholdAverage)
       let sm = $('#date-start').datepicker('getDate').getMonth() + 1; // start month
       const sy = $('#date-start').datepicker('getDate').getFullYear(); // start year
       let em = $('#date-end').datepicker('getDate').getMonth() + 1; // end month
@@ -1318,55 +1259,24 @@ Template.formNewProtection.events({
       const endDate = `${ey}-${em}`;
       const index = "Precipitation";
 
-      //check if info is missing
-      // if(startDate === "" || endDate === "" || parseFloat(yourContr) === 0 || parseFloat(totalPayout) === 0 || location === "" || index === "" || thresholdRelation === "" || thresholdPercent === "" || thresholdAverage === ""){
-      //   var s = "Please complete missing elements: \n";
-      //   if(parseFloat(yourContr) === 0){
-      //     s += "  Your Contribution \n";
-      //     $("#your-contrib").addClass("missing-info");
-      //   }
-      //   if(parseFloat(totalPayout) === 0){
-      //     s += "  Total Payout \n";
-      //     $("#total-contrib").addClass("missing-info");
-      //   }
-      //   if(location === ""){
-      //     s += "  Location \n";
-      //     $("#location").addClass("missing-info");
-      //   }
-      //   if(thresholdRelation === "" || thresholdPercent === "" || thresholdAverage === ""){
-      //     s += "  Threshold \n";
-      //     $("#threshold").addClass("missing-info");
-      //   }
-      //   if(startDate === ""){
-      //     s += "  Start Date \n";
-      //     $("#start-input").addClass("missing-info");
-      //   }
-      //   if(endDate === ""){
-      //     s += "  End Date \n";
-      //     $("#end-input").addClass("missing-info");
-      //   }
-      //   alert(s);
-      // }
-      // else {
-        //ask for confirmation
-        const confirmed = confirm ( "Please confirm your selection: \n\n"
-          + "  Your Contribution (Eth): " + yourContr + "\n"
-          + "  Total Payout (Eth): " + totalPayout + "\n"
-          + "  Location: " + "" // locationObj[location].text + "\n"
-          + "  Threshold: " + threshText(thresholdRelation,thresholdPercent,thresholdAverage) + "\n"
-          + "  Start Date: " + startDate + "\n"
-          + "  End Date: " + endDate + "\n"
-        );
+      //ask for confirmation
+      const confirmed = confirm ( "Please confirm your selection: \n\n"
+        + "  Your Contribution (Eth): " + yourContr + "\n"
+        + "  Total Payout (Eth): " + totalPayout + "\n"
+        + "  Location: " + "" // locationObj[location].text + "\n"
+        + "  Threshold: " + threshText(thresholdRelation,thresholdPercent,thresholdAverage) + "\n"
+        + "  Start Date: " + startDate + "\n"
+        + "  End Date: " + endDate + "\n"
+      );
 
-        if (confirmed) {
-          //submit info
-          createProposal(startDate,endDate,yourContr,totalPayout,location,index,thresholdRelation,thresholdPercent,thresholdAverage);
-          self = Template.instance();
-          resetCreateWIT(self);
-        } else {
-          //let user continue to edit
-        }
-      // }
+      if (confirmed) {
+        //submit info
+        createProposal(startDate,endDate,yourContr,totalPayout,location,index,thresholdRelation,thresholdPercent,thresholdAverage);
+        self = Template.instance();
+        resetCreateWIT(self);
+      } else {
+        //let user continue to edit
+      }
     }
   }
 });
@@ -1400,10 +1310,6 @@ function resetCreateWIT(instance) {
   $("#ten-yr-prob").html('');
   // clear the chart
   clearChart();
-  // clear variables for NOAA calls
-  let NOAACODE = -1;
-  let MONTHCODE = -1;
-  let DURATIONCODE = -1;
   // clear and hide the recommended contribution and wit rating
   $('#your-contrib-hint-value').text('').parent().hide();
   $("#createwit .helpbox.rating").hide();
@@ -1430,34 +1336,8 @@ function resetCreateWIT(instance) {
   });
 }
 
-//call back that clears the form
-function clearForm(){
-  // //clear form if succesful
-  // target[0].value = 0;
-  // target[1].value = 0;
-  // target[2].value = "";
-  // target[3].value = "";
-  // target[4].value = "";
-  // target[5].value = "";
-  // target[6].value = "";
-  // target[7].value = "";
-  // $('#end-date')[0].min = "";
-  // $('#start-date')[0].max = "";
-  // $('#total-contrib')[0].min = 0;
-  // //unselect region, reset text value
-  // clearChart();
-  // $("#ten-yr-prob").html("");
-  // $('#location').val("none");
-  // d3.selectAll(`path.${selectedRegion}`)
-  //   .attr("fill","none");
-  // selectedRegion = "none";
-  NOAACODE = -1;
-  MONTHCODE = -1;
-  DURATIONCODE = -1;
-}
-
 async function createProposal(startDate,endDate,yourContr,totalPayout,location,index,thresholdRelation,thresholdPercent,thresholdAverage){
-  console.log("createProposal")
+  console.log("fn: createProposal")
   const d1 = (new Date(startDate)).getTime()/1000; //convert to UNIX timestamp
   let dd2 = new Date(endDate);
   dd2.setDate(dd2.getDate() + 15);
@@ -1467,37 +1347,18 @@ async function createProposal(startDate,endDate,yourContr,totalPayout,location,i
   let ethAsk = toWei(totalPayout - yourContr);
   let above = threshVal(thresholdRelation);
   let numPPTH = threshValPPTH(thresholdPercent,thresholdAverage); // = 10000 * threshValFraction(thresholdPercent,thresholdAverage);
-  // let location32 = numStringToBytes32(locationObj[location].noaaCode);
   let address = nasaAddress;
   let makeStale = false; //TODO for deployment makeStale should be true in default
-  console.log(ethPropose, ethAsk, above, address, numPPTH, location, d1, d2, makeStale);
+  // console.log(ethPropose, ethAsk, above, address, numPPTH, location, d1, d2, makeStale);
 
   try {
     await promisify(cb => witInstance.createWITProposal(ethPropose, ethAsk, above, address, numPPTH, location, d1, d2, makeStale, {value: ethPropose, from:user[0]}, cb));
-    //clearForm();
   } catch (error) {
     console.log(error)
   }
 }
 
-// Big Number
-function numStringToBytes32(num) {
-   var bn = new BN(num).toTwos(256);
-   return padToBytes32(bn.toString(16));
-}
 
-function bytes32ToNumString(bytes32str) {
-    bytes32str = bytes32str.replace(/^0x/, '');
-    var bn = new BN(bytes32str, 16).fromTwos(256);
-    return bn.toString();
-}
-
-function padToBytes32(n) {
-    while (n.length < 64) {
-        n = "0" + n;
-    }
-    return "0x" + n;
-}
 
 //does this function do anything? I am pretty sure it doesn't
 //tag for review and potential deletion
