@@ -6,17 +6,30 @@ import './body.js';
 // NASA API CALL
 ////////////////////////////////////////////
 
-let submittedDataRequest = false;
-let checkStatus;
+//TODO this should only call if datepicker isn't default values
+prepareNasaCall = function (){
+  let smv = $('#date-start').datepicker('getDate').getMonth() + 1
+    ,sm = `${smv}`     // start month
+    ,syv = $('#date-start').datepicker('getDate').getFullYear() - 10
+    ,sy = `${syv}`; // start year
+  let emv = $('#date-end').datepicker('getDate').getMonth() + 1
+    ,em = `${emv}` // end month, +2 to account for the entire month by putting the end date as the 1st of the next month
+    ,eyv = $('#date-end').datepicker('getDate').getFullYear() - 1
+    ,ey = `${eyv}`; // end year
+  while(sm.length < 2) sm = "0" + sm;
+  while(em.length < 2) em = "0" + em;
 
-callNASA = function (startDate,endDate,location){
-  $("#error-msg").fadeOut(500);
-  $("#error-msg2").fadeOut(500);
-  $("#chart-loader").fadeIn(1000);
-  console.log("nasa:",startDate.mmddyyyy,endDate.mmddyyyy)
-  //reset call parameters
-  submittedDataRequest = false;
-  window.clearInterval(checkStatus);
+  //call NASA 
+  let startDate = {
+    month: smv
+    ,year: syv
+    ,mmddyyyy:`${sm}/01/${sy}`
+  };
+  let endDate = {
+    month: emv
+    ,year: eyv
+    ,mmddyyyy:`${em}/01/${ey}`
+  }; 
 
   //get area that was selected
   // let coords = [[40.55,-83.1],[40.8,-83.1],[40.8,-82.85],[40.55,-82.85]];
@@ -25,9 +38,23 @@ callNASA = function (startDate,endDate,location){
   if(selectedBounds) coords = leafletToNasaCoords(selectedBounds);
   console.log(coords,stringifyCoords(coords));
 
+  callNASA(startDate,endDate,stringifyCoords(coords)); 
+}
+
+let submittedDataRequest = false;
+let checkStatus;
+callNASA = function (startDate,endDate,location){
+  $("#error-msg").fadeOut(500);
+  $("#error-msg2").fadeOut(500);
+  $("#chart-loader").fadeIn(1000);
+  console.log("nasa:",startDate.mmddyyyy,endDate.mmddyyyy,location)
+  //reset call parameters
+  submittedDataRequest = false;
+  window.clearInterval(checkStatus);
+
   //submit initial data request
   // Meteor.call("submitDataRequestNASA","04/01/2008","06/30/2018",stringifyCoords([]),function(error, results) {
-  Meteor.call("submitDataRequestNASA",startDate.mmddyyyy,endDate.mmddyyyy,stringifyCoords(coords),function(error, results) {
+  Meteor.call("submitDataRequestNASA",startDate.mmddyyyy,endDate.mmddyyyy,location,function(error, results) {
     if(typeof results != 'undefined'){
       console.log("data request NASA",results,results.content)
       let id = eval(results.content)[0];
@@ -68,23 +95,6 @@ callNASA = function (startDate,endDate,location){
   });
 }
 
-function stringifyCoords (a){
-  let s = "[";
-  a.map(d => s += `[${d[0]},${d[1]}],`);
-  s = s.substring(0, s.length - 1);
-  s += "]";
-  return s;
-}
-
-function leafletToNasaCoords(a){
-  return [
-    [a[0][0],a[0][1]]
-    ,[a[0][0]+0.25,a[0][1]]
-    ,[a[0][0]+0.25,a[0][1]+0.25]
-    ,[a[0][0],a[0][1]+0.25]
-  ];
-}
-
 var months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec","Jan"];
 function yearlyNASAVals (a,startDate,endDate){
   console.log("yearly NASA",startDate,endDate)
@@ -111,6 +121,8 @@ function yearlyNASAVals (a,startDate,endDate){
   console.log("nasa data",data)
   return {start:startDate.year,data:data,avg:sumAll/data.length,title:`Total Precipitation: ${months[parseInt(startDate.month)-1]} to ${months[parseInt(endDate.month)-1]}`};
 }
+
+
 
 ////////////////////////////////////////////
 // leaflet map
@@ -183,6 +195,9 @@ var waitForLeaflet = setInterval(function(){
       }
       selectedBounds = currentBounds;
       presentSelection = true;
+
+      //call NASA
+      prepareNasaCall();
     }
 
     function mouseZoom(e){
@@ -220,9 +235,39 @@ var waitForLeaflet = setInterval(function(){
   }
 },1000);
 
-getSelectedBounds = function () {
-  return selectedBounds;
+function stringifyCoords (a){
+  let s = "[";
+  a.map(d => s += `[${d[0]},${d[1]}],`);
+  s = s.substring(0, s.length - 1);
+  s += "]";
+  return s;
 }
+
+//all four corners of square
+function leafletToNasaCoords(a){
+  return [
+    [a[0][0],a[0][1]]
+    ,[a[0][0]+0.25,a[0][1]]
+    ,[a[0][0]+0.25,a[0][1]+0.25]
+    ,[a[0][0],a[0][1]+0.25]
+  ];
+}
+
+//top left hand corner of lat lon square
+//selectedBound 
+leafletToWitCoords = function (){
+  let a = selectedBounds;
+  return `${a[0][0]},${a[0][1]}&0.025`;
+}
+
+
+leafletToDisplayCoords = function (){
+  let a = selectedBounds;
+  return `lat: ${a[0][0]} lon: ${a[0][1]}`
+}
+
+
+
 
 
 

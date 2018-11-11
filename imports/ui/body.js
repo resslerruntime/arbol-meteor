@@ -1187,29 +1187,30 @@ Template.formNewProtection.events({
 
     //call NASA
     if ($(event.currentTarget).attr('id') == "date-end") {
-      let smv = $('#date-start').datepicker('getDate').getMonth() + 1
-        ,sm = `${smv}`     // start month
-        ,syv = $('#date-start').datepicker('getDate').getFullYear() - 10
-        ,sy = `${syv}`; // start year
-      let emv = $('#date-end').datepicker('getDate').getMonth() + 1
-        ,em = `${emv}` // end month, +2 to account for the entire month by putting the end date as the 1st of the next month
-        ,eyv = $('#date-end').datepicker('getDate').getFullYear() - 1
-        ,ey = `${eyv}`; // end year
-      while(sm.length < 2) sm = "0" + sm;
-      while(em.length < 2) em = "0" + em;
+      prepareNasaCall();
+      // let smv = $('#date-start').datepicker('getDate').getMonth() + 1
+      //   ,sm = `${smv}`     // start month
+      //   ,syv = $('#date-start').datepicker('getDate').getFullYear() - 10
+      //   ,sy = `${syv}`; // start year
+      // let emv = $('#date-end').datepicker('getDate').getMonth() + 1
+      //   ,em = `${emv}` // end month, +2 to account for the entire month by putting the end date as the 1st of the next month
+      //   ,eyv = $('#date-end').datepicker('getDate').getFullYear() - 1
+      //   ,ey = `${eyv}`; // end year
+      // while(sm.length < 2) sm = "0" + sm;
+      // while(em.length < 2) em = "0" + em;
 
-      //call NASA 
-      let startDate = {
-        month: smv
-        ,year: syv
-        ,mmddyyyy:`${sm}/01/${sy}`
-      };
-      let endDate = {
-        month: emv
-        ,year: eyv
-        ,mmddyyyy:`${em}/01/${ey}`
-      }; 
-      callNASA(startDate,endDate,""); 
+      // //call NASA 
+      // let startDate = {
+      //   month: smv
+      //   ,year: syv
+      //   ,mmddyyyy:`${sm}/01/${sy}`
+      // };
+      // let endDate = {
+      //   month: emv
+      //   ,year: eyv
+      //   ,mmddyyyy:`${em}/01/${ey}`
+      // }; 
+      // callNASA(startDate,endDate,""); 
     }
   },
   'input #your-contrib'(event){
@@ -1310,7 +1311,8 @@ Template.formNewProtection.events({
       const target = event.currentTarget;
       const yourContr = parseFloat($('#your-contrib').val());
       const totalPayout = parseFloat($('#total-contrib').val());
-      const location = $('#location').val();
+      const location = leafletToWitCoords(); //$('#location').val();
+      console.log("return location nasa",location)
       const thresholdRelation = $('#threshold-relation').val();
       const thresholdPercent = $('#threshold-percent').val();
       const thresholdAverage = $('#threshold-average').val();
@@ -1358,7 +1360,7 @@ Template.formNewProtection.events({
         const confirmed = confirm ( "Please confirm your selection: \n\n"
           + "  Your Contribution (Eth): " + yourContr + "\n"
           + "  Total Payout (Eth): " + totalPayout + "\n"
-          + "  Location: " + locationObj[location].text + "\n"
+          + "  Location: " + location + "\n" //locationObj[location].text + "\n"
           + "  Threshold: " + threshText(thresholdRelation,thresholdPercent,thresholdAverage) + "\n"
           + "  Start Date: " + startDate + "\n"
           + "  End Date: " + endDate + "\n"
@@ -1424,7 +1426,7 @@ function resetCreateWIT(instance) {
   instance.createWITdata.set({
     'weatherIndex':'Rainfall',
     'locationType':'Weather Stations',
-    'locationRegion':$('#location').val(),
+    'locationRegion':null,
     'month-start':null,
     'year-start':null,
     'month-end':null,
