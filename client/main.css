@@ -455,7 +455,7 @@ hr {
   align-self: start;*/
 }
 
-#NOAA-msg {
+#NOAA-msg, #error-msg, #error-msg2 {
   position: relative;
   top: -225px;
   left: 95px;
@@ -791,8 +791,8 @@ button.action:hover {
 }
 #mapdiv {
   position:relative;
-  height:300px;
-  width:500px;
+  height:400px;
+  width:700px;
 }
 .chart-loader-div {
   height:0;
