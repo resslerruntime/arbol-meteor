@@ -789,12 +789,10 @@ button.action:hover {
   top:20px;
   z-index:3;
 }
-#map-div {
+#mapdiv {
+  position:relative;
   height:300px;
   width:500px;
-}
-#map-inner-div {
-  padding-left:0;
 }
 .chart-loader-div {
   height:0;

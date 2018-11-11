@@ -94,15 +94,16 @@ function yearlyNASAVals (a,startDate,endDate){
 // leaflet map
 ////////////////////////////////////////////
 
-console.log("leaflet",L)
+console.log("leaflet",L);
+regionmap = false;
 
 //find the proper way to make sure that the HTML is fully loaded before leaflet tries to attach the map
 var waitForLeaflet = setInterval(function(){
-  let leafletDiv = document.getElementById("leaflet-map");
+  let leafletDiv = document.getElementById("mapdiv");
   console.log("leaflet Div",leafletDiv)
   if(leafletDiv){
     window.clearInterval(waitForLeaflet);
-    var mymap = L.map('leaflet-map').setView([40.712, -74.227], 5);
+    regionmap = L.map('mapdiv').setView([40.712, -74.227], 5);
     L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw', {
       maxZoom: 15,
       minZoom: 1,
@@ -110,7 +111,9 @@ var waitForLeaflet = setInterval(function(){
         '<a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, ' +
         'Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
       id: 'mapbox.streets'
-    }).addTo(mymap);
+    }).addTo(regionmap);
+
+    console.log('regionmap is now ' + typeof regionmap);
   }
 },1000)
 

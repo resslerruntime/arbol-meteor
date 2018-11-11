@@ -752,6 +752,10 @@ Template.tabs.events({
       $("#open-protections").hide();
       $("#create-protection").show();
       $("#your-protections").hide();
+      // reset the map
+      if (typeof regionmap == "object") {
+        regionmap.invalidateSize();
+      }
     }
     if(e.currentTarget.id === "your-tab"){
       $("#open-protections").hide();
@@ -1069,6 +1073,10 @@ Template.formNewProtection.events({
       $("#createwit-prev button").attr('disabled','disabled');
       $("#createwit-next").show();
       $("#createwit-submit").hide();
+      // reset the map
+      if (typeof regionmap == "object") {
+        regionmap.invalidateSize();
+      }
     }
     // if this is the last step, hide the next button and show the confirm button
     else if (self.createWITstep.get() >= $("#createwit .step").length) {
@@ -1099,6 +1107,10 @@ Template.formNewProtection.events({
         $("#createwit-prev button").attr('disabled','disabled');
         $("#createwit-next").show();
         $("#createwit-submit").hide();
+        // reset the map
+        if (typeof regionmap == "object") {
+          regionmap.invalidateSize();
+        }
       }
       // if this is the last step, hide the next button and show the confirm button
       else if (self.createWITstep.get() >= $("#createwit .step").length) {
@@ -1371,6 +1383,10 @@ function resetCreateWIT(instance) {
   // show the correct step
   $("#createwit .step.showing").removeClass('showing');
   $("#createwit .step").eq(0).addClass('showing');
+  // reset the map
+  if (typeof regionmap == "object") {
+    regionmap.invalidateSize();
+  }
   // since we are resetting to the first step, disable the previous button and hide the submit button
   $("#createwit-prev button").attr('disabled','disabled');
   $("#createwit-next").show();
