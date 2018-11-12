@@ -360,7 +360,7 @@ function latestProposals(){
   console.log("fn: latestProposals");
   watchLatestProposal = witInstance.ProposalOffered({},{fromBlock: 0, toBlock: 'latest'}).watch(function(error, result){
     updateBalance();
-    let store = addInfoFromProposalCreated(result);
+    // let store = addInfoFromProposalCreated(result);
 
     let id = result.args.WITID.toNumber();
     let aboveID = result.args.aboveID.toNumber();
@@ -379,7 +379,7 @@ function latestAcceptances(){
   //do something as new proposal is accepted
   watchLatestAcceptance = witInstance.ProposalAccepted({},{fromBlock: 0, toBlock: 'latest'}).watch(function(error, result){
     updateBalance();
-    let store = addInfoFromProposalAccepted(result);
+    // let store = addInfoFromProposalAccepted(result);
 
     let id = result.args.WITID.toNumber();
     let aboveID = result.args.aboveID.toNumber();
@@ -396,7 +396,8 @@ function latestEvaluations(){
   //do something as new evaluation is accepted
   watchLatestEvaluation = witInstance.WITEvaluated({},{fromBlock: 0, toBlock: 'latest'}).watch(function(error, result){
     updateBalance();
-    let store = addInfoFromProposalEvaluated(result);
+    // let store = addInfoFromProposalEvaluated(result);
+    
     let id = result.args.WITID.toNumber();
     let aboveID = result.args.aboveID.toNumber();
     let belowID = result.args.belowID.toNumber();
