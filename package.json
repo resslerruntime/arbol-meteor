@@ -5,7 +5,7 @@
     "start": "meteor run"
   },
   "dependencies": {
-    "@babel/runtime": "^7.0.0-beta.36",
+    "@babel/runtime": "7.0.0-beta.55",
     "bignumber.js": "^7.0.1",
     "bn.js": "^4.11.8",
     "d3": "^5.1.0",

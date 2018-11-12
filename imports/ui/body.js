@@ -209,6 +209,7 @@ function initMainPage(){
               $("#web3-onload").removeClass("disabled-div");
 
               // check for subsequent account activity, lockout screen if no metamask user is signed in
+              initContracts();
               setInterval(manageAccounts, 1000);
           } catch (error) {
             console.log('Web3 injection was declined by user')
@@ -225,6 +226,7 @@ function initMainPage(){
           $("#web3-onload").removeClass("disabled-div");
 
           // check for subsequent account activity, lockout screen if no metamask user is signed in
+          initContracts();
           setInterval(manageAccounts, 1000);
         } else {
           console.log('No web3? You should consider trying MetaMask!')
@@ -235,6 +237,61 @@ function initMainPage(){
       }
     });
   }
+}
+
+function initContracts(){
+  //check for network use correct deployed addresses
+  web3.version.getNetwork((err, netId) => {
+    switch (netId) {
+      case "1":
+        $("#network-name").html("Mainnet");
+        $("#network-name").addClass("red-text");
+        console.log('This is mainnet')
+        break
+      case "2":
+        $("#network-name").html("Deprecated Morden");
+        $("#network-name").addClass("red-text");
+        console.log('This is the deprecated Morden test network.')
+        break
+      case "3":
+        $("#network-name").html("Ropsten");
+        $("#network-name").addClass("red-text");
+        console.log('This is the ropsten test network.')
+        break
+      case "4":
+        $("#network-name").html("Rinkeby");
+        $("#network-name").removeClass("red-text");
+        $("#network-name").addClass("green-text");
+        console.log('This is the Rinkeby test network.')
+        //original deployment
+        // witAddress  = "0x8ac71ef838699f2ebe03b00adb1a726aa2153afa";
+        // noaaAddress = "0x598ca8a1da8f889a244a6031126fa6bd71acc292"; 
+        //NASA-leaflet deployment- backwards compatible 07-11-2018
+        // witAddress = "0x72dc0461f8ef97dbe30595b882846f80e6382189";
+        // noaaAddress = "0xe8ca721c10a1947a9344d168c1299dd342f78093";
+        // nasaAddress = "0xc0ec4dbd358038c42ef92f9cc9f7e389191280ef";
+        //NASA-leaflet deployment- backwards compatible 10-11-2018;
+        witAddress = "0x51b65c830bff89af8b68de85400bae1ee66cbb40";
+        noaaAddress = "0x337c58a3c4142f3d382b1fe4027d281625315a0b";
+        nasaAddress = "0x5a958c25b04cdef8ff408bf79479837922bbff16";
+        break
+      case "42":
+        $("#network-name").html("Kovan");
+        $("#network-name").addClass("red-text");
+        console.log('This is the Kovan test network.')
+        break
+      default:
+        $("#network-name").html("Unkown");
+        $("#network-name").addClass("red-text");
+        console.log('This is an unknown network.')
+        //ganache-cli
+        witAddress  = "0x0a143bdf026eabaf95d3e88abb88169674db92f5";
+        noaaAddress = "0x7cb50610e7e107b09acf3fbb8724c6df3f3e1c1d"; 
+    }
+    witContract = web3.eth.contract(WITABI);
+    witInstance = witContract.at(witAddress);
+    setWitInstance(witInstance); //for manageWITs
+  })  
 }
 
 async function manageAccounts(){
@@ -281,79 +338,10 @@ async function manageAccounts(){
 
 //begin the process of loading all the data
 function loadData(){
-  //check for network use correct deployed addresses
-  web3.version.getNetwork((err, netId) => {
-    switch (netId) {
-      case "1":
-        $("#network-name").html("Mainnet");
-        $("#network-name").addClass("red-text");
-        console.log('This is mainnet')
-        break
-      case "2":
-        $("#network-name").html("Deprecated Morden");
-        $("#network-name").addClass("red-text");
-        console.log('This is the deprecated Morden test network.')
-        break
-      case "3":
-        $("#network-name").html("Ropsten");
-        $("#network-name").addClass("red-text");
-        console.log('This is the ropsten test network.')
-        break
-      case "4":
-        $("#network-name").html("Rinkeby");
-        $("#network-name").removeClass("red-text");
-        $("#network-name").addClass("green-text");
-        console.log('This is the Rinkeby test network.')
-        //original deployment
-        // witAddress  = "0x8ac71ef838699f2ebe03b00adb1a726aa2153afa";
-        // noaaAddress = "0x598ca8a1da8f889a244a6031126fa6bd71acc292"; 
-        //NASA-leaflet deployment- backwards compatible 07-11-2018
-        witAddress = "0x72dc0461f8ef97dbe30595b882846f80e6382189";
-        noaaAddress = "0xe8ca721c10a1947a9344d168c1299dd342f78093";
-        nasaAddress = "0xc0ec4dbd358038c42ef92f9cc9f7e389191280ef";
-        //NASA-leaflet deployment- backwards compatible 10-11-2018
-        // witAddress = "0x08f1ab9ee2766255ff4ec88054e6f691679cbfe6";
-        // noaaAddress = "0x1a9a084f9cb6d343b447a55b911f674380c7f162";
-        // nasaAddress = "0x03f6389b5a2cc865d70ba9627f7dc074cc5a21e7";
-        break
-      case "42":
-        $("#network-name").html("Kovan");
-        $("#network-name").addClass("red-text");
-        console.log('This is the Kovan test network.')
-        break
-      default:
-        $("#network-name").html("Unkown");
-        $("#network-name").addClass("red-text");
-        console.log('This is an unknown network.')
-        //ganache-cli
-        witAddress  = "0x0a143bdf026eabaf95d3e88abb88169674db92f5";
-        noaaAddress = "0x7cb50610e7e107b09acf3fbb8724c6df3f3e1c1d"; 
-    }
-    witContract = web3.eth.contract(WITABI);
-    witInstance = witContract.at(witAddress);
-    setWitInstance(witInstance);
-
-/*
-
-//Ben's happy place. Do not disturb.
-    noaaContract = web3.eth.contract(NOAAABI);
-    noaaInstance = noaaContract.at(noaaAddress);
-
-  let sentNOAAPrecipAggregateOraclizeComputation = noaaInstance.sentNOAAPrecipAggregateOraclizeComputation({},{fromBlock: 0, toBlock: 'latest'}).watch(function(error, result){
-    console.log("sentNOAAPrecipAggregateOraclizeComputation: ", result)
-  });
-
-  let gotNOAAPrecipAggregateCallback = noaaInstance.gotNOAAPrecipAggregateCallback({},{fromBlock: 0, toBlock: 'latest'}).watch(function(error, result){
-    console.log("gotNOAAPrecipAggregateCallback: ", result)
-  });
-
-  */
-
     //populate lists
     latestProposals();
     latestAcceptances();
     latestEvaluations();
-  })
 }
 
 function resetGlobalVariables(){
@@ -373,6 +361,7 @@ function latestProposals(){
   watchLatestProposal = witInstance.ProposalOffered({},{fromBlock: 0, toBlock: 'latest'}).watch(function(error, result){
     updateBalance();
     let store = addInfoFromProposalCreated(result);
+
     let id = result.args.WITID.toNumber();
     let aboveID = result.args.aboveID.toNumber();
     let belowID = result.args.belowID.toNumber();
@@ -391,6 +380,7 @@ function latestAcceptances(){
   watchLatestAcceptance = witInstance.ProposalAccepted({},{fromBlock: 0, toBlock: 'latest'}).watch(function(error, result){
     updateBalance();
     let store = addInfoFromProposalAccepted(result);
+
     let id = result.args.WITID.toNumber();
     let aboveID = result.args.aboveID.toNumber();
     let belowID = result.args.belowID.toNumber();    
@@ -597,8 +587,6 @@ async function addAcceptance(result){
   }
 }
 
-
-
 // num = a.start.toNumber()
 let months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 function dateText(iso){
@@ -686,35 +674,6 @@ async function updateBalance(){
   }
 }
 
-//check if browser is google Chrome
-function isChrome(){
-  //https://stackoverflow.com/questions/4565112/javascript-how-to-find-out-if-the-user-browser-is-chrome/13348618#13348618
-  // please note,
-  // that IE11 now returns undefined again for window.chrome
-  // and new Opera 30 outputs true for window.chrome
-  // but needs to check if window.opr is not undefined
-  // and new IE Edge outputs to true now for window.chrome
-  // and if not iOS Chrome check
-  // so use the below updated condition
-  var isChromium = window.chrome;
-  var winNav = window.navigator;
-  var vendorName = winNav.vendor;
-  var isOpera = typeof window.opr !== "undefined";
-  var isIEedge = winNav.userAgent.indexOf("Edge") > -1;
-  var isIOSChrome = winNav.userAgent.match("CriOS");
-
-  if (isIOSChrome) {
-     // is Google Chrome on IOS
-     return true;
-  } else if(isChromium !== null && typeof isChromium !== "undefined" && vendorName === "Google Inc." && isOpera === false && isIEedge === false) {
-     // is Google Chrome
-     return true;
-  } else {
-     // not Google Chrome
-     return false;
-  }
-}
-
 //number of rows in the sortable tables
 function tableRows(){
   //TODO decide how many rows based on available area
@@ -739,6 +698,10 @@ Template.tabs.events({
       $("#open-protections").hide();
       $("#create-protection").show();
       $("#your-protections").hide();
+      // reset the map
+      if (typeof regionmap == "object") {
+        regionmap.invalidateSize();
+      }
     }
     if(e.currentTarget.id === "your-tab"){
       $("#open-protections").hide();
@@ -1056,6 +1019,10 @@ Template.formNewProtection.events({
       $("#createwit-prev button").attr('disabled','disabled');
       $("#createwit-next").show();
       $("#createwit-submit").hide();
+      // reset the map
+      if (typeof regionmap == "object") {
+        regionmap.invalidateSize();
+      }
     }
     // if this is the last step, hide the next button and show the confirm button
     else if (self.createWITstep.get() >= $("#createwit .step").length) {
@@ -1086,6 +1053,10 @@ Template.formNewProtection.events({
         $("#createwit-prev button").attr('disabled','disabled');
         $("#createwit-next").show();
         $("#createwit-submit").hide();
+        // reset the map
+        if (typeof regionmap == "object") {
+          regionmap.invalidateSize();
+        }
       }
       // if this is the last step, hide the next button and show the confirm button
       else if (self.createWITstep.get() >= $("#createwit .step").length) {
@@ -1161,31 +1132,7 @@ Template.formNewProtection.events({
     self.createWITdata.set(selfdata); 
 
     //call NASA
-    if ($(event.currentTarget).attr('id') == "date-end") {
-      let smv = $('#date-start').datepicker('getDate').getMonth() + 1
-        ,sm = `${smv}`     // start month
-        ,syv = $('#date-start').datepicker('getDate').getFullYear() - 10
-        ,sy = `${syv}`; // start year
-      let emv = $('#date-end').datepicker('getDate').getMonth() + 1
-        ,em = `${emv}` // end month, +2 to account for the entire month by putting the end date as the 1st of the next month
-        ,eyv = $('#date-end').datepicker('getDate').getFullYear() - 1
-        ,ey = `${eyv}`; // end year
-      while(sm.length < 2) sm = "0" + sm;
-      while(em.length < 2) em = "0" + em;
-
-      //call NASA 
-      let startDate = {
-        month: smv
-        ,year: syv
-        ,mmddyyyy:`${sm}/01/${sy}`
-      };
-      let endDate = {
-        month: emv
-        ,year: eyv
-        ,mmddyyyy:`${em}/01/${ey}`
-      }; 
-      callNASA(startDate,endDate,""); 
-    }
+    if($(event.currentTarget).attr('id') == "date-end") prepareNasaCall();
   },
   'input #your-contrib'(event){
     capVal(event.currentTarget);
@@ -1288,8 +1235,9 @@ Template.formNewProtection.events({
       // console.log("yourContr",yourContr)
       const totalPayout = parseFloat($('#total-contrib').val());
       // console.log("totalPayout",totalPayout)
-      const location = "21.5331234,-3.1621234&0.14255"; //$('#location').val();
-      // console.log("location",location)
+      // const location = "21.5331234,-3.1621234&0.14255"; //$('#location').val();
+      const location = leafletToWitCoords(); //$('#location').val();
+      // console.log("return location nasa",location)
       const thresholdRelation = $('#threshold-relation').val();
       // console.log("thresholdRelation",thresholdRelation)
       const thresholdPercent = $('#threshold-percent').val();
@@ -1310,7 +1258,7 @@ Template.formNewProtection.events({
       const confirmed = confirm ( "Please confirm your selection: \n\n"
         + "  Your Contribution (Eth): " + yourContr + "\n"
         + "  Total Payout (Eth): " + totalPayout + "\n"
-        + "  Location: " + "" // locationObj[location].text + "\n"
+        + "  Location: " + location + "\n"
         + "  Threshold: " + threshText(thresholdRelation,thresholdPercent,thresholdAverage) + "\n"
         + "  Start Date: " + startDate + "\n"
         + "  End Date: " + endDate + "\n"
@@ -1334,6 +1282,10 @@ function resetCreateWIT(instance) {
   // show the correct step
   $("#createwit .step.showing").removeClass('showing');
   $("#createwit .step").eq(0).addClass('showing');
+  // reset the map
+  if (typeof regionmap == "object") {
+    regionmap.invalidateSize();
+  }
   // since we are resetting to the first step, disable the previous button and hide the submit button
   $("#createwit-prev button").attr('disabled','disabled');
   $("#createwit-next").show();
@@ -1367,7 +1319,7 @@ function resetCreateWIT(instance) {
   instance.createWITdata.set({
     'weatherIndex':'Rainfall',
     'locationType':'Weather Stations',
-    'locationRegion':$('#location').val(),
+    'locationRegion':null,
     'month-start':null,
     'year-start':null,
     'month-end':null,
@@ -1396,7 +1348,8 @@ async function createProposal(startDate,endDate,yourContr,totalPayout,location,i
   let numPPTH = threshValPPTH(thresholdPercent,thresholdAverage); // = 10000 * threshValFraction(thresholdPercent,thresholdAverage);
   let address = nasaAddress;
   let makeStale = false; //TODO for deployment makeStale should be true in default
-  // console.log(ethPropose, ethAsk, above, address, numPPTH, location, d1, d2, makeStale);
+  console.log("ethPropose, ethAsk, above, address, numPPTH, location, d1, d2, makeStale");
+  console.log(ethPropose, ethAsk, above, address, numPPTH, location, d1, d2, makeStale);
 
   try {
     await promisify(cb => witInstance.createWITProposal(ethPropose, ethAsk, above, address, numPPTH, location, d1, d2, makeStale, {value: ethPropose, from:user[0]}, cb));
@@ -1405,10 +1358,6 @@ async function createProposal(startDate,endDate,yourContr,totalPayout,location,i
   }
 }
 
-
-
-//does this function do anything? I am pretty sure it doesn't
-//tag for review and potential deletion
 function capVal(target){
   //change properties of the other date picker so that incorrect values can't be chosen
   var num = parseFloat(target.value);

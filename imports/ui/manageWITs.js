@@ -50,7 +50,7 @@ function Entry(o){
   	let thresh = threshValsToText(!o.proposerIsAbove,o.thresholdPPTTH.toNumber());
 
 	// button
-  	let b = `${toEth(ask)}`;
+  	let b = `${o.askText.v}`;
   	let b1 = `<button type='button' class='action buyit tableBtn' value='${o.askText.v},${o.proposerID.toNumber()}'>Pay <span class="green-text">${o.askText.t} Eth</span> to accept</button>`;
   	//if no user is logged in
   	if(currentUser === -1){
@@ -172,7 +172,7 @@ function MyAcceptance(o){
 	];
 }
 
-let witInstance, currentUser = -1;
+let currentUser = -1, witInstance;
 let e = []; //event store
 
 ////////////////////////////////////
@@ -180,7 +180,7 @@ let e = []; //event store
 ////////////////////////////////////
 
 addInfoFromProposalCreated = function(r){
-	console.log("+++++++++++++++++++++")
+	console.log("+++++++++++++++++++++",r)
 	//check for obj in eventStore
 	let idx = findInStore(r.args.aboveID,r.args.belowID);
 	if(typeof idx === "number"){
@@ -207,17 +207,22 @@ addInfoFromProposalCreated = function(r){
 }
 
 function fillDataProposalCreated(o,r){
+	if(o.aboveID && r.args.aboveID.toNumber() && r.args.aboveID.toNumber() !== o.aboveID.toNumber()) console.log("+++ error- above id mismatch",r.args.aboveID.toNumber(),o.aboveID.toNumber());
+	if(o.belowID && r.args.belowID.toNumber() && r.args.belowID.toNumber() !== o.belowID.toNumber()) console.log("+++ error- below id mismatch",r.args.belowID.toNumber(),o.belowID.toNumber());
+	if(o.aboveOwner && r.args.aboveOwner && r.args.aboveOwner !== o.aboveOwner) console.log("+++ error- above owner mismatch",r.args.aboveOwner,o.aboveOwner);
+	if(o.belowOwner && r.args.belowOwner && r.args.belowOwner !== o.belowOwner) console.log("+++ error- below owner mismatch",r.args.belowOwner,o.belowOwner);
+	
 	//update store with new info
 	if(r.args.aboveID.toNumber() === 0){
 		o.belowID = r.args.belowID;
-		o.belowOwner = getOwner(r.args.belowID);
+		o.belowOwner = r.args.belowOwner;
 		o.proposerID = o.belowID;
 		o.proposer = o.belowOwner;
 		o.proposerIsAbove = false;
 	}
 	if(r.args.belowID.toNumber() === 0){
 		o.aboveID = r.args.aboveID;
-		o.aboveOwner = getOwner(r.args.aboveID);
+		o.aboveOwner = r.args.aboveOwner;
 		o.proposerID = o.aboveID;
 		o.proposer = o.aboveOwner;
 		o.proposerIsAbove = true;		
@@ -242,7 +247,7 @@ function fillDataProposalCreated(o,r){
 }
 
 addInfoFromProposalAccepted = function(r){
-	console.log("+++++++++++++++++++++")
+	console.log("+++++++++++++++++++++",r)
 	//check for obj in eventStore
 	let idx = findInStore(r.args.aboveID,r.args.belowID);
 	if(typeof idx === "number"){
@@ -270,12 +275,14 @@ addInfoFromProposalAccepted = function(r){
 
 function fillDataProposalAccepted(o,r){
 	//update store with new info
-	if(o.aboveID && r.args.aboveID.toNumber() !== o.aboveID.toNumber()) console.log("+++ error- id mismatch",r.args.aboveID.toNumber(),o.aboveID.toNumber());
-	if(o.belowID && r.args.belowID.toNumber() !== o.belowID.toNumber()) console.log("+++ error- id mismatch",r.args.belowID.toNumber(),o.belowID.toNumber());
+	if(o.aboveID && r.args.aboveID.toNumber() !== o.aboveID.toNumber()) console.log("+++ error- above id mismatch",r.args.aboveID.toNumber(),o.aboveID.toNumber());
+	if(o.belowID && r.args.belowID.toNumber() !== o.belowID.toNumber()) console.log("+++ error- below id mismatch",r.args.belowID.toNumber(),o.belowID.toNumber());
+	// if(o.aboveOwner && r.args.aboveOwner !== o.aboveOwner) console.log("+++ error- above owner mismatch",r.args.aboveOwner,o.aboveOwner);
+	// if(o.belowOwner && r.args.belowOwner !== o.belowOwner) console.log("+++ error- below owner mismatch",r.args.belowOwner,o.belowOwner);
 	o.belowID = r.args.belowID;
-	o.belowOwner = getOwner(r.args.belowID);
+	// o.belowOwner = getOwner(r.args.belowID);
 	o.aboveID = r.args.aboveID;
-	o.aboveOwner = getOwner(r.args.aboveID);
+	// o.aboveOwner = getOwner(r.args.aboveID);
 
 	o.state.accepted = true;
 	return o;
@@ -286,7 +293,7 @@ addInfoFromEvaluationStart = function(r){
 }
 
 addInfoFromProposalEvaluated = function(r){
-	console.log("+++++++++++++++++++++")
+	console.log("+++++++++++++++++++++",r)
 	//check for obj in eventStore
 	let idx = findInStore(r.args.aboveID,r.args.belowID);
 	if(typeof idx === "number"){
@@ -314,8 +321,10 @@ addInfoFromProposalEvaluated = function(r){
 
 function fillDataProposalEvaluated(o,r){
 	//update store with new info
-	if(o.aboveID && r.args.aboveID.toNumber() !== o.aboveID.toNumber()) console.log("+++ error- id mismatch",r.args.aboveID.toNumber(),o.aboveID.toNumber());
-	if(o.belowID && r.args.belowID.toNumber() !== o.belowID.toNumber()) console.log("+++ error- id mismatch",r.args.belowID.toNumber(),o.belowID.toNumber());
+	if(o.aboveID && r.args.aboveID.toNumber() !== o.aboveID.toNumber()) console.log("+++ error- above id mismatch",r.args.aboveID.toNumber(),o.aboveID.toNumber());
+	if(o.belowID && r.args.belowID.toNumber() !== o.belowID.toNumber()) console.log("+++ error- below id mismatch",r.args.belowID.toNumber(),o.belowID.toNumber());
+	if(o.aboveOwner && r.args.aboveOwner !== o.aboveOwner) console.log("+++ error- above owner mismatch",r.args.aboveOwner,o.aboveOwner);
+	if(o.belowOwner && r.args.belowOwner !== o.belowOwner) console.log("+++ error- below owner mismatch",r.args.belowOwner,o.belowOwner);
 	o.belowID = r.args.belowID;
 	o.belowOwner = r.args.belowOwner;
 	o.aboveID = r.args.aboveID;
@@ -419,131 +428,11 @@ function findInStore(a,b){
 }
 
 async function getOwner(id){
+	try{
 	let owner = await promisify(cb => witInstance.ownerOf(id, cb));
 	return owner;
+	}catch{
+
+	}
 }
-
-// //table entry constructor open protections
-// //event ProposalOffered(uint indexed WITID, uint aboveID, uint belowID, uint indexed weiContributing,  uint indexed weiAsking, address evaluator, uint thresholdPPTTH, string location, uint start, uint end, bool makeStale);
-// function Entry(r,owner){
-//   let a = r.args;
-//   let location = "?"; 
-//   let ask = a.weiAsking.toNumber();
-//   let propose = a.weiContributing.toNumber();
-//   let id = a.WITID.toNumber();
-
-//   //update for if the contract is for offered for sale or for funding
-//   let totalPayout = toEth(propose) + toEth(ask);
-//   let totalPayoutText = `${clipNum(toEth(propose) + toEth(ask))} Eth`;
-
-//   // button
-//   let b = `${toEth(ask)}`;
-//   let b1 = `<button type='button' class='action buyit tableBtn' value='${toEth(ask)},${a.WITID.toNumber()}'>Pay <span class="green-text">${clipNum(toEth(ask))} Eth</span> to accept</button>`;
-//   //if no user is logged in
-//   if(user[0] === -1){
-//     b1 = `<button type='button' class='tableBtn' value='${toEth(ask)},${a.WITID.toNumber()}'><span class="green-text">${clipNum(toEth(ask))} Eth</span></button>`;
-//   }
-//   //if the current use is the owner of the proposal don't give them the option to purchase the proposal
-//   if(owner === user[0]){
-//     b = "1e99";
-//     b1 = `<button type='button' class='tableBtn'>You are the owner of this proposal</button>`;
-//   }
-
-//   //get threshold text
-//   let above = a.WITID.toNumber() === a.belowID.toNumber();
-//   if(owner === user[0]) above = a.WITID.toNumber() !== a.belowID.toNumber();
-//   let thresh = threshValsToText(above,a.thresholdPPTTH.toNumber());
-
-//   //create the object
-//   this.id = id;
-//   this.type = "bodyRow";
-//   this.column = [
-//       {type:"text",key:location,name:location}
-//       ,{type:"text",key:thresh,name:thresh}
-//       ,{type:"text",key:"NASA Rainfall",name:"NASA Rainfall"}
-//       ,{type:"num",key:a.start.toNumber()*1000,name:dateText(a.start.toNumber()*1000)}
-//       ,{type:"num",key:a.end.toNumber()*1000,name:dateText(a.end.toNumber()*1000)}
-//       ,{type:"num",key:totalPayout,name:totalPayoutText}
-//       ,{type:"num",key:b,name:b1}
-//     ];
-// }
-
-// //table entry constructor my protections
-// //bool if you proposed the protection = true, if you accepted the protection = false
-// function MyEntry(r,a,id,bool){
-//   //is this entry an acceptance, an open proposal, or an accepted proposal
-//   let acceptance = r.args !== a;
-//   let acceptedProposal = false;
-//   if(!acceptance){
-//     if(acceptedList.indexOf(id) !== -1) acceptedProposal = true;
-//   }
-
-//   let ask = a.weiAsking.toNumber();
-//   let propose = a.weiContributing.toNumber();
-//   let location = "?"; 
-
-//   //total payouts
-//   let totalPayout = toEth(propose) + toEth(ask);
-//   let totalPayoutText = `${clipNum(toEth(propose) + toEth(ask))} Eth`;
-
-//   //your contribution
-//   let v;
-//   if(acceptance) v = toEth(ask);
-//   else v = toEth(propose);
-//   let yourContr = v;
-//   let yourContrText = `${clipNum(v)} Eth`;
-
-//   //status
-//   let now = new Date().getTime();
-//   let start = new Date(a.start.toNumber()*1000).getTime();
-//   let end = new Date(a.end.toNumber()*1000).getTime();
-//   let status = "";
-//   let b = "";
-//   let b1 = "";
-
-//   if(acceptance || acceptedProposal){
-//     //acceptances and accepted proposals
-//     if(now < start){
-//       status = "Partnered, waiting to start";
-//       b1 = "Waiting"; //`<button type='button' class='action cancelit tableBtn'> Cancel and redeem <span class="green-text">${yourContr}</span></button>`;
-//     }
-//     if(now >= start && now <= end){
-//       status = "In term";
-//       b = "Waiting";
-//       b1 = "Waiting";
-//     }
-//     if(now > end){
-//       status = "Waiting for evaluation";
-//       b = "Evaluate"
-//       b1 = `<button type='button' class='action evaluateit tableBtn' value=${id}> Evaluate and complete </button>`;
-//     }
-//   }else{
-//     //not accepted proposal
-//     if(now < start) status = "Waiting for partner";
-//     if(now >= start) status = "Stale";
-//     b = "";
-//     b1 = `<button type='button' class='action cancelit tableBtn'> Cancel and redeem <span class="green-text">${yourContrText}</span></button>`;
-//   }
-
-//   //get threshold text
-//   let thresh;
-//   if(acceptance) thresh = threshValsToText(a.WITID.toNumber() === a.belowID.toNumber(),a.thresholdPPTTH.toNumber());
-//   else thresh = threshValsToText(a.WITID.toNumber() !== a.belowID.toNumber(),a.thresholdPPTTH.toNumber());
-
-//   //create the object
-//   this.id = r.args.WITID.toNumber();
-//   this.type = "bodyRow";
-//   //if you change the number or order of columns, you have to update the evaluation listener
-//   this.column = [
-//       {type:"text",key:location,name:location}
-//       ,{type:"text",key:thresh,name:thresh}
-//       ,{type:"text",key:"NASA Rainfall",name:"NASA Rainfall"}
-//       ,{type:"num",key:a.start.toNumber()*1000,name:dateText(a.start.toNumber()*1000)}
-//       ,{type:"num",key:a.end.toNumber()*1000,name:dateText(a.end.toNumber()*1000)}
-//       ,{type:"num",key:yourContr,name:yourContrText}
-//       ,{type:"num",key:totalPayout,name:totalPayoutText}
-//       ,{type:"text",key:status,name:status}
-//       ,{type:"text",key:b,name:b1}
-//     ];
-// }
 
