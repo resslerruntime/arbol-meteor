@@ -45,18 +45,18 @@ function Entry(r,owner){
   let b = `${toEth(ask)}`;
   let b1 = `<button type='button' class='action buyit tableBtn' value='${toEth(ask)},${a.WITID.toNumber()}'>Pay <span class="green-text">${clipNum(toEth(ask))} Eth</span> to accept</button>`;
   //if no user is logged in
-  if(user[0] === -1){
+  if(Session.get("user") === -1){
     b1 = `<button type='button' class='tableBtn' value='${toEth(ask)},${a.WITID.toNumber()}'><span class="green-text">${clipNum(toEth(ask))} Eth</span></button>`;
   }
   //if the current use is the owner of the proposal don't give them the option to purchase the proposal
-  if(owner === user[0]){
+  if(owner === Session.get("user")){
     b = "1e99";
     b1 = `<button type='button' class='tableBtn'>You are the owner of this proposal</button>`;
   }
 
   //get threshold text
   let above = a.WITID.toNumber() === a.belowID.toNumber();
-  if(owner === user[0]) above = a.WITID.toNumber() !== a.belowID.toNumber();
+  if(owner === Session.get("user")) above = a.WITID.toNumber() !== a.belowID.toNumber();
   let thresh = threshValsToText(above,a.thresholdPPTTH.toNumber());
 
   //create the object
@@ -153,8 +153,8 @@ function MyEntry(r,a,id,bool){
 }
 
 //manage current user
-var user = [-1];
-var pastUser = [-2];
+Session.set("user",-1);
+Session.set("pastUser",-2);
 
 // var arbolAddress, arbolContract, arbolInstance; //tag for deletion
 var witAddress, witContract, witInstance;
@@ -290,27 +290,30 @@ function initContracts(){
     }
     witContract = web3.eth.contract(WITABI);
     witInstance = witContract.at(witAddress);
+    Session.set("witAddress",witAddress)
+    Session.set("noaaAddress",noaaAddress)
+    Session.set("nasaAddress",nasaAddress)
     setWitInstance(witInstance); //for manageWITs
   })  
 }
 
 async function manageAccounts(){
-  try{
-    user = await promisify(cb => web3.eth.getAccounts(cb));
-    if(typeof user[0] === "undefined") user = [-1];
-    console.log(`currentUser: ${user[0]}`, `last check: ${pastUser[0]}`,`user changed? ${user[0] !== pastUser[0]}`)
-    if(user[0] !== pastUser[0]){
+  try {
+    let userObj = await promisify(cb => web3.eth.getAccounts(cb)), user = userObj[0];
+    Session.set("user",user);
+    if(typeof user === "undefined") Session.set("user",-1);
+    console.log(`currentUser: ${user}`, `last check: ${Session.get("pastUser")}`,`user changed? ${user !== Session.get("pastUser")}`)
+    if(user !== Session.get("pastUser")){
       console.log("_-_-_- CHANGE IN USER _-_-_-")
       //reset and reload everything for new user
-      setCurrentUser(user[0]); //setCurrentUser for mangeWIT.js
       // $("#web3-onload").addClass("disabled-div");
       $('#open-pager-btns').hide();
       $('#my-pager-btns').hide();
       resetSessionVars();
       resetGlobalVariables();
       let s;
-      if(user[0] !== -1){
-        $('#user-hash').html(user[0]);
+      if(user !== -1){
+        $('#user-hash').html(user);
         $('#user-hash').removeClass('red-text');
         $('#user-hash').addClass('green-text');
 
@@ -331,6 +334,7 @@ async function manageAccounts(){
       loadData();
     }
     pastUser = user;
+    Session.set("pastUser",user)
   } catch (error) {
     console.log(error)
   }
@@ -345,8 +349,6 @@ function loadData(){
 }
 
 function resetGlobalVariables(){
-  opPagination = 0;
-  myPagination = 0;
   acceptedList = [];
   proposedList = [];
   if(watchLatestProposal !== -1) watchLatestProposal.stopWatching();
@@ -360,7 +362,7 @@ function latestProposals(){
   console.log("fn: latestProposals");
   watchLatestProposal = witInstance.ProposalOffered({},{fromBlock: 0, toBlock: 'latest'}).watch(function(error, result){
     updateBalance();
-    // let store = addInfoFromProposalCreated(result);
+    let store = addInfoFromProposalCreated(result);
 
     let id = result.args.WITID.toNumber();
     let aboveID = result.args.aboveID.toNumber();
@@ -379,7 +381,7 @@ function latestAcceptances(){
   //do something as new proposal is accepted
   watchLatestAcceptance = witInstance.ProposalAccepted({},{fromBlock: 0, toBlock: 'latest'}).watch(function(error, result){
     updateBalance();
-    // let store = addInfoFromProposalAccepted(result);
+    let store = addInfoFromProposalAccepted(result);
 
     let id = result.args.WITID.toNumber();
     let aboveID = result.args.aboveID.toNumber();
@@ -396,7 +398,7 @@ function latestEvaluations(){
   //do something as new evaluation is accepted
   watchLatestEvaluation = witInstance.WITEvaluated({},{fromBlock: 0, toBlock: 'latest'}).watch(function(error, result){
     updateBalance();
-    // let store = addInfoFromProposalEvaluated(result);
+    let store = addInfoFromProposalEvaluated(result);
     
     let id = result.args.WITID.toNumber();
     let aboveID = result.args.aboveID.toNumber();
@@ -457,18 +459,20 @@ async function addToken(result){
           }
 
           //show paginated items
+          let opPagination = Session.get("opPagination")
           let pageList = paginateData(list,opPagination);
           if(pageList.length > 0){
             Session.set("openProtectionsPaginatedData",pageList);
           }else{
             if(opPagination > 0) opPagination -= 1;
           }
+          Session.set("opPagination",opPagination);
         }
       }
 
       //add to my protections
-      // console.log("my entry", owner, user[0], result)
-      if(owner === user[0]){
+      // console.log("my entry", owner, Session.get("user"), result)
+      if(owner === Session.get("user")){
         let list = Session.get("myProtectionsData");
         list.push(new MyEntry(result,result.args,id,true));
         list = sortArray(list,Session.get("mySortIndex"),Session.get("descending"));
@@ -483,12 +487,14 @@ async function addToken(result){
         }
 
         //show paginated items
+        let myPagination = Session.get("myPagination");
         let pageList = paginateData(list,myPagination);
         if(pageList.length > 0){
           Session.set("myProtectionsPaginatedData",pageList);
         }else{
           if(myPagination > 0) myPagination -= 1;
         }
+        Session.set("myPagination",myPagination);
       }
     }
   }catch(error){
@@ -512,12 +518,14 @@ function removeToken(id){
     }
 
     //show paginated items
+    let opPagination = Session.get("opPagination");
     let pageList = paginateData(list,opPagination);
     if(pageList.length > 0){
       Session.set("openProtectionsPaginatedData",pageList);
     }else{
       if(opPagination > 0) opPagination -= 1;
     }
+    Session.set("opPagination",opPagination);
   }
 }
 
@@ -555,7 +563,7 @@ async function addAcceptance(result){
 
       //if they were your proposals update your "my protections"
       let owner = await promisify(cb => witInstance.ownerOf(idObj, cb));
-      if(owner === user[0]){
+      if(owner === Session.get("user")){
         //hide the loading
         $('#my-loader').hide();
         $('#my-wrapper').removeClass('loading');
@@ -574,12 +582,14 @@ async function addAcceptance(result){
           }
 
           //show paginated items
+          let myPagination = Session.get("myPagination");
           let pageList = paginateData(list,myPagination);
           if(pageList.length > 0){
             Session.set("myProtectionsPaginatedData",pageList);
           }else{
             if(myPagination > 0) myPagination -= 1;
           }
+          Session.set("myPagination",myPagination)
         });
       }
     } catch (error) {
@@ -621,11 +631,12 @@ function updateOpenProposals(list){
   }
 
   //show paginated items
+  let opPagination = Session.get("opPagination");
   let pageList = paginateData(list,opPagination);
   if(pageList.length > 0){
     Session.set("openProtectionsPaginatedData",pageList);
   }else{
-    if(opPagination > 0) opPagination -= 1;
+    if(opPagination > 0) Session.set("opPagination",opPagination-1);
   }
 }
 
@@ -642,21 +653,22 @@ function updateMyProposals(list){
   }
 
   //show paginated items
+  let myPagination = Session.get("myPagination");
   let pageList = paginateData(list,myPagination);
   if(pageList.length > 0){
     Session.set("myProtectionsPaginatedData",pageList);
   }else{
-    if(myPagination > 0) myPagination -= 1;
+    if(myPagination > 0) Session.set("myPagination",myPagination);
   }  
 }
 
 async function updateBalance(){
-  if(user[0] === -1){
+  if(Session.get("user") === -1){
     $('#user-balance').html("0.000");
     $('#user-balance').removeClass('green-text');
     $('#user-balance').addClass('red-text');
   } else {
-    web3.eth.getBalance(user[0],function (error, result) {
+    web3.eth.getBalance(Session.get("user"),function (error, result) {
       if (!error) {
         var e = toEth(result.plus(21).toString(10));
         if(e === 0){
@@ -728,6 +740,8 @@ function resetSessionVars(){
   Session.set("filterCriteria",{});
   Session.set("openProtectionsData",[]);
   Session.set("myProtectionsData",[]);
+  Session.set("myPagination",0);
+  Session.set("opPagination",0);
   Session.set("openProtectionsPaginatedData",[]);
   Session.set("myProtectionsPaginatedData",[]);
   Session.set("sortIndex",0);
@@ -744,7 +758,7 @@ Template.sortableRows.helpers({
 
 Template.sortableRows.events({
   'click .buyit': function(e){
-    if(user[0] === -1){
+    if(Session.get("user") === -1){
       alert("Please login to MetaMask buy a proposal.");
     } else {
       if(typeof e.target.value === 'undefined') acceptProposal(e.target.parentElement.value);
@@ -770,7 +784,7 @@ async function acceptProposal(v){
     // console.log("proposal token ID", id);
 
     //TODO don't let user accept their own proposal
-    await promisify(cb => witInstance.createWITAcceptance(id,{from: user[0], value:toWei(ethAsk)},cb));
+    await promisify(cb => witInstance.createWITAcceptance(id,{from: Session.get("user"), value:toWei(ethAsk)},cb));
   } catch (error) {
     console.log(error)
   }
@@ -782,8 +796,8 @@ async function evaluateWIT(id){
     let idodd = parseInt(id);
     if(id/2 === Math.round(id/2)) idodd = parseInt(id) - 1;
     // console.log("=================> new WIT evaluation");
-    // console.log("token ID", id, idodd, user[0]);
-    await promisify(cb => witInstance.evaluate(idodd,"",{from: user[0]},cb));
+    // console.log("token ID", id, idodd, Session.get("user"));
+    await promisify(cb => witInstance.evaluate(idodd,"",{from: Session.get("user")},cb));
   } catch (error) {
     console.log(error)
   }
@@ -817,7 +831,7 @@ Template.headerRow.events({
       //set variable to new sorted array
       let list = sortArray(array,colIndex,d);
       Session.set("openProtectionsData",list);
-      opPagination = 0;
+      Session.set("opPagination",0);
       let pageList = paginateData(list,0);
       Session.set("openProtectionsPaginatedData",pageList);
       Session.set("descending",!d);
@@ -839,7 +853,7 @@ Template.headerRow.events({
       //set variable to new sorted array
       let list = sortArray(array,colIndex,d);
       Session.set("myProtectionsData",list);
-      myPagination = 0;
+      Session.set("myPagination",0);
       let pageList = paginateData(list,0);
       Session.set("myProtectionsPaginatedData",pageList);
       Session.set("myDescending",!d);
@@ -863,28 +877,33 @@ function sortArray(array,i,d){
 
 //TODO grey out back and forward button as appropriate
 // Paginate through all the data
-var opPagination = 0;
+Session.set("opPagination",0);
 Template.openPagination.events({
   'click #open-forward'(e){
+    let opPagination = Session.get("opPagination");
     opPagination += 1;
     let list = Session.get("openProtectionsData");
     let pageList = paginateData(list,opPagination);
     if(pageList.length > 0) Session.set("openProtectionsPaginatedData",pageList);
     else if(opPagination > 0) opPagination -= 1;
     $("#open-current").html(opPagination+1);
+    Session.set("opPagination",opPagination);
   },
   'click #open-back'(e){
+    let opPagination = Session.get("opPagination");
     if(opPagination > 0) opPagination -= 1;
     let fullList = Session.get("openProtectionsData");
     let pageList = paginateData(fullList,opPagination);
     Session.set("openProtectionsPaginatedData",pageList);
     $("#open-current").html(opPagination+1);
+    Session.set("opPagination",opPagination);
   }
 });
 
-var myPagination = 0;
+Session.set("myPagination",0);
 Template.myPagination.events({
   'click #my-forward'(e){
+    let myPagination = Session.get("myPagination");
     myPagination += 1;
     let fv = $('#first-token-filter').val();
     let list = Session.get("myProtectionsData");
@@ -892,13 +911,16 @@ Template.myPagination.events({
     if(pageList.length > 0) Session.set("myProtectionsPaginatedData",pageList);
     else if(myPagination > 0) myPagination -= 1;
     $("#my-current").html(myPagination+1);
+    Session.set("myPagination",myPagination);
   },
   'click #my-back'(e){
+    let myPagination = Session.get("myPagination");
     if(myPagination > 0) myPagination -= 1;
     let fullList = Session.get("myProtectionsData");
     let pageList = paginateData(fullList,myPagination);
     Session.set("myProtectionsPaginatedData",pageList);
     $("#my-current").html(myPagination+1);
+    Session.set("myPagination",myPagination);
   }
 });
 
@@ -1224,7 +1246,7 @@ Template.formNewProtection.events({
     }
   },
   'submit .new-protection'(event) {
-    if (user[0] === -1){
+    if (Session.get("user") === -1){
       alert("Please login to MetaMask to create a proposal.");
       return false;
     }
@@ -1267,7 +1289,8 @@ Template.formNewProtection.events({
 
       if (confirmed) {
         //submit info
-        createProposal(startDate,endDate,yourContr,totalPayout,location,index,thresholdRelation,thresholdPercent,thresholdAverage);
+        // createProposal(startDate,endDate,yourContr,totalPayout,location,index,thresholdRelation,thresholdPercent,thresholdAverage);
+        createProposalTest();
         self = Template.instance();
         resetCreateWIT(self);
       } else {
@@ -1353,7 +1376,30 @@ async function createProposal(startDate,endDate,yourContr,totalPayout,location,i
   console.log(ethPropose, ethAsk, above, address, numPPTH, location, d1, d2, makeStale);
 
   try {
-    await promisify(cb => witInstance.createWITProposal(ethPropose, ethAsk, above, address, numPPTH, location, d1, d2, makeStale, {value: ethPropose, from:user[0]}, cb));
+    await promisify(cb => witInstance.createWITProposal(ethPropose, ethAsk, above, address, numPPTH, location, d1, d2, makeStale, {value: ethPropose, from:Session.get("user")}, cb));
+  } catch (error) {
+    console.log(error)
+  }
+}
+
+async function createProposalTest(){
+  console.log("fn: createProposal")
+  const d1 = 1510354801; 
+  const d2 = 1512946801; 
+  let location = "21.5331234,-3.1621234&0.14255";
+
+  let ethPropose = 100000000000000000;
+  let ethAsk = 100000000000000000;
+  let above = false;
+  let numPPTH = 10000; // = 10000 * threshValFraction(thresholdPercent,thresholdAverage);
+  let address = "0x5a958c25b04cdef8ff408bf79479837922bbff16";
+  let makeStale = false; //TODO for deployment makeStale should be true in default
+  let gas = 2000000;
+  console.log("ethPropose, ethAsk, above, address, numPPTH, location, d1, d2, makeStale");
+  console.log(ethPropose, ethAsk, above, address, numPPTH, location, d1, d2, makeStale);
+
+  try {
+    await promisify(cb => witInstance.createWITProposal(ethPropose, ethAsk, above, address, numPPTH, location, d1, d2, makeStale, {value: ethPropose, gas: gas, from:Session.get("user")}, cb));
   } catch (error) {
     console.log(error)
   }
