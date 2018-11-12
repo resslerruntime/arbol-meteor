@@ -45,6 +45,7 @@ function StoreEntry(){
 //table entry constructor, open proposals
 function Entry(o){
 	console.log("+++ new Entry",o)
+	let currentUser = Session.get("user");
 
 	//threshold
   	let thresh = threshValsToText(!o.proposerIsAbove,o.thresholdPPTTH.toNumber());
@@ -377,7 +378,6 @@ function dateText(dObj){
 //TODO in this approach it reconstructs the list of openProposals and myProposal everytime there is a change
 // a less niave approach would be to only change the ones that are update by the event
 getStore = function(){
-	console.log("+++ ABI",WITABI)
 	let op = [], mp = [], currentUser = Session.get("user");
 	let l = e.length;
 	for(let i = 0; i < l; i++){

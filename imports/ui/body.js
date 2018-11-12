@@ -288,6 +288,9 @@ function initContracts(){
         witAddress  = "0x0a143bdf026eabaf95d3e88abb88169674db92f5";
         noaaAddress = "0x7cb50610e7e107b09acf3fbb8724c6df3f3e1c1d"; 
     }
+    console.log("witAddress",witAddress)
+    console.log("noaaAddress",noaaAddress)
+    console.log("nasaAddress",nasaAddress)
     witContract = web3.eth.contract(WITABI);
     witInstance = witContract.at(witAddress);
     Session.set("witAddress",witAddress)
@@ -1395,8 +1398,8 @@ async function createProposalTest(){
   let address = "0x5a958c25b04cdef8ff408bf79479837922bbff16";
   let makeStale = false; //TODO for deployment makeStale should be true in default
   let gas = 2000000;
-  console.log("ethPropose, ethAsk, above, address, numPPTH, location, d1, d2, makeStale");
-  console.log(ethPropose, ethAsk, above, address, numPPTH, location, d1, d2, makeStale);
+  console.log("ethPropose, ethAsk, above, address, numPPTH, location, d1, d2, makeStale, user");
+  console.log(ethPropose, ethAsk, above, address, numPPTH, location, d1, d2, makeStale, Session.get("user"));
 
   try {
     await promisify(cb => witInstance.createWITProposal(ethPropose, ethAsk, above, address, numPPTH, location, d1, d2, makeStale, {value: ethPropose, gas: gas, from:Session.get("user")}, cb));
