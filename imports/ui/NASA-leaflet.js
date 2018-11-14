@@ -131,10 +131,10 @@ function yearlyNASAVals (a,startDate,endDate){
 
 regionmap = false;
 
-//variables
-let currentBounds;
-let selectedBounds;
-let presentSelection = false;
+// variables
+currentBounds = false;
+selectedBounds = false;
+presentSelection = false;
 
 //find the proper way to make sure that the HTML is fully loaded before leaflet tries to attach the map
 var waitForLeaflet = setInterval(function(){

@@ -1115,6 +1115,28 @@ Template.formNewProtection.events({
     selfdata.locationType = $('[name="locationType"]:checked').val();
     self.createWITdata.set(selfdata);
   },
+  'click #mapdiv'(event){
+    let a = selectedBounds;
+    let lat = Math.round(1000 * a[0][0]) / 1000;
+    let lng = Math.round(1000 * a[0][1]) / 1000;
+    self = Template.instance();
+    selfdata = self.createWITdata.get();
+    selfdata.locationRegion = 'latitude '+lat+'°, longitude '+lng+'°';
+    self.createWITdata.set(selfdata);
+    let reversegeocodeURL = 'http://services.gisgraphy.com/reversegeocoding/search?format=json&lat='+lat+'&lng='+lng;
+    $.ajax({
+      type: 'GET',
+      crossDomain: true,
+      dataType: 'jsonp',
+      url: reversegeocodeURL
+    }).done(function(data) {
+      let loc = data.result[0];
+      console.log(loc);
+      console.log(loc.formattedFull);
+    }).fail(function(){
+      console.log('failed to reverse geocode');
+    });
+  },
   'input [data-toggle="datepicker"]'(event){
     // if the input is the start date, use the selected date to limit the end date
     if ($(event.currentTarget).attr('id') == "date-start") {
