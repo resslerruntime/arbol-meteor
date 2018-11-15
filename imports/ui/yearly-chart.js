@@ -7,18 +7,22 @@ import './threshold.js'
 
 var svg, width, height, margin = {top: 40, right: 50, bottom: 45, left: 50};
 var dataExtents, svgStart, svgEnd;
-var tenYrAvg;
+var multiYrAvg;
 
-drawMonths = function (){
+//n = number of years in chart
+drawMonths = function (n){
   svg = d3.select("svg#chart");
   width = +svg.attr("width") - margin.left - margin.right;
   height = +svg.attr("height") - margin.top - margin.bottom;
 
-  var data = [0,0,0,0,0,0,0,0,0,0];
-  tenYrAvg = 0;
+  var data = [];
+  for(let i = 0; i < n; i++){
+    data.push(0);
+  }
+  multiYrAvg = 0;
   dataExtents = d3.extent(data, function(d){return d;});
 
-  svgStart = new Date(2007, 5, 1);
+  svgStart = new Date(2017-n, 5, 1);
   svgEnd = new Date(2017, 8, 1);
   var x = d3.scaleTime()
       .rangeRound([0, width])
@@ -62,7 +66,7 @@ drawMonths = function (){
     .text("Total Precipitation (mm)");
 
   //draw bars
-  let barWidth = width*0.5/10;
+  let barWidth = width*0.5/n;
   g.append("g")
     .attr("class","bars")
     .selectAll("rect")
@@ -70,7 +74,7 @@ drawMonths = function (){
     .enter().append("rect")
     .attr("class","bars")
     .attr("y",d => y(d))
-    .attr("x",(d,i) => x(new Date(2008 + i, 0, 1)) - barWidth/2)
+    .attr("x",(d,i) => x(new Date(2018 - n + i, 0, 1)) - barWidth/2)
     .attr("width",barWidth)
     .attr("height",d => height - y(d) + 1)
     .attr("fill","#b5ffc0")
@@ -93,9 +97,9 @@ drawMonths = function (){
     .text("Year");
 
   g.append("line")
-    .attr("class","tenYrAvg")
-    .attr("y1",function(d){return y(tenYrAvg);})
-    .attr("y2",function(d){return y(tenYrAvg);})
+    .attr("class","multiYrAvg")
+    .attr("y1",function(d){return y(multiYrAvg);})
+    .attr("y2",function(d){return y(multiYrAvg);})
     .attr("x1",width*0.025)
     .attr("x2",width*0.975)
     .attr("stroke","black")
@@ -134,10 +138,10 @@ updateMonths = function (o){
   width = +svg.attr("width") - margin.left - margin.right;
 
   dataExtents = d3.extent(o.data, function(d){return d;});
-  tenYrAvg = o.avg;
+  multiYrAvg = o.avg;
 
   svgStart = new Date(o.start-1, 5, 1);
-  svgEnd = new Date(o.start+9, 8, 1);
+  svgEnd = new Date(o.start+o.years-1, 8, 1);
   var x = d3.scaleTime()
       .rangeRound([0, width])
       .domain([svgStart,svgEnd]);
@@ -168,7 +172,7 @@ updateMonths = function (o){
   let ro = threshObj(rel);
   let n = threshValFraction(pct, avg);
 
-  let barWidth = width*0.5/10;
+  let barWidth = width*0.5/o.years;
   d3.selectAll("g.bars")
     .selectAll("rect")
     .data(o.data)
@@ -185,7 +189,7 @@ updateMonths = function (o){
     .transition().duration(1000)
     .call(d3.axisBottom(x).ticks(9));
 
-  d3.selectAll("line.tenYrAvg")
+  d3.selectAll("line.multiYrAvg")
     .transition().duration(1000)
     .attr("y1",function(d){return y(o.avg);})
     .attr("y2",function(d){return y(o.avg);})
@@ -207,17 +211,18 @@ changeThreshold = function (){
   d3.selectAll("g.bars")
     .selectAll("rect")
     .transition().duration(1000)
-    .attr("fill", d => d >= tenYrAvg*n ? ro.caFill : ro.cbFill)
-    .attr("stroke", d => d >= tenYrAvg*n ? ro.caStroke : ro.cbStroke);
+    .attr("fill", d => d >= multiYrAvg*n ? ro.caFill : ro.cbFill)
+    .attr("stroke", d => d >= multiYrAvg*n ? ro.caStroke : ro.cbStroke);
 
-  d3.selectAll("line.tenYrAvg")
+  d3.selectAll("line.multiYrAvg")
     .transition().duration(1000)
-    .attr("y1",function(d){return y(tenYrAvg*n);})
-    .attr("y2",function(d){return y(tenYrAvg*n);});
+    .attr("y1",function(d){return y(multiYrAvg*n);})
+    .attr("y2",function(d){return y(multiYrAvg*n);});
 }
 
 var pData;
-calcTenYrP = function (o = pData){
+calcPct = function (o = pData){
+  console.log("calcPct",o)
   pData = o;
   //go through data object and decide how many
   //times in the past 10 years met the threshold
@@ -233,30 +238,35 @@ calcTenYrP = function (o = pData){
     pData.data[i] >= pData.avg*n ? sum += 1 : sum += 0;
   }
   //sum * 10 is probability
-  if(!rov) sum = 10 - sum;
-  $("#ten-yr-prob").html(`<span id="pct-span" data-tenYrProb="${sum/l}"> ~${sum*l}% </span> chance of payout`);
+  let finalPct = Math.round(sum*100/o.years);
+  if(!rov) finalPct = 100 - finalPct;
+  $("#ten-yr-prob").html(`<span id="pct-span" data-tenYrProb="${finalPct}"> ~${finalPct}% </span> chance of payout`);
 
-  if(sum <= 3 || sum >= 7){
-    if(sum <= 3) $('#pct-span').addClass('low-text');
-    if(sum >= 7) $('#pct-span').addClass('high-text');
+  if(finalPct <= 30 || finalPct >= 70){
+    if(finalPct <= 30) $('#pct-span').addClass('low-text');
+    if(finalPct >= 70) $('#pct-span').addClass('high-text');
   }else{
     $('#pct-span').removeClass('low-text');
     $('#pct-span').removeClass('high-text');
   }
 }
 
-clearChart = function (){
+clearChart = function (n){
   svg = d3.select("svg#chart");
   margin = {top: 20, right: 50, bottom: 45, left: 50};
   width = +svg.attr("width") - margin.left - margin.right;
 
-  let o = {start:2008,data:[0,0,0,0,0,0,0,0,0,0],avg:0};
+  let data = [];
+  for(let i = 0; i < n; i++){
+    data.push(0);
+  }
+  let o = {start:2008,data:data,avg:0};
   dataExtents = d3.extent(o.data, function(d){return d;});
-  tenYrAvg = o.avg;
-  var y = d3.scaleLinear()
+  multiYrAvg = o.avg;
+  let y = d3.scaleLinear()
       .rangeRound([height, 0])
       .domain([0,dataExtents[1]]);
-  var ymm = d3.scaleLinear()
+  let ymm = d3.scaleLinear()
       .rangeRound([height, 0])
       .domain([0,dataExtents[1]*25.4]);
 
@@ -280,7 +290,7 @@ clearChart = function (){
     .attr("stroke-dasharray", d => `${barWidth},${barWidth}`)
     .attr("opacity",1e-6);
 
-  d3.selectAll("line.tenYrAvg")
+  d3.selectAll("line.multiYrAvg")
     .transition().duration(1000)
     .attr("y1",function(d){return y(o.avg);})
     .attr("y2",function(d){return y(o.avg);})

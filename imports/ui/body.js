@@ -5,7 +5,7 @@ import './manageWITs.js'
 import './NASA-leaflet.js';
 import './NOAA-svg.js';
 import './tables.js'
-import './ten-yr-chart.js';
+import './yearly-chart.js';
 import './threshold.js';
 import './utilities.js'
 
@@ -183,8 +183,9 @@ function initMainPage(){
         //     times: 5
         // });
       });
+      //TODO this should be done when user choose index
       //start drawing svg
-      drawMonths();
+      drawMonths(30);
 
       //TODO check for mobile redirect
       if(screen.width <= 699) {
@@ -994,7 +995,7 @@ Template.formNewProtection.events({
       $("#your-contrib, #requested-contrib").prev().removeAttr('disabled');
       // recommend your contribution
       if ($('#pct-span').attr('data-tenYrProb')) {
-        var recommendedValue = Math.round((event.currentTarget.value * $('#pct-span').attr('data-tenYrProb'))*10000)/10000;
+        var recommendedValue = Math.round((event.currentTarget.value * $('#pct-span').attr('data-tenYrProb'))*10)/1000;
         $('#your-contrib-hint-value').text(recommendedValue).parent().show();
         // if the your contribution field is blank, zero, or invalid (greater than the total), set to recommended value 
         if ($('#your-contrib').val() === '' || $('#your-contrib').val() === 0 || $('#your-contrib').val() >= event.currentTarget.value) {

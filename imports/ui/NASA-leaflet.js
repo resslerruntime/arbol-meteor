@@ -10,7 +10,7 @@ import './body.js';
 prepareNasaCall = function (){
   let smv = $('#date-start').datepicker('getDate').getMonth() + 1
     ,sm = `${smv}`     // start month
-    ,syv = $('#date-start').datepicker('getDate').getFullYear() - 10
+    ,syv = $('#date-start').datepicker('getDate').getFullYear() - 30
     ,sy = `${syv}`; // start year
   let emv = $('#date-end').datepicker('getDate').getMonth() + 1
     ,em = `${emv}` // end month, +2 to account for the entire month by putting the end date as the 1st of the next month
@@ -76,7 +76,7 @@ callNASA = function (startDate,endDate,location){
               if(d.data.length !== 0){
                 let obj = yearlyNASAVals(d.data,startDate,endDate);
                 updateMonths(obj);
-                calcTenYrP(obj);
+                calcPct(obj);
                 $(".chart-loader-div").removeClass("chart-loader");
                 $("#chart-loader").fadeOut(500);  
               }else{
@@ -120,7 +120,7 @@ function yearlyNASAVals (a,startDate,endDate){
     }
   } 
   console.log("nasa data",data)
-  return {start:startDate.year,data:data,avg:sumAll/data.length,title:`Total Precipitation: ${months[parseInt(startDate.month)-1]} to ${months[parseInt(endDate.month)-1]}`};
+  return {years:30,start:startDate.year,data:data,avg:sumAll/data.length,title:`Total Precipitation: ${months[parseInt(startDate.month)-1]} to ${months[parseInt(endDate.month)-1]}`};
 }
 
 
