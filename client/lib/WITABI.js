@@ -152,14 +152,64 @@
           "type": "uint256"
         },
         {
-          "indexed": true,
+          "indexed": false,
           "name": "aboveID",
           "type": "uint256"
         },
         {
-          "indexed": true,
+          "indexed": false,
           "name": "belowID",
           "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "name": "aboveOwner",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "name": "belowOwner",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "name": "weiContributing",
+          "type": "uint256"
+        },
+        {
+          "indexed": true,
+          "name": "weiAsking",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "name": "evaluator",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "name": "thresholdPPTTH",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "name": "location",
+          "type": "string"
+        },
+        {
+          "indexed": false,
+          "name": "start",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "name": "end",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "name": "makeStale",
+          "type": "bool"
         }
       ],
       "name": "ProposalAccepted",

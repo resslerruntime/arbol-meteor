@@ -1,12 +1,14 @@
 import { Template } from 'meteor/templating';
 import { ReactiveVar } from 'meteor/reactive-var';
 
-import './utilities.js'
 import './manageWITs.js'
 import './NASA-leaflet.js';
 import './NOAA-svg.js';
-import './threshold.js';
+import './tables.js'
 import './ten-yr-chart.js';
+import './threshold.js';
+import './utilities.js'
+
 import './body.html';
 import './createProtection.html';
 
@@ -29,128 +31,128 @@ Router.route('/', {
 // FUNCTIONS RELATED TO WEB3 PAGE STARTUP
 ////////////////////////////////////////////
 
-//table entry constructor open protections
-//event ProposalOffered(uint indexed WITID, uint aboveID, uint belowID, uint indexed weiContributing,  uint indexed weiAsking, address evaluator, uint thresholdPPTTH, string location, uint start, uint end, bool makeStale);
-function Entry(r,owner){
-  let a = r.args;
-  let location = "?"; 
-  let ask = a.weiAsking.toNumber();
-  let propose = a.weiContributing.toNumber();
-  let id = a.WITID.toNumber();
+// //table entry constructor open protections
+// //event ProposalOffered(uint indexed WITID, uint aboveID, uint belowID, uint indexed weiContributing,  uint indexed weiAsking, address evaluator, uint thresholdPPTTH, string location, uint start, uint end, bool makeStale);
+// function Entry(r,owner){
+//   let a = r.args;
+//   let location = "?"; 
+//   let ask = a.weiAsking.toNumber();
+//   let propose = a.weiContributing.toNumber();
+//   let id = a.WITID.toNumber();
 
-  //update for if the contract is for offered for sale or for funding
-  let totalPayout = toEth(propose) + toEth(ask);
-  let totalPayoutText = `${clipNum(toEth(propose) + toEth(ask))} Eth`;
-  // button
-  let b = `${toEth(ask)}`;
-  let b1 = `<button type='button' class='action buyit tableBtn' value='${toEth(ask)},${a.WITID.toNumber()}'>Pay <span class="green-text">${clipNum(toEth(ask))} Eth</span> to accept</button>`;
-  //if no user is logged in
-  if(Session.get("user") === -1){
-    b1 = `<button type='button' class='tableBtn' value='${toEth(ask)},${a.WITID.toNumber()}'><span class="green-text">${clipNum(toEth(ask))} Eth</span></button>`;
-  }
-  //if the current use is the owner of the proposal don't give them the option to purchase the proposal
-  if(owner === Session.get("user")){
-    b = "1e99";
-    b1 = `<button type='button' class='tableBtn'>You are the owner of this proposal</button>`;
-  }
+//   //update for if the contract is for offered for sale or for funding
+//   let totalPayout = toEth(propose) + toEth(ask);
+//   let totalPayoutText = `${clipNum(toEth(propose) + toEth(ask))} Eth`;
+//   // button
+//   let b = `${toEth(ask)}`;
+//   let b1 = `<button type='button' class='action buyit tableBtn' value='${toEth(ask)},${a.WITID.toNumber()}'>Pay <span class="green-text">${clipNum(toEth(ask))} Eth</span> to accept</button>`;
+//   //if no user is logged in
+//   if(Session.get("user") === -1){
+//     b1 = `<button type='button' class='tableBtn' value='${toEth(ask)},${a.WITID.toNumber()}'><span class="green-text">${clipNum(toEth(ask))} Eth</span></button>`;
+//   }
+//   //if the current use is the owner of the proposal don't give them the option to purchase the proposal
+//   if(owner === Session.get("user")){
+//     b = "1e99";
+//     b1 = `<button type='button' class='tableBtn'>You are the owner of this proposal</button>`;
+//   }
 
-  //get threshold text
-  let above = a.WITID.toNumber() === a.belowID.toNumber();
-  if(owner === Session.get("user")) above = a.WITID.toNumber() !== a.belowID.toNumber();
-  let thresh = threshValsToText(above,a.thresholdPPTTH.toNumber());
+//   //get threshold text
+//   let above = a.WITID.toNumber() === a.belowID.toNumber();
+//   if(owner === Session.get("user")) above = a.WITID.toNumber() !== a.belowID.toNumber();
+//   let thresh = threshValsToText(above,a.thresholdPPTTH.toNumber());
 
-  //create the object
-  this.id = id;
-  this.type = "bodyRow";
-  this.column = [
-      {type:"text",key:location,name:location}
-      ,{type:"text",key:thresh,name:thresh}
-      ,{type:"text",key:"NASA Rainfall",name:"NASA Rainfall"}
-      ,{type:"num",key:a.start.toNumber()*1000,name:dateText(a.start.toNumber()*1000)}
-      ,{type:"num",key:a.end.toNumber()*1000,name:dateText(a.end.toNumber()*1000)}
-      ,{type:"num",key:totalPayout,name:totalPayoutText}
-      ,{type:"num",key:b,name:b1}
-    ];
-}
+//   //create the object
+//   this.id = id;
+//   this.type = "bodyRow";
+//   this.column = [
+//       {type:"text",key:location,name:location}
+//       ,{type:"text",key:thresh,name:thresh}
+//       ,{type:"text",key:"NASA Rainfall",name:"NASA Rainfall"}
+//       ,{type:"num",key:a.start.toNumber()*1000,name:dateText(a.start.toNumber()*1000)}
+//       ,{type:"num",key:a.end.toNumber()*1000,name:dateText(a.end.toNumber()*1000)}
+//       ,{type:"num",key:totalPayout,name:totalPayoutText}
+//       ,{type:"num",key:b,name:b1}
+//     ];
+// }
 
-//table entry constructor my protections
-//bool if you proposed the protection = true, if you accepted the protection = false
-function MyEntry(r,a,id,bool){
-  //is this entry an acceptance, an open proposal, or an accepted proposal
-  let acceptance = r.args !== a;
-  let acceptedProposal = false;
-  if(!acceptance){
-    if(acceptedList.indexOf(id) !== -1) acceptedProposal = true;
-  }
+// //table entry constructor my protections
+// //bool if you proposed the protection = true, if you accepted the protection = false
+// function MyEntry(r,a,id,bool){
+//   //is this entry an acceptance, an open proposal, or an accepted proposal
+//   let acceptance = r.args !== a;
+//   let acceptedProposal = false;
+//   if(!acceptance){
+//     if(acceptedList.indexOf(id) !== -1) acceptedProposal = true;
+//   }
 
-  let ask = a.weiAsking.toNumber();
-  let propose = a.weiContributing.toNumber();
-  let location = "?"; 
+//   let ask = a.weiAsking.toNumber();
+//   let propose = a.weiContributing.toNumber();
+//   let location = "?"; 
 
-  //total payouts
-  let totalPayout = toEth(propose) + toEth(ask);
-  let totalPayoutText = `${clipNum(toEth(propose) + toEth(ask))} Eth`;
+//   //total payouts
+//   let totalPayout = toEth(propose) + toEth(ask);
+//   let totalPayoutText = `${clipNum(toEth(propose) + toEth(ask))} Eth`;
 
-  //your contribution
-  let v;
-  if(acceptance) v = toEth(ask);
-  else v = toEth(propose);
-  let yourContr = v;
-  let yourContrText = `${clipNum(v)} Eth`;
+//   //your contribution
+//   let v;
+//   if(acceptance) v = toEth(ask);
+//   else v = toEth(propose);
+//   let yourContr = v;
+//   let yourContrText = `${clipNum(v)} Eth`;
 
-  //status
-  let now = new Date().getTime();
-  let start = new Date(a.start.toNumber()*1000).getTime();
-  let end = new Date(a.end.toNumber()*1000).getTime();
-  let status = "";
-  let b = "";
-  let b1 = "";
+//   //status
+//   let now = new Date().getTime();
+//   let start = new Date(a.start.toNumber()*1000).getTime();
+//   let end = new Date(a.end.toNumber()*1000).getTime();
+//   let status = "";
+//   let b = "";
+//   let b1 = "";
 
-  if(acceptance || acceptedProposal){
-    //acceptances and accepted proposals
-    if(now < start){
-      status = "Partnered, waiting to start";
-      b1 = "Waiting"; //`<button type='button' class='action cancelit tableBtn'> Cancel and redeem <span class="green-text">${yourContr}</span></button>`;
-    }
-    if(now >= start && now <= end){
-      status = "In term";
-      b = "Waiting";
-      b1 = "Waiting";
-    }
-    if(now > end){
-      status = "Waiting for evaluation";
-      b = "Evaluate"
-      b1 = `<button type='button' class='action evaluateit tableBtn' value=${id}> Evaluate and complete </button>`;
-    }
-  }else{
-    //not accepted proposal
-    if(now < start) status = "Waiting for partner";
-    if(now >= start) status = "Stale";
-    b = "";
-    b1 = `<button type='button' class='action cancelit tableBtn'> Cancel and redeem <span class="green-text">${yourContrText}</span></button>`;
-  }
+//   if(acceptance || acceptedProposal){
+//     //acceptances and accepted proposals
+//     if(now < start){
+//       status = "Partnered, waiting to start";
+//       b1 = "Waiting"; //`<button type='button' class='action cancelit tableBtn'> Cancel and redeem <span class="green-text">${yourContr}</span></button>`;
+//     }
+//     if(now >= start && now <= end){
+//       status = "In term";
+//       b = "Waiting";
+//       b1 = "Waiting";
+//     }
+//     if(now > end){
+//       status = "Waiting for evaluation";
+//       b = "Evaluate"
+//       b1 = `<button type='button' class='action evaluateit tableBtn' value=${id}> Evaluate and complete </button>`;
+//     }
+//   }else{
+//     //not accepted proposal
+//     if(now < start) status = "Waiting for partner";
+//     if(now >= start) status = "Stale";
+//     b = "";
+//     b1 = `<button type='button' class='action cancelit tableBtn'> Cancel and redeem <span class="green-text">${yourContrText}</span></button>`;
+//   }
 
-  //get threshold text
-  let thresh;
-  if(acceptance) thresh = threshValsToText(a.WITID.toNumber() === a.belowID.toNumber(),a.thresholdPPTTH.toNumber());
-  else thresh = threshValsToText(a.WITID.toNumber() !== a.belowID.toNumber(),a.thresholdPPTTH.toNumber());
+//   //get threshold text
+//   let thresh;
+//   if(acceptance) thresh = threshValsToText(a.WITID.toNumber() === a.belowID.toNumber(),a.thresholdPPTTH.toNumber());
+//   else thresh = threshValsToText(a.WITID.toNumber() !== a.belowID.toNumber(),a.thresholdPPTTH.toNumber());
 
-  //create the object
-  this.id = r.args.WITID.toNumber();
-  this.type = "bodyRow";
-  //if you change the number or order of columns, you have to update the evaluation listener
-  this.column = [
-      {type:"text",key:location,name:location}
-      ,{type:"text",key:thresh,name:thresh}
-      ,{type:"text",key:"NASA Rainfall",name:"NASA Rainfall"}
-      ,{type:"num",key:a.start.toNumber()*1000,name:dateText(a.start.toNumber()*1000)}
-      ,{type:"num",key:a.end.toNumber()*1000,name:dateText(a.end.toNumber()*1000)}
-      ,{type:"num",key:yourContr,name:yourContrText}
-      ,{type:"num",key:totalPayout,name:totalPayoutText}
-      ,{type:"text",key:status,name:status}
-      ,{type:"text",key:b,name:b1}
-    ];
-}
+//   //create the object
+//   this.id = r.args.WITID.toNumber();
+//   this.type = "bodyRow";
+//   //if you change the number or order of columns, you have to update the evaluation listener
+//   this.column = [
+//       {type:"text",key:location,name:location}
+//       ,{type:"text",key:thresh,name:thresh}
+//       ,{type:"text",key:"NASA Rainfall",name:"NASA Rainfall"}
+//       ,{type:"num",key:a.start.toNumber()*1000,name:dateText(a.start.toNumber()*1000)}
+//       ,{type:"num",key:a.end.toNumber()*1000,name:dateText(a.end.toNumber()*1000)}
+//       ,{type:"num",key:yourContr,name:yourContrText}
+//       ,{type:"num",key:totalPayout,name:totalPayoutText}
+//       ,{type:"text",key:status,name:status}
+//       ,{type:"text",key:b,name:b1}
+//     ];
+// }
 
 //manage current user
 Session.set("user",-1);
@@ -160,9 +162,9 @@ Session.set("pastUser",-2);
 var witAddress, witContract, witInstance;
 var noaaAddress, nasaAddress;
 
-//TODO can we really rely on the acceptance events always firing before the proposal events and therefore creating a useful acceptedList
-var acceptedList = [];
-let proposedList = [];
+// //TODO can we really rely on the acceptance events always firing before the proposal events and therefore creating a useful acceptedList
+// var acceptedList = [];
+// let proposedList = [];
 
 function initMainPage(){
   if (Meteor.isClient) {
@@ -271,9 +273,13 @@ function initContracts(){
         // noaaAddress = "0xe8ca721c10a1947a9344d168c1299dd342f78093";
         // nasaAddress = "0xc0ec4dbd358038c42ef92f9cc9f7e389191280ef";
         //NASA-leaflet deployment- backwards compatible 10-11-2018;
-        witAddress = "0x51b65c830bff89af8b68de85400bae1ee66cbb40";
-        noaaAddress = "0x337c58a3c4142f3d382b1fe4027d281625315a0b";
-        nasaAddress = "0x5a958c25b04cdef8ff408bf79479837922bbff16";
+        // witAddress = "0x51b65c830bff89af8b68de85400bae1ee66cbb40";
+        // noaaAddress = "0x337c58a3c4142f3d382b1fe4027d281625315a0b";
+        // nasaAddress = "0x5a958c25b04cdef8ff408bf79479837922bbff16";
+        //NASA-leaflet deployment- backwards compatible 10-12-2018;
+        witAddress = "0x38383ac46977357afe54b060f2f56d25dc7d3a58";
+        noaaAddress = "0xb2b4013466dff53a5cc9f58bcf0d59e923341d3a";
+        nasaAddress = "0x09b42178ae9e4d9d213b675202dc09faab7a3175";        
         break
       case "42":
         $("#network-name").html("Kovan");
@@ -297,6 +303,7 @@ function initContracts(){
     Session.set("noaaAddress",noaaAddress)
     Session.set("nasaAddress",nasaAddress)
     setWitInstance(witInstance); //for manageWITs
+    setWitInstance2(witInstance); //for table
   })  
 }
 
@@ -343,328 +350,6 @@ async function manageAccounts(){
   }
 }
 
-//begin the process of loading all the data
-function loadData(){
-    //populate lists
-    latestProposals();
-    latestAcceptances();
-    latestEvaluations();
-}
-
-function resetGlobalVariables(){
-  acceptedList = [];
-  proposedList = [];
-  if(watchLatestProposal !== -1) watchLatestProposal.stopWatching();
-  if(watchLatestAcceptance !== -1) watchLatestAcceptance.stopWatching();
-  if(watchLatestEvaluation !== -1) watchLatestEvaluation.stopWatching();
-}
-
-//get all proposals, add new entries as they are created
-var watchLatestProposal = -1;
-function latestProposals(){
-  console.log("fn: latestProposals");
-  watchLatestProposal = witInstance.ProposalOffered({},{fromBlock: 0, toBlock: 'latest'}).watch(function(error, result){
-    updateBalance();
-    let store = addInfoFromProposalCreated(result);
-
-    let id = result.args.WITID.toNumber();
-    let aboveID = result.args.aboveID.toNumber();
-    let belowID = result.args.belowID.toNumber();
-    console.log("===> latest: 'offered', id:",id,"above id:",aboveID,"below id:",belowID,result);
-    addToken(result);
-    $('#open-loader').hide();
-    $('#open-wrapper').removeClass('loading');
-  });
-}
-
-//get all acceptances, add new acceptances to myProposals as they are created and remove from open proposals
-var watchLatestAcceptance = -1;
-function latestAcceptances(){
-  console.log("fn: latestAcceptance");
-  //do something as new proposal is accepted
-  watchLatestAcceptance = witInstance.ProposalAccepted({},{fromBlock: 0, toBlock: 'latest'}).watch(function(error, result){
-    updateBalance();
-    let store = addInfoFromProposalAccepted(result);
-
-    let id = result.args.WITID.toNumber();
-    let aboveID = result.args.aboveID.toNumber();
-    let belowID = result.args.belowID.toNumber();    
-    console.log("===> latest: 'accepted', id:",id,"above id:",aboveID,"below id:",belowID,result)
-    addAcceptance(result);
-  });
-}
-
-//get all evaluations
-var watchLatestEvaluation = -1;
-function latestEvaluations(){
-  console.log("fn: latestEvaluation")
-  //do something as new evaluation is accepted
-  watchLatestEvaluation = witInstance.WITEvaluated({},{fromBlock: 0, toBlock: 'latest'}).watch(function(error, result){
-    updateBalance();
-    let store = addInfoFromProposalEvaluated(result);
-    
-    let id = result.args.WITID.toNumber();
-    let aboveID = result.args.aboveID.toNumber();
-    let belowID = result.args.belowID.toNumber();
-    let aboveOwner = result.args.aboveOwner;
-    let belowOwner = result.args.belowOwner;
-    let beneficiary = result.args.beneficiary;
-    console.log("===> latest: 'evaluated'","id:",id,"above id:",aboveID,"below id:",belowID,result)
-    console.log("===> latest: 'evaluated'","id:",id,aboveOwner,belowOwner,beneficiary)
-    //update status in "my protections pages"
-    //go through list, change status update page
-    let list = Session.get("myProtectionsData");
-    let index = findIndex(list,el => el.id == result.args.WITID);
-    if(index != -1){
-      let outcome = "";
-      let payout = toEth(result.args.weiPayout.toNumber());
-      if(true) outcome = `You received <span class="green-text">${payout}</span>`
-      else outcome = "You did not receive the payout";
-      console.log("===> update with evaluate",list,index,list[index], outcome)
-      list[index].column[7].key = "Evaluation";
-      list[index].column[7].name = "Evaluation complete";
-      list[index].column[8].key = "Evaluated";
-      list[index].column[8].name = outcome;
-      Session.set("openProtectionsData",list);
-    }
-  })
-}
-
-//add token to list
-async function addToken(result){
-  try{
-    //TODO change this variable id to idObj.toNumber()
-    let idObj = result.args.WITID;
-    let id = idObj.toNumber();
-    let owner = await promisify(cb => witInstance.ownerOf(idObj, cb));
-
-    //add to open protections
-    if(proposedList.indexOf(id) === -1){
-      if(acceptedList.indexOf(id) === -1){
-        proposedList.push(id);
-        //TODO reinstate date filter
-        //only show entries whose starting dates haven't passed
-        // if(new Date(result.args.start.toNumber()) - new Date() > 0){
-        if(true){
-          let list = Session.get("openProtectionsData");
-          // console.log("===> proposal offered, id:",id);
-          list.push(new Entry(result,owner));
-          list = sortArray(list,Session.get("sortIndex"),Session.get("descending"));
-          Session.set("openProtectionsData",list);
-
-          //if more than ten items turn on pagination
-          //set max pagination
-          let tblRow = tableRows();
-          if(list.length > tblRow){
-            $("#open-pager-btns").show();
-            $("#open-max").html(Math.ceil(list.length/tblRow));
-            $("#open-current").html(1);
-          }
-
-          //show paginated items
-          let opPagination = Session.get("opPagination")
-          let pageList = paginateData(list,opPagination);
-          if(pageList.length > 0){
-            Session.set("openProtectionsPaginatedData",pageList);
-          }else{
-            if(opPagination > 0) opPagination -= 1;
-          }
-          Session.set("opPagination",opPagination);
-        }
-      }
-
-      //add to my protections
-      // console.log("my entry", owner, Session.get("user"), result)
-      if(owner === Session.get("user")){
-        let list = Session.get("myProtectionsData");
-        list.push(new MyEntry(result,result.args,id,true));
-        list = sortArray(list,Session.get("mySortIndex"),Session.get("descending"));
-        Session.set("myProtectionsData",list);
-
-        //if more than ten items turn on pagination
-        let tblRow = tableRows();
-        if(list.length > tblRow){
-          $("#my-pager-btns").show();
-          $("#my-max").html(Math.ceil(list.length/tblRow));
-          $("#my-current").html(1);
-        }
-
-        //show paginated items
-        let myPagination = Session.get("myPagination");
-        let pageList = paginateData(list,myPagination);
-        if(pageList.length > 0){
-          Session.set("myProtectionsPaginatedData",pageList);
-        }else{
-          if(myPagination > 0) myPagination -= 1;
-        }
-        Session.set("myPagination",myPagination);
-      }
-    }
-  }catch(error){
-    console.log(error);
-  }
-}
-
-function removeToken(id){
-  // console.log("removeToken")
-  //add to open protections
-  let list = Session.get("openProtectionsData");
-  if(list.length > 0){
-    let index = findIndex(list,el => el.id == id);
-    list.splice(index,1);
-    // list = sortArray(list,Session.get("sortIndex"),Session.get("descending"));
-    Session.set("openProtectionsData",list);
-
-    //if more than ten items turn on pagination
-    if(list.length <= tableRows()){
-      $("#open-pager-btns").hide();
-    }
-
-    //show paginated items
-    let opPagination = Session.get("opPagination");
-    let pageList = paginateData(list,opPagination);
-    if(pageList.length > 0){
-      Session.set("openProtectionsPaginatedData",pageList);
-    }else{
-      if(opPagination > 0) opPagination -= 1;
-    }
-    Session.set("opPagination",opPagination);
-  }
-}
-
-function findIndex(array,cb){
-  let l = array.length;
-  while(l--){
-    if(cb(array[l])) return l;
-  }
-  return -1;
-}
-
-//add acceptance to my protections
-async function addAcceptance(result){
-  // console.log("fn: addAcceptance")
-  let outerResult = result;
-  let idpObj = result.args.WITID;
-  let idp = idpObj.toNumber();
-
-  let idObj = result.args.aboveID;
-  if(idp === result.args.aboveID.toNumber()) idObj = result.args.belowID;
-  let id = idObj.toNumber();
-
-  if(acceptedList.indexOf(idp) === -1){
-    try{
-      // console.log("===> proposal accepted, id:", id);
-      //prevent previous tokens from being added to list
-      acceptedList.push(idp);
-      //if they are already shown remove them
-      removeToken(idp);
-
-      //these next 3 lines just resort the my protections table but I am not sure they are required for anything
-      let updateList = Session.get("myProtectionsData");
-      updateList = sortArray(updateList,Session.get("mySortIndex"),Session.get("descending"));
-      Session.set("myProtectionsData",updateList);
-
-      //if they were your proposals update your "my protections"
-      let owner = await promisify(cb => witInstance.ownerOf(idObj, cb));
-      if(owner === Session.get("user")){
-        //hide the loading
-        $('#my-loader').hide();
-        $('#my-wrapper').removeClass('loading');
-
-        //get contract information for associated proposal
-        witInstance.ProposalOffered({WITID:idpObj},{fromBlock: 0, toBlock: 'latest'}).watch(function(error, result){
-          // console.log("===> proposal accepted details retrieved, id:",id)
-          let list = Session.get("myProtectionsData");
-          list.push(new MyEntry(outerResult,result.args,id,false));
-          list = sortArray(list,Session.get("mySortIndex"),Session.get("descending"));
-          Session.set("myProtectionsData",list);
-
-          //if more than ten items turn on pagination
-          if(list.length > tableRows()){
-            $("#my-pager-btns").show();
-          }
-
-          //show paginated items
-          let myPagination = Session.get("myPagination");
-          let pageList = paginateData(list,myPagination);
-          if(pageList.length > 0){
-            Session.set("myProtectionsPaginatedData",pageList);
-          }else{
-            if(myPagination > 0) myPagination -= 1;
-          }
-          Session.set("myPagination",myPagination)
-        });
-      }
-    } catch (error) {
-      console.log(error)
-    }
-  }
-}
-
-// num = a.start.toNumber()
-let months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-function dateText(iso){
-  let d1 = new Date(iso).toISOString().substring(0,7);
-  let a = d1.split("-");
-  let n = parseInt(a[1]) - 1;
-  return months[n] + " " + a[0];
-}
-
-function dateNum(text){
-  let a = text.split(" ");
-  let lm = months.length;
-  let n = 0;
-  while(lm--){
-    if(months[lm] === a[0]) n = lm;
-  }
-  return parseInt(a[1]) + n/12;
-}
-
-function updateOpenProposals(list){
-  list = sortArray(list,Session.get("sortIndex"),Session.get("descending"));
-  Session.set("openProtectionsData",list);
-
-  //if more than ten items turn on pagination
-  //set max pagination
-  let tblRow = tableRows();
-  if(list.length > tblRow){
-    $("#open-pager-btns").show();
-    $("#open-max").html(Math.ceil(list.length/tblRow));
-    $("#open-current").html(1);
-  }
-
-  //show paginated items
-  let opPagination = Session.get("opPagination");
-  let pageList = paginateData(list,opPagination);
-  if(pageList.length > 0){
-    Session.set("openProtectionsPaginatedData",pageList);
-  }else{
-    if(opPagination > 0) Session.set("opPagination",opPagination-1);
-  }
-}
-
-function updateMyProposals(list){
-  list = sortArray(list,Session.get("mySortIndex"),Session.get("descending"));
-  Session.set("myProtectionsData",list);
-
-  //if more than ten items turn on pagination
-  let tblRow = tableRows();
-  if(list.length > tblRow){
-    $("#my-pager-btns").show();
-    $("#my-max").html(Math.ceil(list.length/tblRow));
-    $("#my-current").html(1);
-  }
-
-  //show paginated items
-  let myPagination = Session.get("myPagination");
-  let pageList = paginateData(list,myPagination);
-  if(pageList.length > 0){
-    Session.set("myProtectionsPaginatedData",pageList);
-  }else{
-    if(myPagination > 0) Session.set("myPagination",myPagination);
-  }  
-}
-
 async function updateBalance(){
   if(Session.get("user") === -1){
     $('#user-balance').html("0.000");
@@ -690,10 +375,370 @@ async function updateBalance(){
   }
 }
 
-//number of rows in the sortable tables
-function tableRows(){
-  //TODO decide how many rows based on available area
-  return 15;
+//begin the process of loading all the data
+function loadData(){
+    //populate lists
+    latestProposals();
+    latestAcceptances();
+    latestEvaluations();
+}
+
+function resetSessionVars(){
+  Session.set("filterCriteria",{});
+  Session.set("openProtectionsData",[]);
+  Session.set("myProtectionsData",[]);
+  Session.set("myPagination",0);
+  Session.set("opPagination",0);
+  Session.set("openProtectionsPaginatedData",[]);
+  Session.set("myProtectionsPaginatedData",[]);
+  Session.set("sortIndex",0);
+  Session.set("descending",true);
+  Session.set("mySortIndex",0);
+  Session.set("myDescending",true);
+}
+
+function resetGlobalVariables(){
+  // acceptedList = [];
+  // proposedList = [];
+  if(watchLatestProposal !== -1) watchLatestProposal.stopWatching();
+  if(watchLatestAcceptance !== -1) watchLatestAcceptance.stopWatching();
+  if(watchLatestEvaluation !== -1) watchLatestEvaluation.stopWatching();
+}
+
+//get all proposals, add new entries as they are created
+var watchLatestProposal = -1;
+function latestProposals(){
+  console.log("fn: latestProposals");
+  watchLatestProposal = witInstance.ProposalOffered({},{fromBlock: 0, toBlock: 'latest'}).watch(function(error, result){
+    updateBalance();
+    let store = addInfoFromProposalCreated(result);
+    updateOpenProposals(store.openProposals);
+    updateMyProposals(store.myProposals);
+
+    // let id = result.args.WITID.toNumber();
+    // let aboveID = result.args.aboveID.toNumber();
+    // let belowID = result.args.belowID.toNumber();
+    // console.log("===> latest: 'offered', id:",id,"above id:",aboveID,"below id:",belowID,result);
+    // addToken(result);
+    // $('#open-loader').hide();
+    // $('#open-wrapper').removeClass('loading');
+  });
+}
+
+//get all acceptances, add new acceptances to myProposals as they are created and remove from open proposals
+var watchLatestAcceptance = -1;
+function latestAcceptances(){
+  console.log("fn: latestAcceptance");
+  //do something as new proposal is accepted
+  watchLatestAcceptance = witInstance.ProposalAccepted({},{fromBlock: 0, toBlock: 'latest'}).watch(function(error, result){
+    updateBalance();
+    let store = addInfoFromProposalAccepted(result);
+    updateOpenProposals(store.openProposals);
+    updateMyProposals(store.myProposals);
+
+    // let id = result.args.WITID.toNumber();
+    // let aboveID = result.args.aboveID.toNumber();
+    // let belowID = result.args.belowID.toNumber();    
+    // console.log("===> latest: 'accepted', id:",id,"above id:",aboveID,"below id:",belowID,result)
+    // addAcceptance(result);
+  });
+}
+
+//get all evaluations
+var watchLatestEvaluation = -1;
+function latestEvaluations(){
+  console.log("fn: latestEvaluation")
+  //do something as new evaluation is accepted
+  watchLatestEvaluation = witInstance.WITEvaluated({},{fromBlock: 0, toBlock: 'latest'}).watch(function(error, result){
+    updateBalance();
+    let store = addInfoFromProposalEvaluated(result);
+    updateOpenProposals(store.openProposals);
+    updateMyProposals(store.myProposals);
+
+    // let id = result.args.WITID.toNumber();
+    // let aboveID = result.args.aboveID.toNumber();
+    // let belowID = result.args.belowID.toNumber();
+    // let aboveOwner = result.args.aboveOwner;
+    // let belowOwner = result.args.belowOwner;
+    // let beneficiary = result.args.beneficiary;
+    // console.log("===> latest: 'evaluated'","id:",id,"above id:",aboveID,"below id:",belowID,result)
+    // console.log("===> latest: 'evaluated'","id:",id,aboveOwner,belowOwner,beneficiary)
+    // //update status in "my protections pages"
+    // //go through list, change status update page
+    // let list = Session.get("myProtectionsData");
+    // let index = findIndex(list,el => el.id == result.args.WITID);
+    // if(index != -1){
+    //   let outcome = "";
+    //   let payout = toEth(result.args.weiPayout.toNumber());
+    //   if(true) outcome = `You received <span class="green-text">${payout}</span>`
+    //   else outcome = "You did not receive the payout";
+    //   console.log("===> update with evaluate",list,index,list[index], outcome)
+    //   list[index].column[7].key = "Evaluation";
+    //   list[index].column[7].name = "Evaluation complete";
+    //   list[index].column[8].key = "Evaluated";
+    //   list[index].column[8].name = outcome;
+    //   Session.set("openProtectionsData",list);
+    // }
+  })
+}
+
+// //add token to list
+// async function addToken(result){
+//   try{
+//     //TODO change this variable id to idObj.toNumber()
+//     let idObj = result.args.WITID;
+//     let id = idObj.toNumber();
+//     let owner = await promisify(cb => witInstance.ownerOf(idObj, cb));
+
+//     //add to open protections
+//     if(proposedList.indexOf(id) === -1){
+//       if(acceptedList.indexOf(id) === -1){
+//         proposedList.push(id);
+//         //TODO reinstate date filter
+//         //only show entries whose starting dates haven't passed
+//         // if(new Date(result.args.start.toNumber()) - new Date() > 0){
+//         if(true){
+//           let list = Session.get("openProtectionsData");
+//           // console.log("===> proposal offered, id:",id);
+//           list.push(new Entry(result,owner));
+//           list = sortArray(list,Session.get("sortIndex"),Session.get("descending"));
+//           Session.set("openProtectionsData",list);
+
+//           //if more than ten items turn on pagination
+//           //set max pagination
+//           let tblRow = tableRows();
+//           if(list.length > tblRow){
+//             $("#open-pager-btns").show();
+//             $("#open-max").html(Math.ceil(list.length/tblRow));
+//             $("#open-current").html(1);
+//           }
+
+//           //show paginated items
+//           let opPagination = Session.get("opPagination")
+//           let pageList = paginateData(list,opPagination);
+//           if(pageList.length > 0){
+//             Session.set("openProtectionsPaginatedData",pageList);
+//           }else{
+//             if(opPagination > 0) opPagination -= 1;
+//           }
+//           Session.set("opPagination",opPagination);
+//         }
+//       }
+
+//       //add to my protections
+//       // console.log("my entry", owner, Session.get("user"), result)
+//       if(owner === Session.get("user")){
+//         let list = Session.get("myProtectionsData");
+//         list.push(new MyEntry(result,result.args,id,true));
+//         list = sortArray(list,Session.get("mySortIndex"),Session.get("descending"));
+//         Session.set("myProtectionsData",list);
+
+//         //if more than ten items turn on pagination
+//         let tblRow = tableRows();
+//         if(list.length > tblRow){
+//           $("#my-pager-btns").show();
+//           $("#my-max").html(Math.ceil(list.length/tblRow));
+//           $("#my-current").html(1);
+//         }
+
+//         //show paginated items
+//         let myPagination = Session.get("myPagination");
+//         let pageList = paginateData(list,myPagination);
+//         if(pageList.length > 0){
+//           Session.set("myProtectionsPaginatedData",pageList);
+//         }else{
+//           if(myPagination > 0) myPagination -= 1;
+//         }
+//         Session.set("myPagination",myPagination);
+//       }
+//     }
+//   }catch(error){
+//     console.log(error);
+//   }
+// }
+
+// function removeToken(id){
+//   // console.log("removeToken")
+//   //add to open protections
+//   let list = Session.get("openProtectionsData");
+//   if(list.length > 0){
+//     let index = findIndex(list,el => el.id == id);
+//     list.splice(index,1);
+//     // list = sortArray(list,Session.get("sortIndex"),Session.get("descending"));
+//     Session.set("openProtectionsData",list);
+
+//     //if more than ten items turn on pagination
+//     if(list.length <= tableRows()){
+//       $("#open-pager-btns").hide();
+//     }
+
+//     //show paginated items
+//     let opPagination = Session.get("opPagination");
+//     let pageList = paginateData(list,opPagination);
+//     if(pageList.length > 0){
+//       Session.set("openProtectionsPaginatedData",pageList);
+//     }else{
+//       if(opPagination > 0) opPagination -= 1;
+//     }
+//     Session.set("opPagination",opPagination);
+//   }
+// }
+
+// function findIndex(array,cb){
+//   let l = array.length;
+//   while(l--){
+//     if(cb(array[l])) return l;
+//   }
+//   return -1;
+// }
+
+// //add acceptance to my protections
+// async function addAcceptance(result){
+//   // console.log("fn: addAcceptance")
+//   let outerResult = result;
+//   let idpObj = result.args.WITID;
+//   let idp = idpObj.toNumber();
+
+//   let idObj = result.args.aboveID;
+//   if(idp === result.args.aboveID.toNumber()) idObj = result.args.belowID;
+//   let id = idObj.toNumber();
+
+//   if(acceptedList.indexOf(idp) === -1){
+//     try{
+//       // console.log("===> proposal accepted, id:", id);
+//       //prevent previous tokens from being added to list
+//       acceptedList.push(idp);
+//       //if they are already shown remove them
+//       removeToken(idp);
+
+//       //these next 3 lines just resort the my protections table but I am not sure they are required for anything
+//       let updateList = Session.get("myProtectionsData");
+//       updateList = sortArray(updateList,Session.get("mySortIndex"),Session.get("descending"));
+//       Session.set("myProtectionsData",updateList);
+
+//       //if they were your proposals update your "my protections"
+//       let owner = await promisify(cb => witInstance.ownerOf(idObj, cb));
+//       if(owner === Session.get("user")){
+//         //hide the loading
+//         $('#my-loader').hide();
+//         $('#my-wrapper').removeClass('loading');
+
+//         //get contract information for associated proposal
+//         witInstance.ProposalOffered({WITID:idpObj},{fromBlock: 0, toBlock: 'latest'}).watch(function(error, result){
+//           // console.log("===> proposal accepted details retrieved, id:",id)
+//           let list = Session.get("myProtectionsData");
+//           list.push(new MyEntry(outerResult,result.args,id,false));
+//           list = sortArray(list,Session.get("mySortIndex"),Session.get("descending"));
+//           Session.set("myProtectionsData",list);
+
+//           //if more than ten items turn on pagination
+//           if(list.length > tableRows()){
+//             $("#my-pager-btns").show();
+//           }
+
+//           //show paginated items
+//           let myPagination = Session.get("myPagination");
+//           let pageList = paginateData(list,myPagination);
+//           if(pageList.length > 0){
+//             Session.set("myProtectionsPaginatedData",pageList);
+//           }else{
+//             if(myPagination > 0) myPagination -= 1;
+//           }
+//           Session.set("myPagination",myPagination)
+//         });
+//       }
+//     } catch (error) {
+//       console.log(error)
+//     }
+//   }
+// }
+
+// // num = a.start.toNumber()
+// let months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+// function dateText(iso){
+//   let d1 = new Date(iso).toISOString().substring(0,7);
+//   let a = d1.split("-");
+//   let n = parseInt(a[1]) - 1;
+//   return months[n] + " " + a[0];
+// }
+
+// function dateNum(text){
+//   let a = text.split(" ");
+//   let lm = months.length;
+//   let n = 0;
+//   while(lm--){
+//     if(months[lm] === a[0]) n = lm;
+//   }
+//   return parseInt(a[1]) + n/12;
+// }
+
+function updateOpenProposals(list){
+  list = sortArray(list,Session.get("sortIndex"),Session.get("descending"));
+  Session.set("openProtectionsData",list);
+
+  if(list.length > 0){
+    $('#open-loader').hide();
+    $('#open-wrapper').removeClass('loading');
+  }else{
+    $('#open-loader').show();
+    $('#open-wrapper').addClass('loading');   
+  }
+
+  //if more than ten items turn on pagination
+  //set max pagination
+  let tblRow = tableRows();
+  if(list.length > tblRow){
+    $("#open-pager-btns").show();
+    $("#open-max").html(Math.ceil(list.length/tblRow));
+    $("#open-current").html(1);
+  }
+
+  //show paginated items
+  let opPagination = Session.get("opPagination");
+  let pageList = paginateData(list,opPagination);
+  if(pageList.length > 0){
+    Session.set("openProtectionsPaginatedData",pageList);
+  }else{
+    if(list.length > 0){
+      if(opPagination > 0) Session.set("opPagination",opPagination-1);
+    }else{
+      Session.set("openProtectionsPaginatedData",pageList);
+    }
+  }
+}
+
+function updateMyProposals(list){
+  list = sortArray(list,Session.get("mySortIndex"),Session.get("descending"));
+  Session.set("myProtectionsData",list);
+
+  if(list.length > 0){
+    $('#my-loader').hide();
+    $('#my-wrapper').removeClass('loading');
+  }else{
+    $('#my-loader').show();
+    $('#my-wrapper').addClass('loading');   
+  }
+
+  //if more than ten items turn on pagination
+  let tblRow = tableRows();
+  if(list.length > tblRow){
+    $("#my-pager-btns").show();
+    $("#my-max").html(Math.ceil(list.length/tblRow));
+    $("#my-current").html(1);
+  }
+
+  //show paginated items
+  let myPagination = Session.get("myPagination");
+  let pageList = paginateData(list,myPagination);
+  if(pageList.length > 0){
+    Session.set("myProtectionsPaginatedData",pageList);
+  }else{
+    if(list.length > 0){
+      if(myPagination > 0) Session.set("myPagination",myPagination-1);
+    }else{
+      Session.set("myProtectionsPaginatedData",pageList);
+    }
+  }  
 }
 
 ////////////////////////////////////////////
@@ -732,241 +777,6 @@ Template.arrow.events({
     $('html, body').animate({
       scrollTop: $('#arbol-wrapper').height()
     }, 500);
-  }
-});
-
-////////////////////////////////////////////
-// FUNCTIONS RELATED TO SORTABLE TABLES
-////////////////////////////////////////////
-
-function resetSessionVars(){
-  Session.set("filterCriteria",{});
-  Session.set("openProtectionsData",[]);
-  Session.set("myProtectionsData",[]);
-  Session.set("myPagination",0);
-  Session.set("opPagination",0);
-  Session.set("openProtectionsPaginatedData",[]);
-  Session.set("myProtectionsPaginatedData",[]);
-  Session.set("sortIndex",0);
-  Session.set("descending",true);
-  Session.set("mySortIndex",0);
-  Session.set("myDescending",true);
-}
-
-Template.sortableRows.helpers({
-  isEqual: function (a, b) {
-  return a === b;
-  }
-});
-
-Template.sortableRows.events({
-  'click .buyit': function(e){
-    if(Session.get("user") === -1){
-      alert("Please login to MetaMask buy a proposal.");
-    } else {
-      if(typeof e.target.value === 'undefined') acceptProposal(e.target.parentElement.value);
-      else acceptProposal(e.target.value);
-    }
-  },
-  'click .evaluateit': function(e){
-    evaluateWIT(e.target.value);
-  },
-  'click .cancelit': function(e){
-    alert("coming soon");
-  }
-});
-
-async function acceptProposal(v){
-  let vals = v.split(",");
-  let ethAsk = vals[0]
-  let id = vals[1];
-
-  try {
-    // console.log("====> new WIT acceptance");
-    // console.log("ethAsk", ethAsk);
-    // console.log("proposal token ID", id);
-
-    //TODO don't let user accept their own proposal
-    await promisify(cb => witInstance.createWITAcceptance(id,{from: Session.get("user"), value:toWei(ethAsk)},cb));
-  } catch (error) {
-    console.log(error)
-  }
-}
-
-//evaluate WIT once its period h gas elapsed
-async function evaluateWIT(id){
-  try {
-    let idodd = parseInt(id);
-    if(id/2 === Math.round(id/2)) idodd = parseInt(id) - 1;
-    // console.log("=================> new WIT evaluation");
-    // console.log("token ID", id, idodd, Session.get("user"));
-    await promisify(cb => witInstance.evaluate(idodd,"",{from: Session.get("user")},cb));
-  } catch (error) {
-    console.log(error)
-  }
-}
-
-Template.headerRow.events({
-  'mouseenter th': function(e){
-    $(e.target).addClass('hover');
-  },
-  'mouseleave th': function(e){
-    $(e.target).removeClass('hover');
-  },
-  'click th': function(e,template){
-    var t = e.target;
-    $(t).fadeIn(100).fadeOut(100).fadeIn(100); //.fadeOut(100).fadeIn(100);
-    //sort the json based on the header
-    let array = [];
-    let colIndex = 0;
-    if(t.parentElement.parentElement.parentElement.id === "openProtections"){
-      let d = Session.get("descending");
-      array = Session.get("openProtectionsData");
-      //sort array based on the click header
-      if(t.innerText.indexOf("LOCATION") != -1) colIndex = 0;
-      if(t.innerText.indexOf("THRESHOLD") != -1) colIndex = 1;
-      if(t.innerText.indexOf("INDEX") != -1) colIndex = 2;
-      if(t.innerText.indexOf("START") != -1) colIndex = 3;
-      if(t.innerText.indexOf("END") != -1) colIndex = 4;
-      if(t.innerText.indexOf("TOTAL PAYOUT") != -1) colIndex = 5;
-      if(t.innerText.indexOf("PRICE") != -1) colIndex = 6;
-      Session.set("sortIndex",colIndex);
-      //set variable to new sorted array
-      let list = sortArray(array,colIndex,d);
-      Session.set("openProtectionsData",list);
-      Session.set("opPagination",0);
-      let pageList = paginateData(list,0);
-      Session.set("openProtectionsPaginatedData",pageList);
-      Session.set("descending",!d);
-    }
-    if(t.parentElement.parentElement.parentElement.id === "myProtections"){
-      let d = Session.get("myDescending");
-      array = Session.get("myProtectionsData");
-      //sort array based on the click header
-      if(t.innerText.indexOf("LOCATION") != -1) colIndex = 0;
-      if(t.innerText.indexOf("THRESHOLD") != -1) colIndex = 1;
-      if(t.innerText.indexOf("INDEX") != -1) colIndex = 2;
-      if(t.innerText.indexOf("START") != -1) colIndex = 3;
-      if(t.innerText.indexOf("END") != -1) colIndex = 4;
-      if(t.innerText.indexOf("YOUR CONTRIBUTION") != -1) colIndex = 5;
-      if(t.innerText.indexOf("TOTAL PAYOUT") != -1) colIndex = 6;
-      if(t.innerText.indexOf("STATUS") != -1) colIndex = 7;
-      if(t.innerText.indexOf("ACTION") != -1) colIndex = 8;
-      Session.set("mySortIndex",colIndex);
-      //set variable to new sorted array
-      let list = sortArray(array,colIndex,d);
-      Session.set("myProtectionsData",list);
-      Session.set("myPagination",0);
-      let pageList = paginateData(list,0);
-      Session.set("myProtectionsPaginatedData",pageList);
-      Session.set("myDescending",!d);
-    }
-  }
-});
-
-function sortArray(array,i,d){
-  let sortedArray = _.sortBy(array,function(obj){
-    let cell = obj.column[i], key;
-    if(cell.type === "num") return key = parseFloat(cell.key);
-    if(cell.type === "text") return key = cell.key;
-  });
-  if(d) sortedArray.reverse();
-  return sortedArray;
-}
-
-////////////////////////////////////////////
-// FUNCTIONS RELATED TO PAGINATION
-////////////////////////////////////////////
-
-//TODO grey out back and forward button as appropriate
-// Paginate through all the data
-Session.set("opPagination",0);
-Template.openPagination.events({
-  'click #open-forward'(e){
-    let opPagination = Session.get("opPagination");
-    opPagination += 1;
-    let list = Session.get("openProtectionsData");
-    let pageList = paginateData(list,opPagination);
-    if(pageList.length > 0) Session.set("openProtectionsPaginatedData",pageList);
-    else if(opPagination > 0) opPagination -= 1;
-    $("#open-current").html(opPagination+1);
-    Session.set("opPagination",opPagination);
-  },
-  'click #open-back'(e){
-    let opPagination = Session.get("opPagination");
-    if(opPagination > 0) opPagination -= 1;
-    let fullList = Session.get("openProtectionsData");
-    let pageList = paginateData(fullList,opPagination);
-    Session.set("openProtectionsPaginatedData",pageList);
-    $("#open-current").html(opPagination+1);
-    Session.set("opPagination",opPagination);
-  }
-});
-
-Session.set("myPagination",0);
-Template.myPagination.events({
-  'click #my-forward'(e){
-    let myPagination = Session.get("myPagination");
-    myPagination += 1;
-    let fv = $('#first-token-filter').val();
-    let list = Session.get("myProtectionsData");
-    let pageList = paginateData(list,myPagination);
-    if(pageList.length > 0) Session.set("myProtectionsPaginatedData",pageList);
-    else if(myPagination > 0) myPagination -= 1;
-    $("#my-current").html(myPagination+1);
-    Session.set("myPagination",myPagination);
-  },
-  'click #my-back'(e){
-    let myPagination = Session.get("myPagination");
-    if(myPagination > 0) myPagination -= 1;
-    let fullList = Session.get("myProtectionsData");
-    let pageList = paginateData(fullList,myPagination);
-    Session.set("myProtectionsPaginatedData",pageList);
-    $("#my-current").html(myPagination+1);
-    Session.set("myPagination",myPagination);
-  }
-});
-
-//break all entries into list of x entries
-function paginateData (array,index) {
-  let bin = tableRows();
-  let l = array.length;
-  if(l < index*bin){
-    return [];
-  }else{
-    if(l <= (index+1)*bin){
-      return array.slice(index*bin,l);
-    }
-    if(l > (index+1)*bin){
-      return array.slice(index*bin,(index+1)*bin);
-    }
-  }
-}
-
-////////////////////////////////////////////
-// FUNCTIONS RELATED TO "OPEN PROTECTIONS"
-////////////////////////////////////////////
-
-// populate open protections table
-Template.openProtectionsTable.helpers({
-  headerData: function() {
-    return [
-      {
-        type: "headerRow"
-        ,column: [
-          {name:"Location"}
-          ,{name:"Threshold"}
-          ,{name:"Index"}
-          ,{name:"Start"}
-          ,{name:"End"}
-          ,{name:"Total Payout"}
-          ,{name:"Price"}
-        ]
-      }
-    ];
-  },
-  bodyData: function(){
-    return Session.get("openProtectionsPaginatedData");
   }
 });
 
@@ -1292,8 +1102,8 @@ Template.formNewProtection.events({
 
       if (confirmed) {
         //submit info
-        // createProposal(startDate,endDate,yourContr,totalPayout,location,index,thresholdRelation,thresholdPercent,thresholdAverage);
-        createProposalTest();
+        createProposal(startDate,endDate,yourContr,totalPayout,location,index,thresholdRelation,thresholdPercent,thresholdAverage);
+        // createProposalTest();
         self = Template.instance();
         resetCreateWIT(self);
       } else {
@@ -1379,7 +1189,7 @@ async function createProposal(startDate,endDate,yourContr,totalPayout,location,i
   console.log(ethPropose, ethAsk, above, address, numPPTH, location, d1, d2, makeStale);
 
   try {
-    await promisify(cb => witInstance.createWITProposal(ethPropose, ethAsk, above, address, numPPTH, location, d1, d2, makeStale, {value: ethPropose, from:Session.get("user")}, cb));
+    await promisify(cb => witInstance.createWITProposal(ethPropose, ethAsk, above, address, numPPTH, location, d1, d2, makeStale, {from:Session.get("user"), value: ethPropose, gas: 2000000}, cb));
   } catch (error) {
     console.log(error)
   }
@@ -1434,6 +1244,235 @@ function validateCreateWITStep(step) {
   return validates;
 }
 
+
+
+////////////////////////////////////////////
+// FUNCTIONS RELATED TO SORTABLE TABLES
+////////////////////////////////////////////
+
+//number of rows in the sortable tables
+function tableRows (){
+  //TODO decide how many rows based on available area
+  return 15;
+}
+
+Template.sortableRows.helpers({
+  isEqual: function (a, b) {
+  return a === b;
+  }
+});
+
+Template.sortableRows.events({
+  'click .buyit': function(e){
+    if(Session.get("user") === -1){
+      alert("Please login to MetaMask buy a proposal.");
+    } else {
+      if(typeof e.target.value === 'undefined') acceptProposal(e.target.parentElement.value);
+      else acceptProposal(e.target.value);
+    }
+  },
+  'click .evaluateit': function(e){
+    evaluateWIT(e.target.value);
+  },
+  'click .cancelit': function(e){
+    alert("coming soon");
+  }
+});
+
+async function acceptProposal(v){
+  let vals = v.split(",");
+  let ethAsk = vals[0]
+  let id = vals[1];
+
+  try {
+    // console.log("====> new WIT acceptance");
+    // console.log("ethAsk", ethAsk);
+    // console.log("proposal token ID", id);
+
+    //TODO don't let user accept their own proposal
+    await promisify(cb => witInstance.createWITAcceptance(id,{from: Session.get("user"), value:toWei(ethAsk), gas: 2000000},cb));
+  } catch (error) {
+    console.log(error)
+  }
+}
+
+//evaluate WIT once its period h gas elapsed
+async function evaluateWIT(id){
+  try {
+    let idodd = parseInt(id);
+    if(id/2 === Math.round(id/2)) idodd = parseInt(id) - 1;
+    // console.log("=================> new WIT evaluation");
+    // console.log("token ID", id, idodd, Session.get("user"));
+    await promisify(cb => witInstance.evaluate(idodd,"",{from: Session.get("user"), gas: 2000000},cb));
+  } catch (error) {
+    console.log(error)
+  }
+}
+
+Template.headerRow.events({
+  'mouseenter th': function(e){
+    $(e.target).addClass('hover');
+  },
+  'mouseleave th': function(e){
+    $(e.target).removeClass('hover');
+  },
+  'click th': function(e,template){
+    var t = e.target;
+    $(t).fadeIn(100).fadeOut(100).fadeIn(100); //.fadeOut(100).fadeIn(100);
+    //sort the json based on the header
+    let array = [];
+    let colIndex = 0;
+    if(t.parentElement.parentElement.parentElement.id === "openProtections"){
+      let d = Session.get("descending");
+      array = Session.get("openProtectionsData");
+      //sort array based on the click header
+      if(t.innerText.indexOf("LOCATION") != -1) colIndex = 0;
+      if(t.innerText.indexOf("THRESHOLD") != -1) colIndex = 1;
+      if(t.innerText.indexOf("INDEX") != -1) colIndex = 2;
+      if(t.innerText.indexOf("START") != -1) colIndex = 3;
+      if(t.innerText.indexOf("END") != -1) colIndex = 4;
+      if(t.innerText.indexOf("TOTAL PAYOUT") != -1) colIndex = 5;
+      if(t.innerText.indexOf("PRICE") != -1) colIndex = 6;
+      Session.set("sortIndex",colIndex);
+      //set variable to new sorted array
+      let list = sortArray(array,colIndex,d);
+      Session.set("openProtectionsData",list);
+      Session.set("opPagination",0);
+      let pageList = paginateData(list,0);
+      Session.set("openProtectionsPaginatedData",pageList);
+      Session.set("descending",!d);
+    }
+    if(t.parentElement.parentElement.parentElement.id === "myProtections"){
+      let d = Session.get("myDescending");
+      array = Session.get("myProtectionsData");
+      //sort array based on the click header
+      if(t.innerText.indexOf("LOCATION") != -1) colIndex = 0;
+      if(t.innerText.indexOf("THRESHOLD") != -1) colIndex = 1;
+      if(t.innerText.indexOf("INDEX") != -1) colIndex = 2;
+      if(t.innerText.indexOf("START") != -1) colIndex = 3;
+      if(t.innerText.indexOf("END") != -1) colIndex = 4;
+      if(t.innerText.indexOf("YOUR CONTRIBUTION") != -1) colIndex = 5;
+      if(t.innerText.indexOf("TOTAL PAYOUT") != -1) colIndex = 6;
+      if(t.innerText.indexOf("STATUS") != -1) colIndex = 7;
+      if(t.innerText.indexOf("ACTION") != -1) colIndex = 8;
+      Session.set("mySortIndex",colIndex);
+      //set variable to new sorted array
+      let list = sortArray(array,colIndex,d);
+      Session.set("myProtectionsData",list);
+      Session.set("myPagination",0);
+      let pageList = paginateData(list,0);
+      Session.set("myProtectionsPaginatedData",pageList);
+      Session.set("myDescending",!d);
+    }
+  }
+});
+
+function sortArray (array,i,d){
+  let sortedArray = _.sortBy(array,function(obj){
+    let cell = obj.column[i], key;
+    if(cell.type === "num") return key = parseFloat(cell.key);
+    if(cell.type === "text") return key = cell.key;
+  });
+  if(d) sortedArray.reverse();
+  return sortedArray;
+}
+
+////////////////////////////////////////////
+// FUNCTIONS RELATED TO PAGINATION
+////////////////////////////////////////////
+
+//TODO grey out back and forward button as appropriate
+// Paginate through all the data
+Session.set("opPagination",0);
+Template.openPagination.events({
+  'click #open-forward'(e){
+    let opPagination = Session.get("opPagination");
+    opPagination += 1;
+    let list = Session.get("openProtectionsData");
+    let pageList = paginateData(list,opPagination);
+    if(pageList.length > 0) Session.set("openProtectionsPaginatedData",pageList);
+    else if(opPagination > 0) opPagination -= 1;
+    $("#open-current").html(opPagination+1);
+    Session.set("opPagination",opPagination);
+  },
+  'click #open-back'(e){
+    let opPagination = Session.get("opPagination");
+    if(opPagination > 0) opPagination -= 1;
+    let fullList = Session.get("openProtectionsData");
+    let pageList = paginateData(fullList,opPagination);
+    Session.set("openProtectionsPaginatedData",pageList);
+    $("#open-current").html(opPagination+1);
+    Session.set("opPagination",opPagination);
+  }
+});
+
+Session.set("myPagination",0);
+Template.myPagination.events({
+  'click #my-forward'(e){
+    let myPagination = Session.get("myPagination");
+    myPagination += 1;
+    let fv = $('#first-token-filter').val();
+    let list = Session.get("myProtectionsData");
+    let pageList = paginateData(list,myPagination);
+    if(pageList.length > 0) Session.set("myProtectionsPaginatedData",pageList);
+    else if(myPagination > 0) myPagination -= 1;
+    $("#my-current").html(myPagination+1);
+    Session.set("myPagination",myPagination);
+  },
+  'click #my-back'(e){
+    let myPagination = Session.get("myPagination");
+    if(myPagination > 0) myPagination -= 1;
+    let fullList = Session.get("myProtectionsData");
+    let pageList = paginateData(fullList,myPagination);
+    Session.set("myProtectionsPaginatedData",pageList);
+    $("#my-current").html(myPagination+1);
+    Session.set("myPagination",myPagination);
+  }
+});
+
+//break all entries into list of x entries
+function paginateData (array,index) {
+  let bin = tableRows();
+  let l = array.length;
+  if(l < index*bin){
+    return [];
+  }else{
+    if(l <= (index+1)*bin){
+      return array.slice(index*bin,l);
+    }
+    if(l > (index+1)*bin){
+      return array.slice(index*bin,(index+1)*bin);
+    }
+  }
+}
+
+////////////////////////////////////////////
+// FUNCTIONS RELATED TO "OPEN PROTECTIONS"
+////////////////////////////////////////////
+
+// populate open protections table
+Template.openProtectionsTable.helpers({
+  headerData: function() {
+    return [
+      {
+        type: "headerRow"
+        ,column: [
+          {name:"Location"}
+          ,{name:"Threshold"}
+          ,{name:"Index"}
+          ,{name:"Start"}
+          ,{name:"End"}
+          ,{name:"Total Payout"}
+          ,{name:"Price"}
+        ]
+      }
+    ];
+  },
+  bodyData: function(){
+    return Session.get("openProtectionsPaginatedData");
+  }
+});
+
 ////////////////////////////////////////////
 // FUNCTIONS RELATED TO "MY PROTECTIONS"
 ////////////////////////////////////////////
@@ -1462,3 +1501,4 @@ Template.myProtectionsTable.helpers({
     return Session.get("myProtectionsPaginatedData");
   }
 });
+

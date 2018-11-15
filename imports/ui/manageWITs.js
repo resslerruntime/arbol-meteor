@@ -44,7 +44,7 @@ function StoreEntry(){
 
 //table entry constructor, open proposals
 function Entry(o){
-	console.log("+++ new Entry",o)
+	// console.log("+++ new Entry",o)
 	let currentUser = Session.get("user");
 
 	//threshold
@@ -65,7 +65,7 @@ function Entry(o){
 
   	this.type = "bodyRow";
   	this.column = [
-    	{type:"text",key:o.location,name:o.location}
+    	{type:"text",key:o.location,name:o.locationText.t}
     	,{type:"text",key:thresh,name:thresh}
     	,{type:"text",key:"NASA Rainfall",name:"NASA Rainfall"}
     	,{type:"num",key:o.startText.v,name:o.startText.t}
@@ -114,7 +114,7 @@ function MyEntry(o){
 	this.type = "bodyRow";
 	//if you change the number or order of columns, you have to update the evaluation listener
 	this.column = [
-	  	{type:"text",key:o.location,name:o.location}
+	  	{type:"text",key:o.location,name:o.locationText.t}
 	  	,{type:"text",key:thresh,name:thresh}
 	  	,{type:"text",key:"NASA Rainfall",name:"NASA Rainfall"}
     	,{type:"num",key:o.startText.v,name:o.startText.t}
@@ -161,7 +161,7 @@ function MyAcceptance(o){
 	this.type = "bodyRow";
 	//if you change the number or order of columns, you have to update the evaluation listener
 	this.column = [
-	  	{type:"text",key:o.location,name:o.location}
+	  	{type:"text",key:o.locationText.t,name:o.locationText.t}
 	  	,{type:"text",key:thresh,name:thresh}
 	  	,{type:"text",key:"NASA Rainfall",name:"NASA Rainfall"}
     	,{type:"num",key:o.startText.v,name:o.startText.t}
@@ -188,13 +188,13 @@ addInfoFromProposalCreated = function(r){
 		if(e[idx].proposed){
 			//duplicate event was fired
 			//do nothing, don't update frontend
-			console.log("+++ p duplicate")
+			console.log("+++= p duplicate")
 			return false;
 		}else{
 			//update store with new info
 			//pass by reference might be sufficient in this case
 			e[idx] = fillDataProposalCreated(e[idx],r);
-			console.log("+++ p update",e)
+			console.log("+++= p update",r.args.WITID.toNumber(),e)
 			return getStore();
 		}
 	}else{
@@ -202,7 +202,7 @@ addInfoFromProposalCreated = function(r){
 		let o = new StoreEntry();
 		o = fillDataProposalCreated(o,r);
 		e.push(o);
-		console.log("+++ p new",e)
+		console.log("+++= p new",r.args.WITID.toNumber(),e)
 		return getStore();
 	}	
 }
@@ -242,6 +242,7 @@ function fillDataProposalCreated(o,r){
 	o.proposeText = proposeText(o.weiContributing);
 	o.startText = dateText(o.start);
 	o.endText = dateText(o.end);
+	o.locationText = locationText(o.location)
 
 	o.state.proposed = true;
 	return o;
@@ -255,13 +256,13 @@ addInfoFromProposalAccepted = function(r){
 		if(e[idx].accepted){
 			//duplicate event was fired
 			//do nothing, don't update frontend
-			console.log("+++ a duplicate")
+			console.log("+++= a duplicate")
 			return false;
 		}else{
 			//update store with new info
 			//pass by reference might be sufficient in this case
 			e[idx] = fillDataProposalAccepted(e[idx],r);
-			console.log("+++ a update",e)
+			console.log("+++= a update",r.args.WITID.toNumber(),e)
 			return getStore();
 		}
 	}else{
@@ -269,7 +270,7 @@ addInfoFromProposalAccepted = function(r){
 		let o = new StoreEntry();
 		o = fillDataProposalAccepted(o,r);
 		e.push(o);
-		console.log("+++ a new",e)
+		console.log("+++= a new",r.args.WITID.toNumber(),e)
 		return getStore();
 	}		
 }
@@ -278,12 +279,40 @@ function fillDataProposalAccepted(o,r){
 	//update store with new info
 	if(o.aboveID && r.args.aboveID.toNumber() !== o.aboveID.toNumber()) console.log("+++ error- above id mismatch",r.args.aboveID.toNumber(),o.aboveID.toNumber());
 	if(o.belowID && r.args.belowID.toNumber() !== o.belowID.toNumber()) console.log("+++ error- below id mismatch",r.args.belowID.toNumber(),o.belowID.toNumber());
-	// if(o.aboveOwner && r.args.aboveOwner !== o.aboveOwner) console.log("+++ error- above owner mismatch",r.args.aboveOwner,o.aboveOwner);
-	// if(o.belowOwner && r.args.belowOwner !== o.belowOwner) console.log("+++ error- below owner mismatch",r.args.belowOwner,o.belowOwner);
+	if(o.aboveOwner && r.args.aboveOwner !== o.aboveOwner) console.log("+++ error- above owner mismatch",r.args.aboveOwner,o.aboveOwner);
+	if(o.belowOwner && r.args.belowOwner !== o.belowOwner) console.log("+++ error- below owner mismatch",r.args.belowOwner,o.belowOwner);
 	o.belowID = r.args.belowID;
-	// o.belowOwner = getOwner(r.args.belowID);
+	o.belowOwner = r.args.belowOwner;
 	o.aboveID = r.args.aboveID;
-	// o.aboveOwner = getOwner(r.args.aboveID);
+	o.aboveOwner = r.args.aboveOwner;
+
+	//add proposer and accepter
+	if(o.belowID.toNumber() === r.args.WITID.toNumber()){
+		o.accepter = o.aboveOwner;
+		o.accepterID = o.aboveID;
+		o.proposerIsAbove = false;
+	}
+	if(o.aboveID.toNumber() === r.args.WITID.toNumber()){
+		o.accepter = o.belowOwner;
+		o.accepterID = o.belowID;	
+		o.proposerIsAbove = true;
+	}
+
+	//double check vals if over writing from proposal or vice versa?
+	o.thresholdPPTTH = r.args.thresholdPPTTH;
+	o.end = r.args.end;
+	o.start = r.args.start;
+	o.location = r.args.location;
+	o.makeStale = r.args.makeStale;
+
+	o.weiAsking = r.args.weiAsking;
+	o.weiContributing = r.args.weiContributing;
+	o.payoutText = payoutText(o.weiAsking,o.weiContributing);
+	o.askText = askText(o.weiAsking);
+	o.proposeText = proposeText(o.weiContributing);
+	o.startText = dateText(o.start);
+	o.endText = dateText(o.end);
+	o.locationText = locationText(o.location)
 
 	o.state.accepted = true;
 	return o;
@@ -301,13 +330,13 @@ addInfoFromProposalEvaluated = function(r){
 		if(e[idx].evaluated){
 			//duplicate event was fired
 			//do nothing, don't update frontend
-			console.log("+++ e duplicate")
+			console.log("+++= e duplicate")
 			return false;
 		}else{
 			//update store with new info
 			//pass by reference might be sufficient in this case
 			e[idx] = fillDataProposalEvaluated(e[idx],r);
-			console.log("+++ e update",e)
+			console.log("+++= e update",r.args.WITID.toNumber(),e)
 			return getStore();
 		}
 	}else{
@@ -315,7 +344,7 @@ addInfoFromProposalEvaluated = function(r){
 		let o = new StoreEntry();
 		o = fillDataProposalEvaluated(o,r);
 		e.push(o);
-		console.log("+++ e new",e)
+		console.log("+++= e new",r.args.WITID.toNumber(),e)
 		return getStore();
 	}		
 }
@@ -362,6 +391,11 @@ function proposeText(weiContributing){
 	return {v:propose,t:proposeText};
 }
 
+function locationText(location){
+	let l = location.split("&")[0].split(",");
+	return {t:`${Math.round(parseFloat(l[0])*10)/10},${Math.round(parseFloat(l[1])*10)/10}`}
+}
+
 let months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 function dateText(dObj){
 	let iso = dObj.toNumber()*1000;
@@ -378,24 +412,21 @@ function dateText(dObj){
 //TODO in this approach it reconstructs the list of openProposals and myProposal everytime there is a change
 // a less niave approach would be to only change the ones that are update by the event
 getStore = function(){
+	console.log("+++? get store", e)
 	let op = [], mp = [], currentUser = Session.get("user");
 	let l = e.length;
 	for(let i = 0; i < l; i++){
+		console.log("+++?",i,currentUser,e[i].proposer,e[i].accepter)
+		//have to add in time filter, only add to open proposals if start date hasn't passed already
 		if(e[i].state.proposed && !e[i].state.accepted && !e[i].state.evaluated){
 			op.push(new Entry(e[i]));
-			//if it is owned by current user
-			if(currentUser === e[i].proposer) mp.push(new MyEntry(e[i]));
-			if(currentUser === e[i].accepter) mp.push(new MyAcceptance(e[i]));
-		} else if(e[i].state.proposed && e[i].state.accepted && !e[i].state.evaluated){
-			//if it is owned by current user
-			if(currentUser === e[i].proposer) mp.push(new MyEntry(e[i]));
-			if(currentUser === e[i].accepter) mp.push(new MyAcceptance(e[i]));
-		} else if(e[i].state.proposed && e[i].state.accepted && e[i].state.evaluated){
-			//if it is owned by current user
+		}
+		if(e[i].state.proposed || e[i].state.accepted){
 			if(currentUser === e[i].proposer) mp.push(new MyEntry(e[i]));
 			if(currentUser === e[i].accepter) mp.push(new MyAcceptance(e[i]));
 		}
 	}
+	console.log("+++? list",op,mp)
 	return {openProposals:op,myProposals:mp};
 }
 
