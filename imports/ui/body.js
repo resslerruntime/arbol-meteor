@@ -926,6 +926,33 @@ Template.formNewProtection.events({
     selfdata.locationType = $('[name="locationType"]:checked').val();
     self.createWITdata.set(selfdata);
   },
+  'click #mapdiv'(event){
+    let a = selectedBounds;
+    let lat = Math.round(1000 * a[0][0]) / 1000;
+    let lng = Math.round(1000 * a[0][1]) / 1000;
+    $('#locname').val('latitude '+lat+'°, longitude '+lng+'°').trigger('input');
+    let reversegeocodeURL = 'http://services.gisgraphy.com/reversegeocoding/search?format=json&lat='+lat+'&lng='+lng;
+    $.ajax({
+      type: 'GET',
+      crossDomain: true,
+      dataType: 'jsonp',
+      url: reversegeocodeURL
+    }).done(function(data) {
+      let loc = data.result[0].formatedFull;
+      console.log(data.result[0].formatedFull);
+      $('#locname').val(loc).trigger('input');
+    }).fail(function(){
+      console.log('failed to reverse geocode');
+    });
+  },
+  'input #locname'(event){
+    // this is a hidden input to hold a location region that is reverse geocoded from the map coordinate
+    console.log(event.currentTarget.value);
+    self = Template.instance();
+    selfdata = self.createWITdata.get();
+    selfdata.locationRegion = event.currentTarget.value;
+    self.createWITdata.set(selfdata);
+  },
   'input [data-toggle="datepicker"]'(event){
     // if the input is the start date, use the selected date to limit the end date
     if ($(event.currentTarget).attr('id') == "date-start") {
