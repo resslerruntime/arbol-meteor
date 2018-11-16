@@ -31,129 +31,6 @@ Router.route('/', {
 // FUNCTIONS RELATED TO WEB3 PAGE STARTUP
 ////////////////////////////////////////////
 
-// //table entry constructor open protections
-// //event ProposalOffered(uint indexed WITID, uint aboveID, uint belowID, uint indexed weiContributing,  uint indexed weiAsking, address evaluator, uint thresholdPPTTH, string location, uint start, uint end, bool makeStale);
-// function Entry(r,owner){
-//   let a = r.args;
-//   let location = "?"; 
-//   let ask = a.weiAsking.toNumber();
-//   let propose = a.weiContributing.toNumber();
-//   let id = a.WITID.toNumber();
-
-//   //update for if the contract is for offered for sale or for funding
-//   let totalPayout = toEth(propose) + toEth(ask);
-//   let totalPayoutText = `${clipNum(toEth(propose) + toEth(ask))} Eth`;
-//   // button
-//   let b = `${toEth(ask)}`;
-//   let b1 = `<button type='button' class='action buyit tableBtn' value='${toEth(ask)},${a.WITID.toNumber()}'>Pay <span class="green-text">${clipNum(toEth(ask))} Eth</span> to accept</button>`;
-//   //if no user is logged in
-//   if(Session.get("user") === -1){
-//     b1 = `<button type='button' class='tableBtn' value='${toEth(ask)},${a.WITID.toNumber()}'><span class="green-text">${clipNum(toEth(ask))} Eth</span></button>`;
-//   }
-//   //if the current use is the owner of the proposal don't give them the option to purchase the proposal
-//   if(owner === Session.get("user")){
-//     b = "1e99";
-//     b1 = `<button type='button' class='tableBtn'>You are the owner of this proposal</button>`;
-//   }
-
-//   //get threshold text
-//   let above = a.WITID.toNumber() === a.belowID.toNumber();
-//   if(owner === Session.get("user")) above = a.WITID.toNumber() !== a.belowID.toNumber();
-//   let thresh = threshValsToText(above,a.thresholdPPTTH.toNumber());
-
-//   //create the object
-//   this.id = id;
-//   this.type = "bodyRow";
-//   this.column = [
-//       {type:"text",key:location,name:location}
-//       ,{type:"text",key:thresh,name:thresh}
-//       ,{type:"text",key:"NASA Rainfall",name:"NASA Rainfall"}
-//       ,{type:"num",key:a.start.toNumber()*1000,name:dateText(a.start.toNumber()*1000)}
-//       ,{type:"num",key:a.end.toNumber()*1000,name:dateText(a.end.toNumber()*1000)}
-//       ,{type:"num",key:totalPayout,name:totalPayoutText}
-//       ,{type:"num",key:b,name:b1}
-//     ];
-// }
-
-// //table entry constructor my protections
-// //bool if you proposed the protection = true, if you accepted the protection = false
-// function MyEntry(r,a,id,bool){
-//   //is this entry an acceptance, an open proposal, or an accepted proposal
-//   let acceptance = r.args !== a;
-//   let acceptedProposal = false;
-//   if(!acceptance){
-//     if(acceptedList.indexOf(id) !== -1) acceptedProposal = true;
-//   }
-
-//   let ask = a.weiAsking.toNumber();
-//   let propose = a.weiContributing.toNumber();
-//   let location = "?"; 
-
-//   //total payouts
-//   let totalPayout = toEth(propose) + toEth(ask);
-//   let totalPayoutText = `${clipNum(toEth(propose) + toEth(ask))} Eth`;
-
-//   //your contribution
-//   let v;
-//   if(acceptance) v = toEth(ask);
-//   else v = toEth(propose);
-//   let yourContr = v;
-//   let yourContrText = `${clipNum(v)} Eth`;
-
-//   //status
-//   let now = new Date().getTime();
-//   let start = new Date(a.start.toNumber()*1000).getTime();
-//   let end = new Date(a.end.toNumber()*1000).getTime();
-//   let status = "";
-//   let b = "";
-//   let b1 = "";
-
-//   if(acceptance || acceptedProposal){
-//     //acceptances and accepted proposals
-//     if(now < start){
-//       status = "Partnered, waiting to start";
-//       b1 = "Waiting"; //`<button type='button' class='action cancelit tableBtn'> Cancel and redeem <span class="green-text">${yourContr}</span></button>`;
-//     }
-//     if(now >= start && now <= end){
-//       status = "In term";
-//       b = "Waiting";
-//       b1 = "Waiting";
-//     }
-//     if(now > end){
-//       status = "Waiting for evaluation";
-//       b = "Evaluate"
-//       b1 = `<button type='button' class='action evaluateit tableBtn' value=${id}> Evaluate and complete </button>`;
-//     }
-//   }else{
-//     //not accepted proposal
-//     if(now < start) status = "Waiting for partner";
-//     if(now >= start) status = "Stale";
-//     b = "";
-//     b1 = `<button type='button' class='action cancelit tableBtn'> Cancel and redeem <span class="green-text">${yourContrText}</span></button>`;
-//   }
-
-//   //get threshold text
-//   let thresh;
-//   if(acceptance) thresh = threshValsToText(a.WITID.toNumber() === a.belowID.toNumber(),a.thresholdPPTTH.toNumber());
-//   else thresh = threshValsToText(a.WITID.toNumber() !== a.belowID.toNumber(),a.thresholdPPTTH.toNumber());
-
-//   //create the object
-//   this.id = r.args.WITID.toNumber();
-//   this.type = "bodyRow";
-//   //if you change the number or order of columns, you have to update the evaluation listener
-//   this.column = [
-//       {type:"text",key:location,name:location}
-//       ,{type:"text",key:thresh,name:thresh}
-//       ,{type:"text",key:"NASA Rainfall",name:"NASA Rainfall"}
-//       ,{type:"num",key:a.start.toNumber()*1000,name:dateText(a.start.toNumber()*1000)}
-//       ,{type:"num",key:a.end.toNumber()*1000,name:dateText(a.end.toNumber()*1000)}
-//       ,{type:"num",key:yourContr,name:yourContrText}
-//       ,{type:"num",key:totalPayout,name:totalPayoutText}
-//       ,{type:"text",key:status,name:status}
-//       ,{type:"text",key:b,name:b1}
-//     ];
-// }
-
 //manage current user
 Session.set("user",-1);
 Session.set("pastUser",-2);
@@ -161,10 +38,6 @@ Session.set("pastUser",-2);
 // var arbolAddress, arbolContract, arbolInstance; //tag for deletion
 var witAddress, witContract, witInstance;
 var noaaAddress, nasaAddress;
-
-// //TODO can we really rely on the acceptance events always firing before the proposal events and therefore creating a useful acceptedList
-// var acceptedList = [];
-// let proposedList = [];
 
 function initMainPage(){
   if (Meteor.isClient) {
@@ -399,8 +272,6 @@ function resetSessionVars(){
 }
 
 function resetGlobalVariables(){
-  // acceptedList = [];
-  // proposedList = [];
   if(watchLatestProposal !== -1) watchLatestProposal.stopWatching();
   if(watchLatestAcceptance !== -1) watchLatestAcceptance.stopWatching();
   if(watchLatestEvaluation !== -1) watchLatestEvaluation.stopWatching();
@@ -415,14 +286,6 @@ function latestProposals(){
     let store = addInfoFromProposalCreated(result);
     updateOpenProposals(store.openProposals);
     updateMyProposals(store.myProposals);
-
-    // let id = result.args.WITID.toNumber();
-    // let aboveID = result.args.aboveID.toNumber();
-    // let belowID = result.args.belowID.toNumber();
-    // console.log("===> latest: 'offered', id:",id,"above id:",aboveID,"below id:",belowID,result);
-    // addToken(result);
-    // $('#open-loader').hide();
-    // $('#open-wrapper').removeClass('loading');
   });
 }
 
@@ -436,12 +299,6 @@ function latestAcceptances(){
     let store = addInfoFromProposalAccepted(result);
     updateOpenProposals(store.openProposals);
     updateMyProposals(store.myProposals);
-
-    // let id = result.args.WITID.toNumber();
-    // let aboveID = result.args.aboveID.toNumber();
-    // let belowID = result.args.belowID.toNumber();    
-    // console.log("===> latest: 'accepted', id:",id,"above id:",aboveID,"below id:",belowID,result)
-    // addAcceptance(result);
   });
 }
 
@@ -455,223 +312,8 @@ function latestEvaluations(){
     let store = addInfoFromProposalEvaluated(result);
     updateOpenProposals(store.openProposals);
     updateMyProposals(store.myProposals);
-
-    // let id = result.args.WITID.toNumber();
-    // let aboveID = result.args.aboveID.toNumber();
-    // let belowID = result.args.belowID.toNumber();
-    // let aboveOwner = result.args.aboveOwner;
-    // let belowOwner = result.args.belowOwner;
-    // let beneficiary = result.args.beneficiary;
-    // console.log("===> latest: 'evaluated'","id:",id,"above id:",aboveID,"below id:",belowID,result)
-    // console.log("===> latest: 'evaluated'","id:",id,aboveOwner,belowOwner,beneficiary)
-    // //update status in "my protections pages"
-    // //go through list, change status update page
-    // let list = Session.get("myProtectionsData");
-    // let index = findIndex(list,el => el.id == result.args.WITID);
-    // if(index != -1){
-    //   let outcome = "";
-    //   let payout = toEth(result.args.weiPayout.toNumber());
-    //   if(true) outcome = `You received <span class="green-text">${payout}</span>`
-    //   else outcome = "You did not receive the payout";
-    //   console.log("===> update with evaluate",list,index,list[index], outcome)
-    //   list[index].column[7].key = "Evaluation";
-    //   list[index].column[7].name = "Evaluation complete";
-    //   list[index].column[8].key = "Evaluated";
-    //   list[index].column[8].name = outcome;
-    //   Session.set("openProtectionsData",list);
-    // }
   })
 }
-
-// //add token to list
-// async function addToken(result){
-//   try{
-//     //TODO change this variable id to idObj.toNumber()
-//     let idObj = result.args.WITID;
-//     let id = idObj.toNumber();
-//     let owner = await promisify(cb => witInstance.ownerOf(idObj, cb));
-
-//     //add to open protections
-//     if(proposedList.indexOf(id) === -1){
-//       if(acceptedList.indexOf(id) === -1){
-//         proposedList.push(id);
-//         //TODO reinstate date filter
-//         //only show entries whose starting dates haven't passed
-//         // if(new Date(result.args.start.toNumber()) - new Date() > 0){
-//         if(true){
-//           let list = Session.get("openProtectionsData");
-//           // console.log("===> proposal offered, id:",id);
-//           list.push(new Entry(result,owner));
-//           list = sortArray(list,Session.get("sortIndex"),Session.get("descending"));
-//           Session.set("openProtectionsData",list);
-
-//           //if more than ten items turn on pagination
-//           //set max pagination
-//           let tblRow = tableRows();
-//           if(list.length > tblRow){
-//             $("#open-pager-btns").show();
-//             $("#open-max").html(Math.ceil(list.length/tblRow));
-//             $("#open-current").html(1);
-//           }
-
-//           //show paginated items
-//           let opPagination = Session.get("opPagination")
-//           let pageList = paginateData(list,opPagination);
-//           if(pageList.length > 0){
-//             Session.set("openProtectionsPaginatedData",pageList);
-//           }else{
-//             if(opPagination > 0) opPagination -= 1;
-//           }
-//           Session.set("opPagination",opPagination);
-//         }
-//       }
-
-//       //add to my protections
-//       // console.log("my entry", owner, Session.get("user"), result)
-//       if(owner === Session.get("user")){
-//         let list = Session.get("myProtectionsData");
-//         list.push(new MyEntry(result,result.args,id,true));
-//         list = sortArray(list,Session.get("mySortIndex"),Session.get("descending"));
-//         Session.set("myProtectionsData",list);
-
-//         //if more than ten items turn on pagination
-//         let tblRow = tableRows();
-//         if(list.length > tblRow){
-//           $("#my-pager-btns").show();
-//           $("#my-max").html(Math.ceil(list.length/tblRow));
-//           $("#my-current").html(1);
-//         }
-
-//         //show paginated items
-//         let myPagination = Session.get("myPagination");
-//         let pageList = paginateData(list,myPagination);
-//         if(pageList.length > 0){
-//           Session.set("myProtectionsPaginatedData",pageList);
-//         }else{
-//           if(myPagination > 0) myPagination -= 1;
-//         }
-//         Session.set("myPagination",myPagination);
-//       }
-//     }
-//   }catch(error){
-//     console.log(error);
-//   }
-// }
-
-// function removeToken(id){
-//   // console.log("removeToken")
-//   //add to open protections
-//   let list = Session.get("openProtectionsData");
-//   if(list.length > 0){
-//     let index = findIndex(list,el => el.id == id);
-//     list.splice(index,1);
-//     // list = sortArray(list,Session.get("sortIndex"),Session.get("descending"));
-//     Session.set("openProtectionsData",list);
-
-//     //if more than ten items turn on pagination
-//     if(list.length <= tableRows()){
-//       $("#open-pager-btns").hide();
-//     }
-
-//     //show paginated items
-//     let opPagination = Session.get("opPagination");
-//     let pageList = paginateData(list,opPagination);
-//     if(pageList.length > 0){
-//       Session.set("openProtectionsPaginatedData",pageList);
-//     }else{
-//       if(opPagination > 0) opPagination -= 1;
-//     }
-//     Session.set("opPagination",opPagination);
-//   }
-// }
-
-// function findIndex(array,cb){
-//   let l = array.length;
-//   while(l--){
-//     if(cb(array[l])) return l;
-//   }
-//   return -1;
-// }
-
-// //add acceptance to my protections
-// async function addAcceptance(result){
-//   // console.log("fn: addAcceptance")
-//   let outerResult = result;
-//   let idpObj = result.args.WITID;
-//   let idp = idpObj.toNumber();
-
-//   let idObj = result.args.aboveID;
-//   if(idp === result.args.aboveID.toNumber()) idObj = result.args.belowID;
-//   let id = idObj.toNumber();
-
-//   if(acceptedList.indexOf(idp) === -1){
-//     try{
-//       // console.log("===> proposal accepted, id:", id);
-//       //prevent previous tokens from being added to list
-//       acceptedList.push(idp);
-//       //if they are already shown remove them
-//       removeToken(idp);
-
-//       //these next 3 lines just resort the my protections table but I am not sure they are required for anything
-//       let updateList = Session.get("myProtectionsData");
-//       updateList = sortArray(updateList,Session.get("mySortIndex"),Session.get("descending"));
-//       Session.set("myProtectionsData",updateList);
-
-//       //if they were your proposals update your "my protections"
-//       let owner = await promisify(cb => witInstance.ownerOf(idObj, cb));
-//       if(owner === Session.get("user")){
-//         //hide the loading
-//         $('#my-loader').hide();
-//         $('#my-wrapper').removeClass('loading');
-
-//         //get contract information for associated proposal
-//         witInstance.ProposalOffered({WITID:idpObj},{fromBlock: 0, toBlock: 'latest'}).watch(function(error, result){
-//           // console.log("===> proposal accepted details retrieved, id:",id)
-//           let list = Session.get("myProtectionsData");
-//           list.push(new MyEntry(outerResult,result.args,id,false));
-//           list = sortArray(list,Session.get("mySortIndex"),Session.get("descending"));
-//           Session.set("myProtectionsData",list);
-
-//           //if more than ten items turn on pagination
-//           if(list.length > tableRows()){
-//             $("#my-pager-btns").show();
-//           }
-
-//           //show paginated items
-//           let myPagination = Session.get("myPagination");
-//           let pageList = paginateData(list,myPagination);
-//           if(pageList.length > 0){
-//             Session.set("myProtectionsPaginatedData",pageList);
-//           }else{
-//             if(myPagination > 0) myPagination -= 1;
-//           }
-//           Session.set("myPagination",myPagination)
-//         });
-//       }
-//     } catch (error) {
-//       console.log(error)
-//     }
-//   }
-// }
-
-// // num = a.start.toNumber()
-// let months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-// function dateText(iso){
-//   let d1 = new Date(iso).toISOString().substring(0,7);
-//   let a = d1.split("-");
-//   let n = parseInt(a[1]) - 1;
-//   return months[n] + " " + a[0];
-// }
-
-// function dateNum(text){
-//   let a = text.split(" ");
-//   let lm = months.length;
-//   let n = 0;
-//   while(lm--){
-//     if(months[lm] === a[0]) n = lm;
-//   }
-//   return parseInt(a[1]) + n/12;
-// }
 
 function updateOpenProposals(list){
   list = sortArray(list,Session.get("sortIndex"),Session.get("descending"));
@@ -1057,7 +699,7 @@ Template.formNewProtection.events({
   },
   'input #threshold'(event) {
     changeThreshold();
-    calcTenYrP();
+    calcPct();
     self = Template.instance();
     selfdata = self.createWITdata.get();
     fields = $(event.currentTarget).find('select');
@@ -1223,28 +865,28 @@ async function createProposal(startDate,endDate,yourContr,totalPayout,location,i
   }
 }
 
-async function createProposalTest(){
-  console.log("fn: createProposal")
-  const d1 = 1510354801; 
-  const d2 = 1512946801; 
-  let location = "21.5331234,-3.1621234&0.14255";
+// async function createProposalTest(){
+//   console.log("fn: createProposal")
+//   const d1 = 1510354801; 
+//   const d2 = 1512946801; 
+//   let location = "21.5331234,-3.1621234&0.14255";
 
-  let ethPropose = 100000000000000000;
-  let ethAsk = 100000000000000000;
-  let above = false;
-  let numPPTH = 10000; // = 10000 * threshValFraction(thresholdPercent,thresholdAverage);
-  let address = "0x5a958c25b04cdef8ff408bf79479837922bbff16";
-  let makeStale = false; //TODO for deployment makeStale should be true in default
-  let gas = 2000000;
-  console.log("ethPropose, ethAsk, above, address, numPPTH, location, d1, d2, makeStale, user");
-  console.log(ethPropose, ethAsk, above, address, numPPTH, location, d1, d2, makeStale, Session.get("user"));
+//   let ethPropose = 100000000000000000;
+//   let ethAsk = 100000000000000000;
+//   let above = false;
+//   let numPPTH = 10000; // = 10000 * threshValFraction(thresholdPercent,thresholdAverage);
+//   let address = "0x5a958c25b04cdef8ff408bf79479837922bbff16";
+//   let makeStale = false; //TODO for deployment makeStale should be true in default
+//   let gas = 2000000;
+//   console.log("ethPropose, ethAsk, above, address, numPPTH, location, d1, d2, makeStale, user");
+//   console.log(ethPropose, ethAsk, above, address, numPPTH, location, d1, d2, makeStale, Session.get("user"));
 
-  try {
-    await promisify(cb => witInstance.createWITProposal(ethPropose, ethAsk, above, address, numPPTH, location, d1, d2, makeStale, {value: ethPropose, gas: gas, from:Session.get("user")}, cb));
-  } catch (error) {
-    console.log(error)
-  }
-}
+//   try {
+//     await promisify(cb => witInstance.createWITProposal(ethPropose, ethAsk, above, address, numPPTH, location, d1, d2, makeStale, {value: ethPropose, gas: gas, from:Session.get("user")}, cb));
+//   } catch (error) {
+//     console.log(error)
+//   }
+// }
 
 function capVal(target){
   //change properties of the other date picker so that incorrect values can't be chosen
@@ -1300,6 +942,7 @@ Template.sortableRows.events({
     }
   },
   'click .evaluateit': function(e){
+    console.log("==> new WIT evaluation",e.target);
     evaluateWIT(e.target.value);
   },
   'click .cancelit': function(e){
@@ -1327,11 +970,8 @@ async function acceptProposal(v){
 //evaluate WIT once its period h gas elapsed
 async function evaluateWIT(id){
   try {
-    let idodd = parseInt(id);
-    if(id/2 === Math.round(id/2)) idodd = parseInt(id) - 1;
-    // console.log("=================> new WIT evaluation");
-    // console.log("token ID", id, idodd, Session.get("user"));
-    await promisify(cb => witInstance.evaluate(idodd,"",{from: Session.get("user"), gas: 2000000},cb));
+    console.log("==> token ID", id, Session.get("user"));
+    await promisify(cb => witInstance.evaluate(15,"",{from: Session.get("user"), gas: 2000000},cb));
   } catch (error) {
     console.log(error)
   }

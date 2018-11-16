@@ -139,18 +139,19 @@ function MyAcceptance(o){
 	let b1 = "";
 
     if(now < start){
-      status = "Partnered, waiting to start";
-      b1 = "Waiting"; 
+      	status = "Partnered, waiting to start";
+      	b1 = "Waiting"; 
     }
 	if(now >= start && now <= end){
-	  status = "In term";
-	  b = "Waiting";
-	  b1 = "Waiting";
+	  	status = "In term";
+	  	b = "Waiting";
+	  	b1 = "Waiting";
 	}
 	if(now > end){
-	  status = "Waiting for evaluation";
-	  b = "Evaluate"
-	  b1 = `<button type='button' class='action evaluateit tableBtn' value=${o.proposerID.toNumber()}> Evaluate and complete </button>`;
+	  	status = "Waiting for evaluation";
+	  	b = "Evaluate"
+	  	b1 = `<button type='button' class='action evaluateit tableBtn' value=${o.proposerID.toNumber()}> Evaluate and complete </button>`;
+		console.log("+++E",o.proposerID.toNumber(),o.accepterID.toNumber(),b1);
 	}
 	
 	if(o.state.evaluated){
@@ -290,11 +291,15 @@ function fillDataProposalAccepted(o,r){
 	if(o.belowID.toNumber() === r.args.WITID.toNumber()){
 		o.accepter = o.aboveOwner;
 		o.accepterID = o.aboveID;
+		o.proposer = o.belowOwner
+		o.proposerID = o.belowID;
 		o.proposerIsAbove = false;
 	}
 	if(o.aboveID.toNumber() === r.args.WITID.toNumber()){
 		o.accepter = o.belowOwner;
-		o.accepterID = o.belowID;	
+		o.accepterID = o.belowID;
+		o.proposer = o.aboveOwner
+		o.proposerID = o.aboveID;	
 		o.proposerIsAbove = true;
 	}
 
