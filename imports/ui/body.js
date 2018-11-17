@@ -1,5 +1,6 @@
 import { Template } from 'meteor/templating';
 import { ReactiveVar } from 'meteor/reactive-var';
+import * as w3 from "web3";
 
 import './manageWITs.js'
 import './NASA-leaflet.js';
@@ -300,6 +301,17 @@ function latestAcceptances(){
     updateOpenProposals(store.openProposals);
     updateMyProposals(store.myProposals);
   });
+}
+
+var watchLastInvocation = -1;
+function watchEvaluationInvoked(){
+  console.log("fn: latestEvalInvoked");
+  watchLastInvocation = witInstance.WITEvaluationInvoked({},{fromBlock: 0, toBlock: 'latest'}).watch(function(error, result){
+    updateBalance();
+    let store = addInfoFromEvaluationInvoked(result);
+    updateOpenProposals(store.openProposals);
+    updateMyProposals(store.myProposals);
+  })
 }
 
 //get all evaluations
@@ -955,15 +967,15 @@ async function acceptProposal(v){
   let ethAsk = vals[0]
   let id = vals[1];
 
-  try {
-    // console.log("====> new WIT acceptance");
-    // console.log("ethAsk", ethAsk);
-    // console.log("proposal token ID", id);
+  console.log("===> new WIT acceptance");
+  console.log("==> token ID",id,Session.get("user"),ethAsk)
+  console.log("==>",w3,w3.utils,w3.utils.toWei(ethAsk));
 
+  try {
     //TODO don't let user accept their own proposal
-    await promisify(cb => witInstance.createWITAcceptance(id,{from: Session.get("user"), value:toWei(ethAsk), gas: 2000000},cb));
+    await promisify(cb => witInstance.createWITAcceptance(id,{from: Session.get("user"), value:w3.utils.toWei(ethAsk), gas: 2000000},cb));
   } catch (error) {
-    console.log(error)
+    console.log(error);
   }
 }
 
@@ -971,7 +983,7 @@ async function acceptProposal(v){
 async function evaluateWIT(id){
   try {
     console.log("==> token ID", id, Session.get("user"));
-    await promisify(cb => witInstance.evaluate(15,"",{from: Session.get("user"), gas: 2000000},cb));
+    await promisify(cb => witInstance.evaluate(id,"",{from: Session.get("user"), gas: 2000000},cb));
   } catch (error) {
     console.log(error)
   }

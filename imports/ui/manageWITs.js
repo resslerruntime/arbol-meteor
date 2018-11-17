@@ -52,16 +52,17 @@ function Entry(o){
 
 	// button
   	let b = `${o.askText.v}`;
-  	let b1 = `<button type='button' class='action buyit tableBtn' value='${o.askText.v},${o.proposerID.toNumber()}'>Pay <span class="green-text">${o.askText.t} Eth</span> to accept</button>`;
+  	let b1 = `<button type='button' class='action buyit tableBtn' value='${o.askText.v},${o.proposerID.toNumber()}'>Pay <span class="green-text">${o.askText.t}</span> to accept</button>`;
   	//if no user is logged in
   	if(currentUser === -1){
-    	b1 = `<button type='button' class='tableBtn'><span class="green-text">${o.askText.t} Eth</span></button>`;
+    	b1 = `<button type='button' class='tableBtn'><span class="green-text">${o.askText.t}</span></button>`;
   	}
   	//if the current use is the owner of the proposal don't give them the option to purchase the proposal
   	if(currentUser === o.proposer){
     	b = "1e99";
     	b1 = `<button type='button' class='tableBtn'>You are the owner of this proposal</button>`;
   	}
+  	console.log("&&&",o.proposerID.toNumber(),b1)
 
   	this.type = "bodyRow";
   	this.column = [
@@ -103,7 +104,7 @@ function MyEntry(o){
 		if(now > end){
 		  status = "Waiting for evaluation";
 		  b = "Evaluate"
-		  b1 = `<button type='button' class='action evaluateit tableBtn' value=${o.proposerID.toNumber()}> Evaluate and complete </button>`;
+		  b1 = `<button type='button' class='action evaluateit tableBtn' value=${o.proposerID.toNumber()}>Evaluate and complete</button>`;
 		}
 	}
 	if(o.state.evaluated){
@@ -323,7 +324,7 @@ function fillDataProposalAccepted(o,r){
 	return o;
 }
 
-addInfoFromEvaluationStart = function(r){
+addInfoFromEvaluationInvoked = function(r){
 	
 }
 
