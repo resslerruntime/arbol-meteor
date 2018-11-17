@@ -1,6 +1,5 @@
 import { Template } from 'meteor/templating';
 import { ReactiveVar } from 'meteor/reactive-var';
-import * as w3 from "web3";
 
 import './manageWITs.js'
 import './NASA-leaflet.js';
@@ -76,8 +75,8 @@ function initMainPage(){
         $("#user").show();
         // Modern dapp browsers...
         if(window.ethereum) {
-          console.log("User account exposed on users agreement");
           window.web3 = new Web3(ethereum);
+          console.log("User account exposed on users agreement",web3);
           try {
               // Request account access if needed
               await ethereum.enable();
@@ -187,7 +186,7 @@ async function manageAccounts(){
     let userObj = await promisify(cb => web3.eth.getAccounts(cb)), user = userObj[0];
     Session.set("user",user);
     if(typeof user === "undefined") Session.set("user",-1);
-    console.log(`currentUser: ${user}`, `last check: ${Session.get("pastUser")}`,`user changed? ${user !== Session.get("pastUser")}`)
+    console.log(`_-_ currentUser: ${user}`, `last check: ${Session.get("pastUser")}`,`user changed? ${user !== Session.get("pastUser")}`)
     if(user !== Session.get("pastUser")){
       console.log("_-_-_- CHANGE IN USER _-_-_-")
       //reset and reload everything for new user
@@ -195,37 +194,37 @@ async function manageAccounts(){
       $('#open-pager-btns').hide();
       $('#my-pager-btns').hide();
       resetSessionVars();
-      resetGlobalVariables();
+      // resetGlobalVariables();
       let s;
       if(user !== -1){
+        console.log("_-_ new user",user)
         $('#user-hash').html(user);
         $('#user-hash').removeClass('red-text');
         $('#user-hash').addClass('green-text');
 
         $('#my-wrapper').removeClass('loading');
         $('#my-loader').hide();
-
-        updateBalance();
       } else {
+        console.log("_-_ user undefined",user)
         $('#user-hash').html("No current user- log into MetaMask");
         $('#user-hash').addClass('red-text');
         $('#user-hash').removeClass('green-text');
 
         $('#my-loader').show();
-        $('#my-wrapper').addClass('loading');
-
-        updateBalance();
+        $('#my-wrapper').addClass('loading'); 
       }
+      updateBalance();
       loadData();
     }
     pastUser = user;
-    Session.set("pastUser",user)
+    Session.set("pastUser",user);
   } catch (error) {
     console.log(error)
   }
 }
 
 async function updateBalance(){
+  console.log("_-_ update balance",Session.get("user"))
   if(Session.get("user") === -1){
     $('#user-balance').html("0.000");
     $('#user-balance').removeClass('green-text');
@@ -233,7 +232,7 @@ async function updateBalance(){
   } else {
     web3.eth.getBalance(Session.get("user"),function (error, result) {
       if (!error) {
-        var e = toEth(result.plus(21).toString(10));
+        var e = toEth(result.toNumber());
         if(e === 0){
           $('#user-balance').html("0.000");
           $('#user-balance').removeClass('green-text');
@@ -255,10 +254,12 @@ function loadData(){
     //populate lists
     latestProposals();
     latestAcceptances();
+    latestInvocation();
     latestEvaluations();
 }
 
 function resetSessionVars(){
+  console.log("_-_ fn: resetSessionVars")
   Session.set("filterCriteria",{});
   Session.set("openProtectionsData",[]);
   Session.set("myProtectionsData",[]);
@@ -272,11 +273,13 @@ function resetSessionVars(){
   Session.set("myDescending",true);
 }
 
-function resetGlobalVariables(){
-  if(watchLatestProposal !== -1) watchLatestProposal.stopWatching();
-  if(watchLatestAcceptance !== -1) watchLatestAcceptance.stopWatching();
-  if(watchLatestEvaluation !== -1) watchLatestEvaluation.stopWatching();
-}
+// function resetGlobalVariables(){
+//   console.log("_-_ fn: resetGlobalVariables")
+//   console.log("_-_", watchLatestProposal, watchLatestAcceptance, watchLatestEvaluation)
+//   if(watchLatestProposal !== -1) watchLatestProposal.stopWatching();
+//   if(watchLatestAcceptance !== -1) watchLatestAcceptance.stopWatching();
+//   if(watchLatestEvaluation !== -1) watchLatestEvaluation.stopWatching();
+// }
 
 //get all proposals, add new entries as they are created
 var watchLatestProposal = -1;
@@ -303,10 +306,10 @@ function latestAcceptances(){
   });
 }
 
-var watchLastInvocation = -1;
-function watchEvaluationInvoked(){
+var watchLatestInvocation = -1;
+function latestInvocation(){
   console.log("fn: latestEvalInvoked");
-  watchLastInvocation = witInstance.WITEvaluationInvoked({},{fromBlock: 0, toBlock: 'latest'}).watch(function(error, result){
+  watchLatestInvocation = witInstance.WITEvaluationInvoked({},{fromBlock: 0, toBlock: 'latest'}).watch(function(error, result){
     updateBalance();
     let store = addInfoFromEvaluationInvoked(result);
     updateOpenProposals(store.openProposals);
@@ -958,29 +961,32 @@ Template.sortableRows.events({
     evaluateWIT(e.target.value);
   },
   'click .cancelit': function(e){
-    alert("coming soon");
+    alert("Cancel and redeem: coming soon");
+  },
+  'click .downloadit': function(e){
+    alert("Download receipt: coming soon");
   }
 });
 
 async function acceptProposal(v){
   let vals = v.split(",");
-  let ethAsk = vals[0]
+  let weiAsk = vals[0]
   let id = vals[1];
 
   console.log("===> new WIT acceptance");
-  console.log("==> token ID",id,Session.get("user"),ethAsk)
-  console.log("==>",w3,w3.utils,w3.utils.toWei(ethAsk));
+  console.log("==> token ID",id,Session.get("user"),weiAsk)
 
   try {
     //TODO don't let user accept their own proposal
-    await promisify(cb => witInstance.createWITAcceptance(id,{from: Session.get("user"), value:w3.utils.toWei(ethAsk), gas: 2000000},cb));
+    await promisify(cb => witInstance.createWITAcceptance(id,{from: Session.get("user"), value:weiAsk, gas: 2000000},cb));
   } catch (error) {
     console.log(error);
   }
 }
 
-//evaluate WIT once its period h gas elapsed
+
 async function evaluateWIT(id){
+  //evaluate WIT once its period h gas elapsed
   try {
     console.log("==> token ID", id, Session.get("user"));
     await promisify(cb => witInstance.evaluate(id,"",{from: Session.get("user"), gas: 2000000},cb));

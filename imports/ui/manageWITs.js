@@ -20,11 +20,13 @@ function StoreEntry(){
 	this.location;
 	this.makeStale;
 
-	this.weiAsking;
-	this.weiContributing;
+	this.weiAsking;			//amount of wei asked for by the proposing party
+	this.weiContributing;	//amount of wei contributed by the proposing party
 
-	this.beneficiary;
-	this.weiPayout;
+	this.invoker;			//user who invoked the evaluation
+
+	this.beneficiary;		//user that received the total payout
+	this.weiPayout;			//total payout that was received
 
 	//calculated table entry values
 	this.payoutText;
@@ -37,7 +39,7 @@ function StoreEntry(){
 	this.state = {
 		proposed:false
 		,accepted:false
-		,evaluationStarted:false
+		,invoked:false
 		,evaluated:false
 	};
 }
@@ -78,6 +80,7 @@ function Entry(o){
 
 //table entry constructor, my proposals
 function MyEntry(o){
+	let currentUser = Session.get("user");
 	//threshold
 	let thresh = threshValsToText(o.proposerIsAbove,o.thresholdPPTTH.toNumber());
 
@@ -107,8 +110,20 @@ function MyEntry(o){
 		  b1 = `<button type='button' class='action evaluateit tableBtn' value=${o.proposerID.toNumber()}>Evaluate and complete</button>`;
 		}
 	}
-	if(o.state.evaluated){
 
+	if(o.state.invoked){
+		if(currentUser === o.invoker) status = "You initiated evaluation";
+		else status = "Accepter initiated evaluation";
+		b = "Waiting";
+		b1 = "Waiting";
+	}
+
+	if(o.state.evaluated){
+		console.log("<> evaluated",o)
+	  	if(currentUser === o.beneficiary) status = `You received <span class="green-text">${o.proposeText.t}</span>`;
+	  	else status = "You did not receive the payout";
+	  	b = "Completed";
+	  	b1 = `<button type='button' class='action downloadit tableBtn'>Download receipt</button>`;
 	}
 
 	//create the object
@@ -128,6 +143,7 @@ function MyEntry(o){
 }
 
 function MyAcceptance(o){
+	let currentUser = Session.get("user");
 	//threshold
 	let thresh = threshValsToText(!o.proposerIsAbove,o.thresholdPPTTH.toNumber());
 
@@ -154,9 +170,20 @@ function MyAcceptance(o){
 	  	b1 = `<button type='button' class='action evaluateit tableBtn' value=${o.proposerID.toNumber()}> Evaluate and complete </button>`;
 		console.log("+++E",o.proposerID.toNumber(),o.accepterID.toNumber(),b1);
 	}
+
+	if(o.state.invoked){
+		if(currentUser === o.invoker) status = "You initiated evaluation";
+		else status = "Proposer initiated evaluation";
+		b = "Waiting";
+		b1 = "Waiting";
+	}
 	
 	if(o.state.evaluated){
-
+		console.log("<> evaluated",o)
+	  	if(currentUser === o.beneficiary) status = `You received <span class="green-text">${o.proposeText.t}</span>`;
+	  	else status = "You did not receive the payout";
+	  	b = "Completed";
+	  	b1 = `<button type='button' class='action downloadit tableBtn'>Download receipt</button>`;
 	}
 
 	//create the object
@@ -196,7 +223,7 @@ addInfoFromProposalCreated = function(r){
 			//update store with new info
 			//pass by reference might be sufficient in this case
 			e[idx] = fillDataProposalCreated(e[idx],r);
-			console.log("+++= p update",r.args.WITID.toNumber(),e)
+			console.log("+++= p update",r.args.WITID.toNumber(),e.length)
 			return getStore();
 		}
 	}else{
@@ -204,7 +231,7 @@ addInfoFromProposalCreated = function(r){
 		let o = new StoreEntry();
 		o = fillDataProposalCreated(o,r);
 		e.push(o);
-		console.log("+++= p new",r.args.WITID.toNumber(),e)
+		console.log("+++= p new",r.args.WITID.toNumber(),e.length)
 		return getStore();
 	}	
 }
@@ -264,7 +291,7 @@ addInfoFromProposalAccepted = function(r){
 			//update store with new info
 			//pass by reference might be sufficient in this case
 			e[idx] = fillDataProposalAccepted(e[idx],r);
-			console.log("+++= a update",r.args.WITID.toNumber(),e)
+			console.log("+++= a update",r.args.WITID.toNumber(),e.length)
 			return getStore();
 		}
 	}else{
@@ -272,7 +299,7 @@ addInfoFromProposalAccepted = function(r){
 		let o = new StoreEntry();
 		o = fillDataProposalAccepted(o,r);
 		e.push(o);
-		console.log("+++= a new",r.args.WITID.toNumber(),e)
+		console.log("+++= a new",r.args.WITID.toNumber(),e.length)
 		return getStore();
 	}		
 }
@@ -325,7 +352,38 @@ function fillDataProposalAccepted(o,r){
 }
 
 addInfoFromEvaluationInvoked = function(r){
-	
+	console.log("+++++++++++++++++++++",r)
+	//check for obj in eventStore
+	let idx = findInStore(r.args.WITID,r.args.WITID);
+	if(typeof idx === "number"){
+		if(e[idx].evaluated){
+			//duplicate event was fired
+			//do nothing, don't update frontend
+			console.log("+++= se duplicate")
+			return false;
+		}else{
+			//update store with new info
+			//pass by reference might be sufficient in this case
+			e[idx] = fillDataEvaluationInvoked(e[idx],r);
+			console.log("+++= se update",r.args.WITID.toNumber(),e.length)
+			return getStore();
+		}
+	}else{
+		//create new obj for the event store
+		let o = new StoreEntry();
+		o = fillDataEvaluationInvoked(o,r);
+		e.push(o);
+		console.log("+++= se new",r.args.WITID.toNumber(),e.length)
+		return getStore();
+	}	
+}
+
+function fillDataEvaluationInvoked(o,r){
+
+	o.invoker = r.args.invoker;
+
+	o.state.invoked = true;
+	return o;
 }
 
 addInfoFromProposalEvaluated = function(r){
@@ -342,7 +400,7 @@ addInfoFromProposalEvaluated = function(r){
 			//update store with new info
 			//pass by reference might be sufficient in this case
 			e[idx] = fillDataProposalEvaluated(e[idx],r);
-			console.log("+++= e update",r.args.WITID.toNumber(),e)
+			console.log("+++= e update",r.args.WITID.toNumber(),e.length)
 			return getStore();
 		}
 	}else{
@@ -350,7 +408,7 @@ addInfoFromProposalEvaluated = function(r){
 		let o = new StoreEntry();
 		o = fillDataProposalEvaluated(o,r);
 		e.push(o);
-		console.log("+++= e new",r.args.WITID.toNumber(),e)
+		console.log("+++= e new",r.args.WITID.toNumber(),e.length)
 		return getStore();
 	}		
 }
@@ -378,22 +436,22 @@ function fillDataProposalEvaluated(o,r){
 ////////////////////////////////////
 
 function payoutText(weiAsking,weiContributing){
-	let ask = toEth(weiAsking.toNumber())
-	let propose = toEth(weiContributing.toNumber());
+	let ask = weiAsking.toNumber()
+	let propose = weiContributing.toNumber();
 	let totalPayout = propose + ask;
-	let totalPayoutText = `${clipNum(totalPayout)} Eth`;
+	let totalPayoutText = `${clipNum(toEth(totalPayout))} Eth`;
 	return {v:totalPayout,t:totalPayoutText};
 }
 
 function askText(weiAsking){
-	let ask = toEth(weiAsking.toNumber());
-	let askText = `${clipNum(ask)} Eth`;
+	let ask = weiAsking.toNumber();
+	let askText = `${clipNum(toEth(ask))} Eth`;
 	return {v:ask,t:askText};
 }
 
 function proposeText(weiContributing){
-	let propose = toEth(weiContributing.toNumber());
-	let proposeText = `${clipNum(propose)} Eth`;
+	let propose = weiContributing.toNumber();
+	let proposeText = `${clipNum(toEth(propose))} Eth`;
 	return {v:propose,t:proposeText};
 }
 
@@ -422,9 +480,9 @@ getStore = function(){
 	let op = [], mp = [], currentUser = Session.get("user");
 	let l = e.length;
 	for(let i = 0; i < l; i++){
-		console.log("+++?",i,currentUser,e[i].proposer,e[i].accepter)
+		if(e[i].state.proposed || e[i].state.accepted) console.log("+++?",i,currentUser,e[i].proposer,e[i].accepter)
 		//have to add in time filter, only add to open proposals if start date hasn't passed already
-		if(e[i].state.proposed && !e[i].state.accepted && !e[i].state.evaluated){
+		if(e[i].state.proposed && !e[i].state.accepted && !e[i].state.invoked && !e[i].state.evaluated){
 			op.push(new Entry(e[i]));
 		}
 		if(e[i].state.proposed || e[i].state.accepted){

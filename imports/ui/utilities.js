@@ -1,3 +1,5 @@
+import * as w3 from "web3";
+
 //used for asynchronous web3 calls
 promisify = (inner) =>
     new Promise((resolve, reject) =>
@@ -40,13 +42,9 @@ isChrome = function (){
 }
 
 //conversion
-toEth = function (n){
-  return n/Math.pow(10,18);
-}
+toEth = n => w3.utils.fromWei(`${n}`);
 
-toWei = function (n){
-  return n*Math.pow(10,18);
-}
+toWei = n => w3.utils.toWei(`${n}`);
 
 // give number three decimals
 clipNum = function (n){
