@@ -191,8 +191,7 @@ async function manageAccounts(){
       console.log("_-_-_- CHANGE IN USER _-_-_-")
       //reset and reload everything for new user
       // $("#web3-onload").addClass("disabled-div");
-      $('#open-pager-btns').hide();
-      $('#my-pager-btns').hide();
+
       resetSessionVars();
       // resetGlobalVariables();
       let s;
@@ -260,6 +259,8 @@ function loadData(){
 
 function resetSessionVars(){
   console.log("_-_ fn: resetSessionVars")
+  $('#open-pager-btns').hide();
+  $('#my-pager-btns').hide();
   Session.set("filterCriteria",{});
   Session.set("openProtectionsData",[]);
   Session.set("myProtectionsData",[]);
@@ -349,6 +350,8 @@ function updateOpenProposals(list){
     $("#open-pager-btns").show();
     $("#open-max").html(Math.ceil(list.length/tblRow));
     $("#open-current").html(1);
+  }else{
+    $("#open-pager-btns").hide();
   }
 
   //show paginated items
@@ -383,6 +386,8 @@ function updateMyProposals(list){
     $("#my-pager-btns").show();
     $("#my-max").html(Math.ceil(list.length/tblRow));
     $("#my-current").html(1);
+  }else{
+    $("#my-pager-btns").hide();
   }
 
   //show paginated items
