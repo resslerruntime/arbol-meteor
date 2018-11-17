@@ -1054,6 +1054,10 @@ Template.formNewProtection.events({
     $('#your-contrib').val($(event.currentTarget).text());
     // also have to reset the requested contribution
     $('#requested-contrib').val(Math.round(($('#total-contrib').val() - $('#your-contrib').val())*10000)/10000);
+    self = Template.instance();
+    selfdata = self.createWITdata.get();
+    selfdata['your-contrib'] = $('#your-contrib').val();
+    self.createWITdata.set(selfdata);
   },
   'input #threshold'(event) {
     changeThreshold();
@@ -1254,7 +1258,14 @@ function capVal(target){
   $('#total-contrib')[0].min = next;
 
   let tot = parseFloat($('#total-contrib')[0].value);
-  if(num >= tot) $('#total-contrib')[0].value = next;
+  if(num >= tot) {
+    $('#total-contrib')[0].value = next;
+    // recalculate recommended contribution
+    if ($('#pct-span').attr('data-tenYrProb')) {
+      var recommendedValue = Math.round((next * $('#pct-span').attr('data-tenYrProb'))*10)/1000;
+      $('#your-contrib-hint-value').text(recommendedValue).parent().show();
+    }    
+  }
 }
 
 function validateCreateWITStep(step) {
