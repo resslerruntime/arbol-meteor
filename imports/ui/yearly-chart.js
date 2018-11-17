@@ -289,10 +289,9 @@ clearChart = function (n){
     .attr("height",d => height - y(d) + 1)
     .attr("stroke-dasharray", d => `${barWidth},${barWidth}`)
     .attr("opacity",1e-6);
-
-  d3.selectAll("line.multiYrAvg")
-    .transition().duration(1000)
-    .attr("y1",function(d){return y(o.avg);})
-    .attr("y2",function(d){return y(o.avg);})
-    .attr("opacity",1e-6);
+  //d3.selectAll("line.multiYrAvg")
+  //  .transition().duration(1000)
+  //  .attr("y1",function(d){return y(o.avg);})
+  //  .attr("y2",function(d){return y(o.avg);})
+  //  .attr("opacity",1e-6);
 }
