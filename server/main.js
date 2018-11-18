@@ -39,23 +39,40 @@ Meteor.startup(() => {
       return HTTP.call("GET",url);
     }
     ,postDataRequestNASA: function(begintime,endtime,coords){
-      var data = new FormData();
-      data.append("datatype", "0");
-      data.append("begintime", begintime);
-      data.append("endtime", endtime);
-      data.append("intervaltype", "1");
-      data.append("operationtype", "4");
-      data.append("callback", "successCallback");
-      data.append("dateType_Category", "default");
-      data.append("isZip_CurrentDataType", "false");
-      data.append("geometry", `{"type":"Polygon","coordinates":[${coords}]}`); 
+      // var data = new FormData();
+      // data.append("datatype", "0");
+      // data.append("begintime", begintime);
+      // data.append("endtime", endtime);
+      // data.append("intervaltype", "1");
+      // data.append("operationtype", "4");
+      // data.append("callback", "successCallback");
+      // data.append("dateType_Category", "default");
+      // data.append("isZip_CurrentDataType", "false");
+      // data.append("geometry", `{"type":"Polygon","coordinates":[${coords}]}`); 
 
-      console.log("POST",data)
-      // let url = `https://climateserv.servirglobal.net/chirps/submitDataRequest/`;
-      // return HTTP.call('POST', url, {
-      //     data: { some: 'json', stuff: 1 }
-      //   });
-    },
+      // var xhr = new XMLHttpRequest();
+      // xhr.withCredentials = true;
+      // xhr.addEventListener("readystatechange", function () {
+      //   if (this.readyState === 4) {
+      //     console.log(this.responseText);
+      //   }
+      // });
+      // xhr.open("POST", "https://climateserv.servirglobal.net/chirps/submitDataRequest/?callback=successCallback");
+      // xhr.setRequestHeader("Content-Type", "application/json");
+      // xhr.setRequestHeader("cache-control", "no-cache");
+      // xhr.setRequestHeader("Postman-Token", "e2442ac9-69ad-4d09-b541-b8a9ee0d70cb");
+      // xhr.send(data);
+
+      let url = `https://climateserv.servirglobal.net/chirps/submitDataRequest/`;
+      return HTTP.call('POST', url, {data: {
+        datatype:"0"
+        ,begintime:begintime
+        ,endtime:endtime
+        ,intervaltype:"1"
+        ,operationtype:"4"
+        ,geometry: `{"type":"Polygon","coordinates":[${coords}]}` 
+      }});
+    }
     ,getDataRequestProgressNASA: function(id){
       let url = `https://climateserv.servirglobal.net/chirps/getDataRequestProgress/?id=${id}`;
       this.unblock();

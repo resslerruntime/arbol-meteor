@@ -498,9 +498,7 @@ getStore = function(){
 // assorted helper functions
 ////////////////////////////////////
 
-setWitInstance = function(inst){
-	witInstance = inst;
-}
+setWitInstance = (inst) => witInstance = inst;
 
 // check for ID in eventStore
 function findInStore(a,b){

@@ -53,13 +53,44 @@ callNASA = function (startDate,endDate,location){
   submittedDataRequest = false;
   window.clearInterval(checkStatus);
 
-  Meteor.call("postDataRequestNASA",startDate.mmddyyyy,endDate.mmddyyyy,location,function(error, results) {
-    if(typeof results != 'undefined'){
-      console.log("POST result",result);
-    }else{
-      console.log("POST error",error);
-    }
+  var form = new FormData();
+  form.append("datatype", "0");
+  form.append("begintime", "10/12/2017");
+  form.append("endtime", "10/31/2017");
+  form.append("intervaltype", "0");
+  form.append("operationtype", "5");
+  form.append("callback", "successCallback");
+  form.append("dateType_Category", "default");
+  form.append("isZip_CurrentDataType", "false");
+  form.append("geometry", "{\"type\":\"Polygon\",\"coordinates\":[[[-99.2772674560547,38.10160366596239],[-104.36325073242189,38.25867146839721],[-103.96636962890626,41.65649719441146],[-99.2772674560547,38.10160366596239]]]}");
+  console.log("AJAX",form)
+  var settings = {
+    "async": true,
+    "crossDomain": true,
+    "url": "https://climateserv.servirglobal.net/chirps/submitDataRequest/?callback=successCallback",
+    "method": "POST",
+    "headers": {
+      "Content-Type": "application/json",
+      // "cache-control": "no-cache",
+      // "Postman-Token": "d1cd5f08-840b-4177-8356-ff6964c24d4f"
+    },
+    "processData": false,
+    "contentType": false,
+    "mimeType": "multipart/form-data",
+    "data": form
+  }
+  console.log("AJAX",settings)
+  $.ajax(settings).done(function (response) {
+    console.log("AJAX",response);
   });
+
+  // Meteor.call("postDataRequestNASA",startDate.mmddyyyy,endDate.mmddyyyy,location,function(error, results) {
+  //   if(typeof results != 'undefined'){
+  //     console.log("POST result",result);
+  //   }else{
+  //     console.log("POST error",error);
+  //   }
+  // });
 
   //submit initial data request
   // Meteor.call("submitDataRequestNASA","04/01/2008","06/30/2018",stringifyCoords([]),function(error, results) {
