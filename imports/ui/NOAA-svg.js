@@ -55,7 +55,7 @@ callNOAA = function (){
           //if a new NOAA call is made before previous one has returned, block the returned info from updating the chart
           if(check === currentHTTP){
             upDateMonths(obj);
-            calcTenYrP(obj);
+            calcPct(obj);
             $(".chart-loader-div").removeClass("chart-loader");
             $("#chart-loader").fadeOut(500);
           }

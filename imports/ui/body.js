@@ -816,6 +816,7 @@ function resetCreateWIT(instance) {
   // reset the map
   if (typeof regionmap == "object") {
     regionmap.invalidateSize();
+    // NOTE: need to add clearing of layers and restart of the map
   }
   // since we are resetting to the first step, disable the previous button and hide the submit button
   $("#createwit-prev button").attr('disabled','disabled');
