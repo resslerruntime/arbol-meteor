@@ -53,6 +53,14 @@ callNASA = function (startDate,endDate,location){
   submittedDataRequest = false;
   window.clearInterval(checkStatus);
 
+  Meteor.call("postDataRequestNASA",startDate.mmddyyyy,endDate.mmddyyyy,location,function(error, results) {
+    if(typeof results != 'undefined'){
+      console.log("POST result",result);
+    }else{
+      console.log("POST error",error);
+    }
+  });
+
   //submit initial data request
   // Meteor.call("submitDataRequestNASA","04/01/2008","06/30/2018",stringifyCoords([]),function(error, results) {
   Meteor.call("submitDataRequestNASA",startDate.mmddyyyy,endDate.mmddyyyy,location,function(error, results) {
@@ -98,11 +106,12 @@ callNASA = function (startDate,endDate,location){
 
 var months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec","Jan"];
 function yearlyNASAVals (a,startDate,endDate){
-  console.log("yearly NASA",startDate,endDate)
+  console.log("yearly NASA",a,startDate,endDate)
   //we get all monthly values for the entire period of duration
   //we only want a single yearly value for duration
   let data = [], sum = 0, sumAll = 0, inRange = false;
   let al = a.length;
+  //this assumes they are in order, apparently they are not...
   for(let i = 0; i < al; i++){
     let date = a[i].date.split("/");
     //check if current date is between range
