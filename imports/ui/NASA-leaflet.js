@@ -53,36 +53,66 @@ callNASA = function (startDate,endDate,location){
   submittedDataRequest = false;
   window.clearInterval(checkStatus);
 
-  var form = new FormData();
-  form.append("datatype", "0");
-  form.append("begintime", "10/12/2017");
-  form.append("endtime", "10/31/2017");
-  form.append("intervaltype", "0");
-  form.append("operationtype", "5");
-  form.append("callback", "successCallback");
-  form.append("dateType_Category", "default");
-  form.append("isZip_CurrentDataType", "false");
-  form.append("geometry", "{\"type\":\"Polygon\",\"coordinates\":[[[-99.2772674560547,38.10160366596239],[-104.36325073242189,38.25867146839721],[-103.96636962890626,41.65649719441146],[-99.2772674560547,38.10160366596239]]]}");
-  console.log("AJAX",form)
-  var settings = {
-    "async": true,
-    "crossDomain": true,
-    "url": "https://climateserv.servirglobal.net/chirps/submitDataRequest/?callback=successCallback",
-    "method": "POST",
-    "headers": {
-      "Content-Type": "application/json",
-      // "cache-control": "no-cache",
-      // "Postman-Token": "d1cd5f08-840b-4177-8356-ff6964c24d4f"
-    },
-    "processData": false,
-    "contentType": false,
-    "mimeType": "multipart/form-data",
-    "data": form
-  }
-  console.log("AJAX",settings)
-  $.ajax(settings).done(function (response) {
-    console.log("AJAX",response);
-  });
+  // var data = new FormData();
+  // data.append("datatype", "0");
+  // data.append("begintime", "10/12/2017");
+  // data.append("endtime", "10/31/2017");
+  // data.append("intervaltype", "0");
+  // data.append("operationtype", "5");
+  // data.append("callback", "successCallback");
+  // data.append("dateType_Category", "default");
+  // data.append("isZip_CurrentDataType", "false");
+  // data.append("geometry", "{\"type\":\"Polygon\",\"coordinates\":[[[-99.2772674560547,38.10160366596239],[-104.36325073242189,38.25867146839721],[-103.96636962890626,41.65649719441146],[-99.2772674560547,38.10160366596239]]]}");
+  
+  // var xhr = new XMLHttpRequest();
+  // xhr.withCredentials = false;
+  // xhr.addEventListener("readystatechange", function () {
+  //   if (this.readyState === 4) {
+  //     console.log("HTTP",this.responseText);
+  //   }
+  // });
+
+  // xhr.open("POST", "https://climateserv.servirglobal.net/chirps/submitDataRequest/?callback=successCallback");
+  // xhr.setRequestHeader("Content-Type", "application/json");
+  // xhr.setRequestHeader("cache-control", "no-cache");
+  // xhr.setRequestHeader("Postman-Token", "e2442ac9-69ad-4d09-b541-b8a9ee0d70cb");
+  // xhr.setRequestHeader("X-Requested-With","XMLHTTPRequest");
+  // xhr.setRequestHeader(
+  // console.log("HTTP",xhr)
+  // xhr.send(data);
+
+  // var form = new FormData();
+  // form.append("datatype", "0");
+  // form.append("begintime", "10/12/2017");
+  // form.append("endtime", "10/31/2017");
+  // form.append("intervaltype", "0");
+  // form.append("operationtype", "5");
+  // form.append("callback", "successCallback");
+  // form.append("dateType_Category", "default");
+  // form.append("isZip_CurrentDataType", "false");
+  // form.append("geometry", "{\"type\":\"Polygon\",\"coordinates\":[[[-99.2772674560547,38.10160366596239],[-104.36325073242189,38.25867146839721],[-103.96636962890626,41.65649719441146],[-99.2772674560547,38.10160366596239]]]}");
+  // console.log("AJAX",form)
+  // var settings = {
+  //   "async": true,
+  //   "crossDomain": true,
+  //   "url": "https://climateserv.servirglobal.net/chirps/submitDataRequest/?callback=successCallback",
+  //   "method": "POST",
+  //   "headers": {
+  //     "host": "climateserv.servirglobal.net",
+  //     "X-Requested-With"
+  //     "Content-Type": "application/json",
+  //     // "cache-control": "no-cache",
+  //     // "Postman-Token": "d1cd5f08-840b-4177-8356-ff6964c24d4f"
+  //   },
+  //   "processData": false,
+  //   "contentType": false,
+  //   "mimeType": "multipart/form-data",
+  //   "data": form
+  // }
+  // console.log("AJAX",settings)
+  // $.ajax(settings).done(function (response) {
+  //   console.log("AJAX",response);
+  // });
 
   // Meteor.call("postDataRequestNASA",startDate.mmddyyyy,endDate.mmddyyyy,location,function(error, results) {
   //   if(typeof results != 'undefined'){
