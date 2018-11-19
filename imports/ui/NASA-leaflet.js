@@ -31,35 +31,40 @@ prepareNasaCall = function (){
     ,mmddyyyy:`${em}/01/${ey}`
   }; 
 
+  //   //call NASA 
+  // let startDate = {
+  //   month: "6"
+  //   ,year: "2007"
+  //   ,mmddyyyy:`02/01/2005`
+  // };
+  // let endDate = {
+  //   month: "7"
+  //   ,year: "2007"
+  //   ,mmddyyyy:`06/01/2008`
+  // };
+
   //get area that was selected
   // let coords = [[40.55,-83.1],[40.8,-83.1],[40.8,-82.85],[40.55,-82.85]];
   // let coords = [[40.55,-83.1],[45,-83.1],[45,-80],[40.55,-80]];
   let coords = [[2.65,32.1],[2.9,32.1],[2.9,32.35],[2.65,32.35]];
   if(selectedBounds) coords = leafletToNasaCoords(selectedBounds);
-  console.log(coords,stringifyCoords(coords));
-  console.log("test",Session.get("sortIndex"));
+  console.log("stringify",coords,stringifyCoords(coords));
 
+  // callTestDay(startDate,endDate,"[[2.6,32.75],[2.85,32.75],[2.85,33],[2.6,33]]");
+  // callTestMonth(startDate,endDate,"[[2.6,32.75],[2.85,32.75],[2.85,33],[2.6,33]]");
   callNASA(startDate,endDate,stringifyCoords(coords)); 
 }
 
-let submittedDataRequest = false;
+let latestId = "";
 let checkStatus;
+
 callNASA = function (startDate,endDate,location){
   $("#error-msg").fadeOut(500);
   $("#error-msg2").fadeOut(500);
   $("#chart-loader").fadeIn(1000);
   console.log("nasa:",startDate.mmddyyyy,endDate.mmddyyyy,location)
   //reset call parameters
-  submittedDataRequest = false;
   window.clearInterval(checkStatus);
-
-  Meteor.call("postDataRequestNASA",startDate.mmddyyyy,endDate.mmddyyyy,location,function(error, results) {
-    if(typeof results != 'undefined'){
-      console.log("POST result",result);
-    }else{
-      console.log("POST error",error);
-    }
-  });
 
   //submit initial data request
   // Meteor.call("submitDataRequestNASA","04/01/2008","06/30/2018",stringifyCoords([]),function(error, results) {
@@ -67,35 +72,39 @@ callNASA = function (startDate,endDate,location){
     if(typeof results != 'undefined'){
       console.log("data request NASA",results,results.content)
       let id = eval(results.content)[0];
+      latestId = id;
       checkStatus = setInterval(function(){
         console.log("getDataRequestProgressNASA",id)
         //check status of data request
         Meteor.call("getDataRequestProgressNASA",id,function(error, results) {
-          console.log("progress NASA",results)
+          console.log("progress NASA",id,results)
           let status = parseFloat(eval(results.content)[0]);
-          if(status === 100 && !submittedDataRequest){
-            submittedDataRequest = true;
+          if(status === 100){
             window.clearInterval(checkStatus);
-            console.log("getDataFromRequestNASA",id)
-            //when data is ready get data
-            Meteor.call("getDataFromRequestNASA",id,function(error, results) {
-              submittedDataRequest = false;
-              let d = JSON.parse(results.content)
-              if(d.data.length !== 0){
-                let obj = yearlyNASAVals(d.data,startDate,endDate);
-                updateMonths(obj);
-                calcPct(obj);
-                $(".chart-loader-div").removeClass("chart-loader");
-                $("#chart-loader").fadeOut(500);  
-              }else{
-                console.log("No data returned")
-                $("#chart-loader").fadeOut(500);
-                $("#error-msg2").fadeIn(1000);
-              }            
-            });
+            if(id === latestId){
+              console.log("nasa latest id", latestId)
+              console.log("getDataFromRequestNASA",id)
+              //when data is ready get data
+              Meteor.call("getDataFromRequestNASA",id,function(error, results) {
+                submittedDataRequest = false;
+                let d = JSON.parse(results.content)
+                if(d.data.length !== 0){
+                  
+                  let obj = yearlyNASAVals(d.data,startDate,endDate);
+                  updateMonths(obj);
+                  calcPct(obj);
+                  $(".chart-loader-div").removeClass("chart-loader");
+                  $("#chart-loader").fadeOut(500);  
+                }else{
+                  console.log("No data returned")
+                  $("#chart-loader").fadeOut(500);
+                  $("#error-msg2").fadeIn(1000);
+                }            
+              });
+            }
           }
         });
-      }, 2000);
+      }, 5000);
     }else{
       console.log("NASA server not responding: ",error.message)
       $("#chart-loader").fadeOut(500);
@@ -104,35 +113,152 @@ callNASA = function (startDate,endDate,location){
   });
 }
 
-var months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec","Jan"];
-function yearlyNASAVals (a,startDate,endDate){
-  console.log("yearly NASA",a,startDate,endDate)
-  //we get all monthly values for the entire period of duration
-  //we only want a single yearly value for duration
-  let data = [], sum = 0, sumAll = 0, inRange = false;
-  let al = a.length;
-  //this assumes they are in order, apparently they are not...
-  for(let i = 0; i < al; i++){
-    let date = a[i].date.split("/");
-    //check if current date is between range
-    if(parseInt(startDate.month) === parseInt(date[0])){
-      inRange = true;
-    } 
-    if(inRange){
-      sum += a[i].value.sum;
-      sumAll += a[i].value.sum;
-    } 
-    if(parseInt(endDate.month) === parseInt(date[0])){
-      data.push(sum);
-      sum = 0;
-      inRange = false;
+let checkStatus2;
+callTestMonth = function (startDate,endDate,location){
+  //submit initial data request
+  Meteor.call("testMonth",startDate.mmddyyyy,endDate.mmddyyyy,location,function(error, results) {
+    if(typeof results != 'undefined'){
+      let id = eval(results.content)[0];
+      checkStatus2 = setInterval(function(){
+        //check status of data request
+        Meteor.call("getDataRequestProgressNASA",id,function(error, results) {
+          let status = parseFloat(eval(results.content)[0]);
+          if(status === 100){
+            window.clearInterval(checkStatus2);
+            //when data is ready get data
+            Meteor.call("getDataFromRequestNASA",id,function(error, results) {
+              let d = JSON.parse(results.content);
+              if(d.data.length !== 0){
+                console.log("testMonth",d.data) 
+              }else{
+                console.log("No data returned")
+              }            
+            });
+          }
+        });
+      }, 2000);
+    }else{
+      console.log("NASA server not responding: ",error.message);
     }
-  } 
-  console.log("nasa data",data)
-  return {years:30,start:startDate.year,data:data,avg:sumAll/data.length,title:`Total Precipitation: ${months[parseInt(startDate.month)-1]} to ${months[parseInt(endDate.month)-1]}`};
+  });
+}
+
+let checkStatus3;
+callTestDay = function (startDate,endDate,location){
+  //submit initial data request
+  Meteor.call("testDay",startDate.mmddyyyy,endDate.mmddyyyy,location,function(error, results) {
+    if(typeof results != 'undefined'){
+      let id = eval(results.content)[0];
+      checkStatus3 = setInterval(function(){
+        //check status of data request
+        Meteor.call("getDataRequestProgressNASA",id,function(error, results) {
+          let status = parseFloat(eval(results.content)[0]);
+          if(status === 100){
+            window.clearInterval(checkStatus3);
+            //when data is ready get data
+            Meteor.call("getDataFromRequestNASA",id,function(error, results) {
+              let d = JSON.parse(results.content);
+              if(d.data.length !== 0){
+                console.log("testDay",d.data) 
+              }else{
+                console.log("No data returned")
+              }            
+            });
+          }
+        });
+      }, 2000);
+    }else{
+      console.log("NASA server not responding: ",error.message);
+    }
+  });
 }
 
 
+function makeContainer(startDate,endDate){
+  var years = [];
+  let sdm = parseInt(startDate.month), edm = parseInt(endDate.month);
+  let sy = parseInt(startDate.year), ey = sy;
+  for(var i = 0; i < 30; i++){
+  // while(ey <= parseInt(endDate.year)){
+    let ey = sdm <= edm ? sy : sy+1;
+    // let st = new Date(sy, sdm-1, 1);
+    // let et = new Date(ey, edm-1, 1);
+
+    years.push({
+      startYear: sy
+      ,startMonth: sdm
+      // ,startDate: st
+      // ,startTimestamp: Math.floor(st.getTime()/1000)
+      ,endYear: ey
+      ,endMonth: edm
+      // ,endDate: et
+      // ,endTimestamp: Math.floor(et.getTime()/1000)
+      ,objs: []
+      ,val: 0
+    });
+    //increment start year
+    sy += 1;
+  // }
+  }
+  return years;
+}
+
+function parseData(data){
+  let a = [];
+  let l = data.length;
+  for(var i = 0; i < l; i++){
+    let d = data[i].date.split("/");
+    a.push({month:parseInt(d[0]),year:parseInt(d[1]),val:data[i].value.sum})
+  }
+  return a;
+}
+
+function checkRange(a,c){
+  let b = false;
+  if(a.year >= c.startYear && a.year <= c.endYear){
+    if(c.startMonth < c.endMonth){
+      if(a.month >= c.startMonth && a.month <= c.endMonth) b = true;
+    } else if(c.endMonth < c.startMonth){
+      if(a.month >= c.startMonth && a.year === c.startYear) b = true;
+      if(a.month <= c.endMonth && a.year === c.endYear) b = true;
+    } else if(c.startMonth === c.endMonth){
+      if(a.month === c.startMonth) b = true; 
+    }
+  }else{
+    b = false;
+  }
+  return b;
+}
+
+var months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec","Jan"];
+function yearlyNASAVals (a,startDate,endDate){
+  console.log("yearly NASA",a,startDate,endDate)
+  let con = makeContainer(startDate,endDate);
+  let arr = parseData(a);
+  let al = arr.length, cl = con.length;
+  for(let i = 0; i < al; i++){
+    for(let j = 0; j < cl; j++){
+      if(checkRange(arr[i],con[j])){
+        con[j].objs.push(arr[i])
+      }
+    }
+  } 
+
+  let data = [], sumAll = 0;
+  for(let k = 0; k < cl; k++){
+    let cll = con[k].objs.length;
+    let sum = 0;
+    for(let n = 0; n < cll; n++){
+      sum += con[k].objs[n].val;
+    }
+    data.push(sum);
+    con[k].val = sum;
+    sumAll += sum;
+  }
+
+  console.log("nasa data",con,data)
+  return {years:30,start:startDate.year,data:data,avg:sumAll/data.length,title:`Total Precipitation: ${months[parseInt(startDate.month)-1]} to ${months[parseInt(endDate.month)-1]}`};
+}
 
 ////////////////////////////////////////////
 // leaflet map

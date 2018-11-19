@@ -38,6 +38,18 @@ Meteor.startup(() => {
       this.unblock();
       return HTTP.call("GET",url);
     }
+    ,testMonth: function(begintime,endtime,coords){
+      let url = `https://climateserv.servirglobal.net/chirps/submitDataRequest/?datatype=0&begintime=${begintime}&endtime=${endtime}&intervaltype=1&operationtype=4&isZip_CurrentDataType=false&geometry={"type":"Polygon","coordinates":[${coords}]}`;
+      console.log("NASA",url)
+      this.unblock();
+      return HTTP.call("GET",url);
+    }
+    ,testDay: function(begintime,endtime,coords){
+      let url = `https://climateserv.servirglobal.net/chirps/submitDataRequest/?datatype=0&begintime=${begintime}&endtime=${endtime}&intervaltype=0&operationtype=4&isZip_CurrentDataType=false&geometry={"type":"Polygon","coordinates":[${coords}]}`;
+      console.log("NASA",url)
+      this.unblock();
+      return HTTP.call("GET",url);
+    }
     ,getDataRequestProgressNASA: function(id){
       let url = `https://climateserv.servirglobal.net/chirps/getDataRequestProgress/?id=${id}`;
       this.unblock();
