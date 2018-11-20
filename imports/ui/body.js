@@ -272,6 +272,7 @@ function resetSessionVars(){
   Session.set("descending",true);
   Session.set("mySortIndex",0);
   Session.set("myDescending",true);
+  resetReception();
 }
 
 // function resetGlobalVariables(){

@@ -209,8 +209,23 @@ let e = []; //event store
 // populate store with event results
 ////////////////////////////////////
 
+let proposalReceived = false
+	,acceptanceReceived = false
+	,invocationReceived = false
+	,evaluationReceived = false
+	,timedRelease = false;
+
+resetReception = function(){
+	proposalReceived = false;
+	acceptanceReceived = false;
+	invocationReceived = false;
+	evaluationReceived = false;
+	timedRelease = false;	
+}
+
 addInfoFromProposalCreated = function(r){
 	console.log("+++++++++++++++++++++",r)
+	proposalReceived = true;
 	//check for obj in eventStore
 	let idx = findInStore(r.args.aboveID,r.args.belowID);
 	if(typeof idx === "number"){
@@ -279,6 +294,7 @@ function fillDataProposalCreated(o,r){
 
 addInfoFromProposalAccepted = function(r){
 	console.log("+++++++++++++++++++++",r)
+	acceptanceReceived = true;
 	//check for obj in eventStore
 	let idx = findInStore(r.args.aboveID,r.args.belowID);
 	if(typeof idx === "number"){
@@ -353,6 +369,7 @@ function fillDataProposalAccepted(o,r){
 
 addInfoFromEvaluationInvoked = function(r){
 	console.log("+++++++++++++++++++++",r)
+	invocationReceived = true;
 	//check for obj in eventStore
 	let idx = findInStore(r.args.WITID,r.args.WITID);
 	if(typeof idx === "number"){
@@ -388,6 +405,7 @@ function fillDataEvaluationInvoked(o,r){
 
 addInfoFromProposalEvaluated = function(r){
 	console.log("+++++++++++++++++++++",r)
+	evaluationReceived = true;
 	//check for obj in eventStore
 	let idx = findInStore(r.args.aboveID,r.args.belowID);
 	if(typeof idx === "number"){
@@ -476,7 +494,15 @@ function dateText(dObj){
 //TODO in this approach it reconstructs the list of openProposals and myProposal everytime there is a change
 // a less niave approach would be to only change the ones that are update by the event
 getStore = function(){
-	console.log("+++? get store", e)
+	if(proposalReceived && acceptanceReceived && invocationReceived && evaluationReceived){
+		return buildStore();
+	} else {
+		return {openProposals:[],myProposals:[]};	
+	} 
+}
+
+function buildStore(){
+	console.log("+++? get store", e.length,proposalReceived,acceptanceReceived,invocationReceived,evaluationReceived)
 	let op = [], mp = [], currentUser = Session.get("user");
 	let l = e.length;
 	for(let i = 0; i < l; i++){
