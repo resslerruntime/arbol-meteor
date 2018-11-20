@@ -6,9 +6,10 @@ body {
         -ms-user-select: none; /* Internet Explorer/Edge */
             user-select: none; /* Non-prefixed version, currently supported by Chrome and Opera */
 
-  --main-bg-color: #f9f9ef;
+  /*--main-bg-color: #f9f9ef;*/
+  --main-bg-color: #ffffff;
   --header-height: 60px;
-  --footer-height: 150px;
+  --footer-height: 100px;
   --web3-onload-padding: 25px;
   font-family:arial,sans-serif;
   margin: 0px;
@@ -147,7 +148,10 @@ div.not-chrome-footer {
 #header{
   width: 100%;
   height: var(--header-height);
-  background-color: lightgray;
+  background-color:white;
+  background-image: linear-gradient(to bottom right, white, #C4EFC5);
+  /*background-image: linear-gradient(to bottom right, white, #C4EFC5, #8AD88C);*/
+  /*background-color: lightgray;*/
 }
 
 #instance-data {
@@ -158,8 +162,9 @@ div.not-chrome-footer {
 #arbol2 {
   margin-left: 10px;
   text-align:left;
-  letter-spacing: -5px;
+  letter-spacing: 5px;
   font: bold 45px verdana;
+  color: #4BAE4D;
 }
 
 td.inf-body {
@@ -181,7 +186,8 @@ td.inf-name {
   text-align:right;
   letter-spacing: 2px;
   font: bold 18px arial;
-  color: var(--main-bg-color);
+  /*color: var(--main-bg-color);*/
+  color: black;
   text-transform: uppercase;
 }
 
@@ -280,7 +286,10 @@ hr {
 #footer {
   width: 100%;
   height: var(--footer-height);
-  background-color: lightgray;
+  /*background-color: lightgray;*/
+  background-color: #2FAD6E;
+  background-image: linear-gradient(to bottom right, #C4EFC5, #8AD88C, #4BAE4D);
+  /*background-image: linear-gradient(to bottom right, #1B2946, #2FAD6E);*/
 }
 
 #logo {
@@ -288,17 +297,17 @@ hr {
   width: 50px;
   height: 50px;
   padding-left: 25px;
-  padding-top: 50px;
+  padding-top: 25px;
 }
 
 #links {
   position:relative;
   left: 100px;
-  bottom: 80px;
+  bottom: 70px;
 }
 
 #links table tr td {
-  padding: 10px;
+  padding: 5px;
   font: bold 12px arial;
 }
 
