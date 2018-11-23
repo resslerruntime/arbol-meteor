@@ -151,9 +151,9 @@ function initContracts(){
         // noaaAddress = "0x337c58a3c4142f3d382b1fe4027d281625315a0b";
         // nasaAddress = "0x5a958c25b04cdef8ff408bf79479837922bbff16";
         //NASA-leaflet deployment- backwards compatible 10-12-2018;
-        witAddress = "0x38383ac46977357afe54b060f2f56d25dc7d3a58";
-        noaaAddress = "0xb2b4013466dff53a5cc9f58bcf0d59e923341d3a";
-        nasaAddress = "0x09b42178ae9e4d9d213b675202dc09faab7a3175";        
+        witAddress = "0xa2ed7be8cd73d94de8e6d8e7a7b5de9af43684bc";
+        noaaAddress = "0x782c883f8034e9ee52eba6dcea57a87851fce738";
+        nasaAddress = "0x836886d868e84529f1d327531e7e2d35f8f04705";        
         break
       case "42":
         $("#network-name").html("Kovan");
