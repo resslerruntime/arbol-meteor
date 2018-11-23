@@ -4,32 +4,6 @@ import * as Qs from "qs";
 import * as axios from "axios";
 import './body.js';
 
-// let xxx = stringifyCoords([[2.65,32.1],[2.9,32.1],[2.9,32.35],[2.65,32.35]]);
-
-// axios.request({
-//     method:'post'
-//     ,url:'https://climateserv.servirglobal.net/chirps/submitDataRequest/'
-//     ,responseType:'text'
-//     ,headers: { 'content-type': 'application/x-www-form-urlencoded' }
-//     ,data: Qs.stringify({
-//       datatype: 1,
-//       begintime: "02/01/2005",
-//       endtime: "06/01/2008",
-//       intervaltype: 0,
-//       operationtype: 4,
-//       dateType_Category: "default",
-//       isZip_CurrentDataType: "false",
-//       geometry: `{\"type\":\"Polygon\",\"coordinates\":[${xxx}]}`
-//       // geometry: "{\"type\":\"Polygon\",\"coordinates\":[[[-99.2772674560547,38.10160366596239],[-104.36325073242189,38.25867146839721],[-103.96636962890626,41.65649719441146],[-99.2772674560547,38.10160366596239]]]}"
-//     })
-//   })
-//   .then(function (response) {
-//     console.log("axios",response,response.data)
-//   })
-//   .catch(function (error) {
-//     console.log("axios",error.response);
-//   });
-
 ////////////////////////////////////////////
 // NASA API CALL
 ////////////////////////////////////////////
@@ -81,12 +55,12 @@ prepareNasaCall = function (){
   // callTestDay(startDate,endDate,"[[2.6,32.75],[2.85,32.75],[2.85,33],[2.6,33]]");
   // callTestMonth(startDate,endDate,"[[2.6,32.75],[2.85,32.75],[2.85,33],[2.6,33]]");
   callNASA(startDate,endDate,stringifyCoords(coords));
-  // callNasaAxios(startDate,endDate,stringifyCoords(coords));  
 }
 
 let latestId = "";
 let checkStatus;
 
+//Follow reasonable convention and take location with (lat, lon) ordering.
 callNASA = function (startDate,endDate,location){
   $("#error-msg").fadeOut(500);
   $("#error-msg2").fadeOut(500);
@@ -96,7 +70,6 @@ callNASA = function (startDate,endDate,location){
   window.clearInterval(checkStatus);
 
   //submit initial data request
-  // Meteor.call("submitDataRequestNASA","04/01/2008","06/30/2018",stringifyCoords([]),function(error, results) {
   Meteor.call("submitDataRequestNASA",startDate.mmddyyyy,endDate.mmddyyyy,location,function(error, results) {
     if(typeof results != 'undefined'){
       console.log("data request NASA",results,results.content)
@@ -142,75 +115,6 @@ callNASA = function (startDate,endDate,location){
   });
 }
 
-let latestIdAxios = "";
-let checkStatusAxios;
-callNasaAxios = function (startDate,endDate,location){
-  $("#error-msg").fadeOut(500);
-  $("#error-msg2").fadeOut(500);
-  $("#chart-loader").fadeIn(1000);
-
-  console.log(startDate,endDate)
-
-  window.clearInterval(checkStatusAxios);
-  axios.request({
-    method:'post'
-    ,url:'https://climateserv.servirglobal.net/chirps/submitDataRequest/'
-    ,responseType:'text'
-    ,headers: { 'content-type': 'application/x-www-form-urlencoded' }
-    ,data: Qs.stringify({
-      datatype: 0,
-      begintime: startDate.mmddyyyy,
-      endtime: endDate.mmddyyyy,
-      intervaltype: 1,
-      operationtype: 4,
-      dateType_Category: "default",
-      isZip_CurrentDataType: "false",
-      geometry: `{\"type\":\"Polygon\",\"coordinates\":[${location}]}`
-    })
-  })
-  .then(function (response) {
-    console.log("data request NASA",response,response.data)
-    let id = response.data[0];
-    console.log(id)
-    latestIdAxios = id;
-    checkStatusAxios = setInterval(function(){
-      console.log("getDataRequestProgressNASA",id)
-      //check status of data request
-      Meteor.call("getDataRequestProgressNASA",id,function(error, results) {
-        console.log("progress NASA",id,results)
-        let status = parseFloat(eval(results.content)[0]);
-        if(status === 100){
-          window.clearInterval(checkStatusAxios);
-          if(id === latestIdAxios){
-            console.log("nasa latest id", latestIdAxios)
-            console.log("getDataFromRequestNASA",id)
-            //when data is ready get data
-            Meteor.call("getDataFromRequestNASA",id,function(error, results) {
-              submittedDataRequest = false;
-              let d = JSON.parse(results.content)
-              if(d.data.length !== 0){
-                let obj = yearlyNASAVals(d.data,startDate,endDate);
-                updateMonths(obj);
-                calcPct(obj);
-                $(".chart-loader-div").removeClass("chart-loader");
-                $("#chart-loader").fadeOut(500);  
-              }else{
-                console.log("No data returned")
-                $("#chart-loader").fadeOut(500);
-                $("#error-msg2").fadeIn(1000);
-              }            
-            });
-          }
-        }
-      });
-    }, 5000);
-  })
-  .catch(function (error) {
-    console.log("NASA server not responding: ",error);
-    $("#chart-loader").fadeOut(500);
-    $("#error-msg").fadeIn(1000);
-  });
-}
 
 let checkStatus2;
 callTestMonth = function (startDate,endDate,location){
