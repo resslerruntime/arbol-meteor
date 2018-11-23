@@ -52,25 +52,34 @@ prepareNasaCall = function (){
   if(selectedBounds) coords = leafletToNasaCoords(selectedBounds);
   console.log("stringify",coords,stringifyCoords(coords));
 
+  // These two calls are currently made to functions that do not swap coordinates, and therefore won't work properly.
   // callTestDay(startDate,endDate,"[[2.6,32.75],[2.85,32.75],[2.85,33],[2.6,33]]");
   // callTestMonth(startDate,endDate,"[[2.6,32.75],[2.85,32.75],[2.85,33],[2.6,33]]");
-  callNASA(startDate,endDate,stringifyCoords(coords));
+
+  callNASA(startDate,endDate,coords);
 }
 
 let latestId = "";
 let checkStatus;
 
-//Follow reasonable convention and take location with (lat, lon) ordering.
-callNASA = function (startDate,endDate,location){
+// Follow reasonable convention and take polygonArray with (lat, lon) ordering.
+callNASA = function (startDate,endDate,polygonArray){
   $("#error-msg").fadeOut(500);
   $("#error-msg2").fadeOut(500);
   $("#chart-loader").fadeIn(1000);
-  console.log("nasa:",startDate.mmddyyyy,endDate.mmddyyyy,location)
+  console.log("nasa:",startDate.mmddyyyy,endDate.mmddyyyy,polygonArray)
   //reset call parameters
   window.clearInterval(checkStatus);
 
+  // We must swap the ordering of the coordinate pairs because that
+  // is what NASA requires. Change to (lon, lat)
+  var invertedPolygon = [];
+  for (var i = 0; i < polygonArray.length; i++) {
+    invertedPolygon[i] = [polygonArray[i][1], polygonArray[i][0]];
+  }
+
   //submit initial data request
-  Meteor.call("submitDataRequestNASA",startDate.mmddyyyy,endDate.mmddyyyy,location,function(error, results) {
+  Meteor.call("submitDataRequestNASA",startDate.mmddyyyy,endDate.mmddyyyy,stringifyCoords(invertedPolygon),function(error, results) {
     if(typeof results != 'undefined'){
       console.log("data request NASA",results,results.content)
       let id = eval(results.content)[0];
@@ -116,6 +125,7 @@ callNASA = function (startDate,endDate,location){
 }
 
 
+// This function does not invert coordinates, and therefore will return incorrect results.
 let checkStatus2;
 callTestMonth = function (startDate,endDate,location){
   //submit initial data request
@@ -146,6 +156,7 @@ callTestMonth = function (startDate,endDate,location){
   });
 }
 
+// This function does not swap coordinates and therefore will return incorrect results.
 let checkStatus3;
 callTestDay = function (startDate,endDate,location){
   //submit initial data request
