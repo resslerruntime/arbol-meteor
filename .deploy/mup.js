@@ -8,9 +8,8 @@ module.exports = {
   },
 
   app: {
-    name: 'wwwarbolapp',
+    name: 'arbol',
     path: '../',
-
     servers: {
       one: {},
     },
@@ -21,8 +20,6 @@ module.exports = {
 
     env: {
       ROOT_URL: 'https://www.arbol.app',
-      MONGO_URL: 'mongodb://mongodb/meteor',
-      MONGO_OPLOG_URL: 'mongodb://mongodb/local',
     },
 
     docker: {
@@ -32,17 +29,10 @@ module.exports = {
     enableUploadProgressBar: true
   },
 
-  mongo: {
-    version: '3.4.1',
-    servers: {
-      one: {}
-    }
-  },
-
   proxy: {
     domains: 'www.arbol.app',
     ssl: {
-      letsEncryptEmail: 'admin@arbolcoin.com'
+      letsEncryptEmail: 'bandre@arbolmarket.com'
     }
   }
 };
