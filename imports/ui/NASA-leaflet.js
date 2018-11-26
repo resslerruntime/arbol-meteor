@@ -80,50 +80,52 @@ callNASA = function (startDate,endDate,polygonArray){
 
   //submit initial data request
   Meteor.call("submitDataRequestNASA",startDate.mmddyyyy,endDate.mmddyyyy,stringifyCoords(invertedPolygon),function(error, results) {
-    if(typeof results != 'undefined'){
-      console.log("data request NASA",results,results.content)
-      let id = eval(results.content)[0];
-      latestId = id;
-      checkStatus = setInterval(function(){
-        console.log("getDataRequestProgressNASA",id)
-        //check status of data request
-        Meteor.call("getDataRequestProgressNASA",id,function(error, results) {
-          console.log("progress NASA",id,results)
-          let status = parseFloat(eval(results.content)[0]);
-          if(status === 100){
-            window.clearInterval(checkStatus);
-            if(id === latestId){
-              console.log("nasa latest id", latestId)
-              console.log("getDataFromRequestNASA",id)
-              //when data is ready get data
-              Meteor.call("getDataFromRequestNASA",id,function(error, results) {
-                submittedDataRequest = false;
-                let d = JSON.parse(results.content)
-                if(d.data.length !== 0){
-                  
-                  let obj = yearlyNASAVals(d.data,startDate,endDate);
-                  updateMonths(obj);
-                  calcPct(obj);
-                  $(".chart-loader-div").removeClass("chart-loader");
-                  $("#chart-loader").fadeOut(500);  
-                }else{
-                  console.log("No data returned")
-                  $("#chart-loader").fadeOut(500);
-                  $("#error-msg2").fadeIn(1000);
-                }            
-              });
+    if(typeof results == 'undefined') { 
+      errorizeGraph("No data was returned.")
+      return;        
+    }
+    let id = eval(results.content)[0];
+    latestId = id;
+    checkStatus = setInterval(function(){
+      console.log("getDataRequestProgressNASA",id);
+      //check status of data request
+      Meteor.call("getDataRequestProgressNASA",id,function(error, results) {
+        console.log("progress NASA",id,results)
+        let status = parseFloat(eval(results.content)[0]);
+        if (status != 100) {
+          errorizeGraph("No data was returned. ClimateSERV API may be down.")
+          return;          
+        }
+        window.clearInterval(checkStatus);
+        if(id === latestId){
+          console.log("nasa latest id", latestId)
+          console.log("getDataFromRequestNASA",id)
+          //when data is ready get data
+          Meteor.call("getDataFromRequestNASA",id,function(error, results) {
+            submittedDataRequest = false;
+            let d = JSON.parse(results.content)
+            if(d.data.length === 0){
+              errorizeGraph("No data was returned.")
+              return;
             }
-          }
-        });
-      }, 5000);
-    }else{
-      console.log("NASA server not responding: ",error.message)
+            let obj = yearlyNASAVals(d.data,startDate,endDate);
+            updateMonths(obj);
+            calcPct(obj);
+            $(".chart-loader-div").removeClass("chart-loader");
+            $("#chart-loader").fadeOut(500);
+          });
+        }
+      });
+    }, 5000);
+    errorizeGraph = function(consoleMessage){
+      console.log(consoleMessage);
       $("#chart-loader").fadeOut(500);
       $("#error-msg").fadeIn(1000);
-    }
+      }
+    
   });
-}
 
+}
 
 // This function does not invert coordinates, and therefore will return incorrect results.
 let checkStatus2;
@@ -141,7 +143,7 @@ callTestMonth = function (startDate,endDate,location){
             //when data is ready get data
             Meteor.call("getDataFromRequestNASA",id,function(error, results) {
               let d = JSON.parse(results.content);
-              if(d.data.length !== 0){
+              if(d.data.length !== 0 && d.data != "[-1]"){
                 console.log("testMonth",d.data) 
               }else{
                 console.log("No data returned")
