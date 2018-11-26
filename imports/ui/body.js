@@ -594,7 +594,7 @@ Template.formNewProtection.events({
     let lat = Math.round(1000 * a[0][0]) / 1000;
     let lng = Math.round(1000 * a[0][1]) / 1000;
     $('#locname').val('latitude '+lat+'°, longitude '+lng+'°').trigger('input');
-    let reversegeocodeURL = 'http://services.gisgraphy.com/reversegeocoding/search?format=json&lat='+lat+'&lng='+lng;
+    let reversegeocodeURL = 'https://services.gisgraphy.com/reversegeocoding/search?format=json&lat='+lat+'&lng='+lng;
     $.ajax({
       type: 'GET',
       crossDomain: true,
