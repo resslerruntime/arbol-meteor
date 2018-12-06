@@ -386,6 +386,11 @@ var waitForLeaflet = setInterval(function(){
   }
 },1000);
 
+//reset leaflet
+function resetLeaflet (){
+  //TODO
+}
+
 function stringifyCoords (a){
   let s = "[";
   a.map(d => s += `[${d[0]},${d[1]}],`);

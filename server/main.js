@@ -60,5 +60,12 @@ Meteor.startup(() => {
       this.unblock();
       return HTTP.call("GET",url);
     }
+    //reverse geocoding
+    ,getLocationfromLatLon: function(lat,lng){
+      let url = `https://services.gisgraphy.com/reversegeocoding/search?format=json&lat=${lat}&lng=${lng}`;
+      this.unblock();
+      console.log("reverse",url)
+      return HTTP.call("GET",url);
+    }
   });
 });

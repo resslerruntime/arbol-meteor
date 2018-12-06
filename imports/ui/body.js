@@ -275,14 +275,6 @@ function resetSessionVars(){
   resetReception();
 }
 
-// function resetGlobalVariables(){
-//   console.log("_-_ fn: resetGlobalVariables")
-//   console.log("_-_", watchLatestProposal, watchLatestAcceptance, watchLatestEvaluation)
-//   if(watchLatestProposal !== -1) watchLatestProposal.stopWatching();
-//   if(watchLatestAcceptance !== -1) watchLatestAcceptance.stopWatching();
-//   if(watchLatestEvaluation !== -1) watchLatestEvaluation.stopWatching();
-// }
-
 //get all proposals, add new entries as they are created
 var watchLatestProposal = -1;
 function latestProposals(){
@@ -478,6 +470,8 @@ Template.formNewProtection.onRendered(function(){
   $("#createwit-prev button").attr('disabled','disabled');
   // hide the submit button since this is the first step
   $("#createwit-submit").hide();
+  // hide the start over button since this is the first step
+  $("#createwit-cancel").hide();
   // initialize datepickers
   $('[data-toggle="datepicker"]').datepicker({
     autoHide: true,
@@ -516,22 +510,19 @@ Template.formNewProtection.events({
     $("#createwit .step").eq((self.createWITstep.get() - 1)).addClass('showing');
     // if this is the first step, disable the previous button
     if (self.createWITstep.get() < 2) {
+      console.log("^^^ A")
       $("#createwit-prev button").attr('disabled','disabled');
       $("#createwit-next").show();
       $("#createwit-submit").hide();
+      $("#createwit-cancel").hide();
       // reset the map
       if (typeof regionmap == "object") {
         regionmap.invalidateSize();
       }
     }
-    // if this is the last step, hide the next button and show the confirm button
-    else if (self.createWITstep.get() >= $("#createwit .step").length) {
-      $("#createwit-prev button").show().removeAttr('disabled');
-      $("#createwit-next").hide();
-      $("#createwit-submit").show();
-    }
     // otherwise, hide the confirm button, show the next button and enable the previous button
     else {
+      console.log("^^^ C")
       $("#createwit-prev button").show().removeAttr('disabled');
       $("#createwit-next").show();
       $("#createwit-submit").hide();
@@ -548,27 +539,21 @@ Template.formNewProtection.events({
       // show the correct step
       $("#createwit .step.showing").removeClass('showing');
       $("#createwit .step").eq((self.createWITstep.get() - 1)).addClass('showing');
-      // if this is the first step, disable the previous button and hide the submit button
-      if (self.createWITstep.get() < 2) {
-        $("#createwit-prev button").attr('disabled','disabled');
-        $("#createwit-next").show();
-        $("#createwit-submit").hide();
-        // reset the map
-        if (typeof regionmap == "object") {
-          regionmap.invalidateSize();
-        }
-      }
+
       // if this is the last step, hide the next button and show the confirm button
-      else if (self.createWITstep.get() >= $("#createwit .step").length) {
+      if (self.createWITstep.get() >= $("#createwit .step").length) {
+        console.log("^^^ E")
         $("#createwit-prev button").show().removeAttr('disabled');
         $("#createwit-next").hide();
         $("#createwit-submit").show();
       }
       // otherwise, hide the confirm button, show the next button and enable the previous button
       else {
+        console.log("^^^ F")
         $("#createwit-prev button").show().removeAttr('disabled');
         $("#createwit-next").show();
         $("#createwit-submit").hide();
+        $("#createwit-cancel").show();
       }
     }
   },
@@ -595,18 +580,21 @@ Template.formNewProtection.events({
     let lng = Math.round(1000 * a[0][1]) / 1000;
     $('#locname').val('latitude '+lat+'°, longitude '+lng+'°').trigger('input');
     let reversegeocodeURL = 'https://services.gisgraphy.com/reversegeocoding/search?format=json&lat='+lat+'&lng='+lng;
+
     $.ajax({
       type: 'GET',
       crossDomain: true,
       dataType: 'jsonp',
       url: reversegeocodeURL
     }).done(function(data) {
+      console.log("reverse geocoding",data)
       let loc = data.result[0].formatedFull;
       console.log(data.result[0].formatedFull);
       $('#locname').val(loc).trigger('input');
     }).fail(function(){
       console.log('failed to reverse geocode');
     });
+
   },
   'input #locname'(event){
     // this is a hidden input to hold a location region that is reverse geocoded from the map coordinate
