@@ -935,7 +935,7 @@ function capVal(target){
 function validateCreateWITStep(step) {
   let validates = false;
   if ($("#createwit .step").eq(step).length > 0) {
-    console.log("valid step number to validate");
+    //console.log("valid step number to validate");
     validates = true;
     $("#createwit .step").eq(step).find('input,select').each(function(){
       if ($(this).val() === null || $(this).val() === '') {
@@ -946,8 +946,6 @@ function validateCreateWITStep(step) {
   }
   return validates;
 }
-
-
 
 ////////////////////////////////////////////
 // FUNCTIONS RELATED TO SORTABLE TABLES
