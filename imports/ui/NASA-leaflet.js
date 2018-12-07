@@ -92,7 +92,7 @@ callNASA = function (startDate,endDate,polygonArray){
       Meteor.call("getDataRequestProgressNASA",id,function(error, results) {
         console.log("progress NASA",id,results)
         let status = parseFloat(eval(results.content)[0]);
-        if (status != 100) {
+        if (status == '-1') {
           errorizeGraph("No data was returned. ClimateSERV API may be down.")
           return;          
         }
