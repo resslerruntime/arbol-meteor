@@ -576,21 +576,25 @@ Template.formNewProtection.events({
   },
   'click #mapdiv'(event){
     let a = selectedBounds;
-    let lat = Math.round(1000 * a[0][0]) / 1000;
-    let lng = Math.round(1000 * a[0][1]) / 1000;
+    let lat = Math.round(1000 * (a[0][0]+0.125)) / 1000;
+    let lng = Math.round(1000 * (a[0][1]+0.125)) / 1000;
     $('#locname').val('latitude '+lat+'°, longitude '+lng+'°').trigger('input');
     let reversegeocodeURL = 'https://services.gisgraphy.com/reversegeocoding/search?format=json&lat='+lat+'&lng='+lng;
 
+    //TODO can we move this api call to server side?
     $.ajax({
       type: 'GET',
       crossDomain: true,
       dataType: 'jsonp',
       url: reversegeocodeURL
     }).done(function(data) {
-      console.log("reverse geocoding",data)
-      let loc = data.result[0].formatedFull;
-      console.log(data.result[0].formatedFull);
-      $('#locname').val(loc).trigger('input');
+      let r = data.result[0];
+      let adm1Name = "", adm2Name = "", city = "";
+      if(r.adm1Name) adm1Name = r.adm1Name + ", "; 
+      if(r.adm2Name) adm2Name = r.adm2Name + ", ";
+      if(r.city) city = r.city + ", ";
+      let location = city + adm2Name + adm1Name + r.countryCode;
+      $('#locname').val(location).trigger('input');
     }).fail(function(){
       console.log('failed to reverse geocode');
     });
