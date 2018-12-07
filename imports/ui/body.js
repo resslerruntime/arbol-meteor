@@ -602,7 +602,6 @@ Template.formNewProtection.events({
   },
   'input #locname'(event){
     // this is a hidden input to hold a location region that is reverse geocoded from the map coordinate
-    console.log(event.currentTarget.value);
     self = Template.instance();
     selfdata = self.createWITdata.get();
     selfdata.locationRegion = event.currentTarget.value;
@@ -789,10 +788,8 @@ Template.formNewProtection.events({
 
       if (confirmed) {
         //submit info
-        createProposal(startDate,endDate,yourContr,totalPayout,location,index,thresholdRelation,thresholdPercent,thresholdAverage);
-        // createProposalTest();
         self = Template.instance();
-        resetCreateWIT(self);
+        createProposal(startDate,endDate,yourContr,totalPayout,location,index,thresholdRelation,thresholdPercent,thresholdAverage,self);
       } else {
         //let user continue to edit
       }
@@ -860,7 +857,7 @@ function resetCreateWIT(instance) {
   });
 }
 
-async function createProposal(startDate,endDate,yourContr,totalPayout,location,index,thresholdRelation,thresholdPercent,thresholdAverage){
+async function createProposal(startDate,endDate,yourContr,totalPayout,location,index,thresholdRelation,thresholdPercent,thresholdAverage,self){
   console.log("fn: createProposal")
   const d1 = (new Date(startDate)).getTime()/1000; //convert to UNIX timestamp
   let dd2 = new Date(endDate);
@@ -878,6 +875,7 @@ async function createProposal(startDate,endDate,yourContr,totalPayout,location,i
 
   try {
     await promisify(cb => witInstance.createWITProposal(ethPropose, ethAsk, above, address, numPPTH, location, d1, d2, makeStale, {from:Session.get("user"), value: ethPropose, gas: 2000000}, cb));
+    resetCreateWIT(self);    
   } catch (error) {
     console.log(error)
   }
