@@ -38,6 +38,7 @@ Session.set("pastUser",-2);
 // var arbolAddress, arbolContract, arbolInstance; //tag for deletion
 var witAddress, witContract, witInstance;
 var noaaAddress, nasaAddress;
+var hadrianAddress;
 
 function initMainPage(){
   if (Meteor.isClient) {
@@ -151,9 +152,13 @@ function initContracts(){
         // noaaAddress = "0x337c58a3c4142f3d382b1fe4027d281625315a0b";
         // nasaAddress = "0x5a958c25b04cdef8ff408bf79479837922bbff16";
         //NASA-leaflet deployment- backwards compatible 10-12-2018;
-        witAddress = "0xa2ed7be8cd73d94de8e6d8e7a7b5de9af43684bc";
-        noaaAddress = "0x782c883f8034e9ee52eba6dcea57a87851fce738";
-        nasaAddress = "0x836886d868e84529f1d327531e7e2d35f8f04705";        
+        // witAddress = "0xa2ed7be8cd73d94de8e6d8e7a7b5de9af43684bc";
+        // noaaAddress = "0x782c883f8034e9ee52eba6dcea57a87851fce738";
+        // nasaAddress = "0x836886d868e84529f1d327531e7e2d35f8f04705"; 
+        //Stable coing deployment, 12-06-2018
+        hadrianAddress = 0x92c8c65d6ac2513b8041742d9d34ac22b0a5a865;
+        nasaAddress =  0x5387aee08b03f62b4774bb49e87195c85c509814;
+        witAddress = 0xbbc1b8b1f5af6b541ad0a2ae111ce2bbd77a467c;
         break
       case "42":
         $("#network-name").html("Kovan");

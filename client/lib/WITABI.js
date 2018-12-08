@@ -1,30 +1,17 @@
  WITABI = [
     {
-      "constant": false,
+      "constant": true,
       "inputs": [
         {
-          "name": "_to",
-          "type": "address"
-        },
-        {
-          "name": "_tokenId",
-          "type": "uint256"
+          "name": "interfaceId",
+          "type": "bytes4"
         }
       ],
-      "name": "approve",
-      "outputs": [],
-      "payable": false,
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "constant": true,
-      "inputs": [],
-      "name": "totalSupply",
+      "name": "supportsInterface",
       "outputs": [
         {
           "name": "",
-          "type": "uint256"
+          "type": "bool"
         }
       ],
       "payable": false,
@@ -35,7 +22,88 @@
       "constant": true,
       "inputs": [
         {
-          "name": "tokenID",
+          "name": "tokenId",
+          "type": "uint256"
+        }
+      ],
+      "name": "getApproved",
+      "outputs": [
+        {
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "name": "to",
+          "type": "address"
+        },
+        {
+          "name": "tokenId",
+          "type": "uint256"
+        }
+      ],
+      "name": "approve",
+      "outputs": [],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "name": "from",
+          "type": "address"
+        },
+        {
+          "name": "to",
+          "type": "address"
+        },
+        {
+          "name": "tokenId",
+          "type": "uint256"
+        }
+      ],
+      "name": "transferFrom",
+      "outputs": [],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "name": "from",
+          "type": "address"
+        },
+        {
+          "name": "to",
+          "type": "address"
+        },
+        {
+          "name": "tokenId",
+          "type": "uint256"
+        }
+      ],
+      "name": "safeTransferFrom",
+      "outputs": [],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [
+        {
+          "name": "tokenId",
           "type": "uint256"
         }
       ],
@@ -73,15 +141,15 @@
       "constant": false,
       "inputs": [
         {
-          "name": "_to",
+          "name": "to",
           "type": "address"
         },
         {
-          "name": "_tokenId",
-          "type": "uint256"
+          "name": "approved",
+          "type": "bool"
         }
       ],
-      "name": "transfer",
+      "name": "setApprovalForAll",
       "outputs": [],
       "payable": false,
       "stateMutability": "nonpayable",
@@ -91,11 +159,23 @@
       "constant": false,
       "inputs": [
         {
-          "name": "_tokenId",
+          "name": "from",
+          "type": "address"
+        },
+        {
+          "name": "to",
+          "type": "address"
+        },
+        {
+          "name": "tokenId",
           "type": "uint256"
+        },
+        {
+          "name": "_data",
+          "type": "bytes"
         }
       ],
-      "name": "takeOwnership",
+      "name": "safeTransferFrom",
       "outputs": [],
       "payable": false,
       "stateMutability": "nonpayable",
@@ -117,12 +197,21 @@
     },
     {
       "constant": true,
-      "inputs": [],
-      "name": "systemFeePPM",
+      "inputs": [
+        {
+          "name": "owner",
+          "type": "address"
+        },
+        {
+          "name": "operator",
+          "type": "address"
+        }
+      ],
+      "name": "isApprovedForAll",
       "outputs": [
         {
           "name": "",
-          "type": "uint256"
+          "type": "bool"
         }
       ],
       "payable": false,
@@ -210,6 +299,11 @@
           "indexed": false,
           "name": "makeStale",
           "type": "bool"
+        },
+        {
+          "indexed": false,
+          "name": "stakingStablecoin",
+          "type": "bool"
         }
       ],
       "name": "ProposalAccepted",
@@ -282,6 +376,11 @@
           "indexed": false,
           "name": "makeStale",
           "type": "bool"
+        },
+        {
+          "indexed": false,
+          "name": "stakingStablecoin",
+          "type": "bool"
         }
       ],
       "name": "ProposalOffered",
@@ -324,6 +423,11 @@
           "indexed": false,
           "name": "belowID",
           "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "name": "stakingStablecoin",
+          "type": "bool"
         }
       ],
       "name": "WITEvaluated",
@@ -346,6 +450,11 @@
           "indexed": true,
           "name": "amountRedeemed",
           "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "name": "stakingStablecoin",
+          "type": "bool"
         }
       ],
       "name": "WITCancelled",
@@ -429,17 +538,17 @@
       "inputs": [
         {
           "indexed": true,
-          "name": "_from",
+          "name": "from",
           "type": "address"
         },
         {
           "indexed": true,
-          "name": "_to",
+          "name": "to",
           "type": "address"
         },
         {
-          "indexed": false,
-          "name": "_tokenId",
+          "indexed": true,
+          "name": "tokenId",
           "type": "uint256"
         }
       ],
@@ -451,21 +560,43 @@
       "inputs": [
         {
           "indexed": true,
-          "name": "_owner",
+          "name": "owner",
           "type": "address"
         },
         {
           "indexed": true,
-          "name": "_approved",
+          "name": "approved",
           "type": "address"
         },
         {
-          "indexed": false,
-          "name": "_tokenId",
+          "indexed": true,
+          "name": "tokenId",
           "type": "uint256"
         }
       ],
       "name": "Approval",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "name": "owner",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "name": "operator",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "name": "approved",
+          "type": "bool"
+        }
+      ],
+      "name": "ApprovalForAll",
       "type": "event"
     },
     {
@@ -476,16 +607,20 @@
           "type": "address"
         },
         {
-          "name": "storageAddress",
-          "type": "address"
-        },
-        {
           "name": "NOAAPrecipAggregate",
           "type": "address"
         },
         {
           "name": "NASA",
           "type": "address"
+        },
+        {
+          "name": "_stableERC20",
+          "type": "address"
+        },
+        {
+          "name": "_testMode",
+          "type": "bool"
         }
       ],
       "name": "initialize",
@@ -531,6 +666,10 @@
         },
         {
           "name": "makeStale",
+          "type": "bool"
+        },
+        {
+          "name": "stakingStablecoin",
           "type": "bool"
         }
       ],
@@ -599,34 +738,6 @@
         }
       ],
       "name": "cancelAndRedeem",
-      "outputs": [],
-      "payable": false,
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "constant": false,
-      "inputs": [
-        {
-          "name": "dependant",
-          "type": "address"
-        }
-      ],
-      "name": "addDependant",
-      "outputs": [],
-      "payable": false,
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "constant": false,
-      "inputs": [
-        {
-          "name": "newOwner",
-          "type": "address"
-        }
-      ],
-      "name": "decomission",
       "outputs": [],
       "payable": false,
       "stateMutability": "nonpayable",
