@@ -285,10 +285,12 @@ var watchLatestProposal = -1;
 function latestProposals(){
   console.log("fn: latestProposals");
   watchLatestProposal = witInstance.ProposalOffered({},{fromBlock: 0, toBlock: 'latest'}).watch(function(error, result){
-    updateBalance();
-    let store = addInfoFromProposalCreated(result);
-    updateOpenProposals(store.openProposals);
-    updateMyProposals(store.myProposals);
+    //updateBalance();
+    if(typeof result !== "undefined"){
+      let store = addInfoFromProposalCreated(result);
+      updateOpenProposals(store.openProposals);
+      updateMyProposals(store.myProposals);
+    }
   });
 }
 
@@ -298,10 +300,12 @@ function latestAcceptances(){
   console.log("fn: latestAcceptance");
   //do something as new proposal is accepted
   watchLatestAcceptance = witInstance.ProposalAccepted({},{fromBlock: 0, toBlock: 'latest'}).watch(function(error, result){
-    updateBalance();
-    let store = addInfoFromProposalAccepted(result);
-    updateOpenProposals(store.openProposals);
-    updateMyProposals(store.myProposals);
+    //updateBalance();
+    if(typeof result !== "undefined"){
+      let store = addInfoFromProposalAccepted(result);
+      updateOpenProposals(store.openProposals);
+      updateMyProposals(store.myProposals);
+    }
   });
 }
 
@@ -309,10 +313,12 @@ var watchLatestInvocation = -1;
 function latestInvocation(){
   console.log("fn: latestEvalInvoked");
   watchLatestInvocation = witInstance.WITEvaluationInvoked({},{fromBlock: 0, toBlock: 'latest'}).watch(function(error, result){
-    updateBalance();
-    let store = addInfoFromEvaluationInvoked(result);
-    updateOpenProposals(store.openProposals);
-    updateMyProposals(store.myProposals);
+    //updateBalance();
+    if(typeof result !== "undefined"){
+      let store = addInfoFromEvaluationInvoked(result);
+      updateOpenProposals(store.openProposals);
+      updateMyProposals(store.myProposals);
+    }
   })
 }
 
@@ -322,10 +328,12 @@ function latestEvaluations(){
   console.log("fn: latestEvaluation")
   //do something as new evaluation is accepted
   watchLatestEvaluation = witInstance.WITEvaluated({},{fromBlock: 0, toBlock: 'latest'}).watch(function(error, result){
-    updateBalance();
-    let store = addInfoFromProposalEvaluated(result);
-    updateOpenProposals(store.openProposals);
-    updateMyProposals(store.myProposals);
+    //updateBalance();
+    if(typeof result !== "undefined"){
+      let store = addInfoFromProposalEvaluated(result);
+      updateOpenProposals(store.openProposals);
+      updateMyProposals(store.myProposals);
+    }
   })
 }
 
