@@ -223,31 +223,33 @@ changeThreshold = function (){
 var pData;
 calcPct = function (o = pData){
   console.log("calcPct",o)
-  pData = o;
-  //go through data object and decide how many
-  //times in the past 10 years met the threshold
-  let rel = $("#threshold-relation")[0].value;
-  let pct = $("#threshold-percent")[0].value;
-  let avg = $("#threshold-average")[0].value;
-  let rov = threshVal(rel);
-  let n = threshValFraction(pct, avg);
+  if(typeof o !== "undefined"){
+    pData = o;
+    //go through data object and decide how many
+    //times in the past 10 years met the threshold
+    let rel = $("#threshold-relation")[0].value;
+    let pct = $("#threshold-percent")[0].value;
+    let avg = $("#threshold-average")[0].value;
+    let rov = threshVal(rel);
+    let n = threshValFraction(pct, avg);
 
-  let l = pData.data.length;
-  let sum = 0;
-  for(let i = 0; i < l; i++){
-    pData.data[i] >= pData.avg*n ? sum += 1 : sum += 0;
-  }
-  //sum * 10 is probability
-  let finalPct = Math.round(sum*100/o.years);
-  if(!rov) finalPct = 100 - finalPct;
-  $("#ten-yr-prob").html(`<span id="pct-span" data-tenYrProb="${finalPct}"> ~${finalPct}% </span> chance of payout`);
+    let l = pData.data.length;
+    let sum = 0;
+    for(let i = 0; i < l; i++){
+      pData.data[i] >= pData.avg*n ? sum += 1 : sum += 0;
+    }
+    //sum * 10 is probability
+    let finalPct = Math.round(sum*100/o.years);
+    if(!rov) finalPct = 100 - finalPct;
+    $("#ten-yr-prob").html(`<span id="pct-span" data-tenYrProb="${finalPct}"> ~${finalPct}% </span> chance of payout`);
 
-  if(finalPct <= 30 || finalPct >= 70){
-    if(finalPct <= 30) $('#pct-span').addClass('low-text');
-    if(finalPct >= 70) $('#pct-span').addClass('high-text');
-  }else{
-    $('#pct-span').removeClass('low-text');
-    $('#pct-span').removeClass('high-text');
+    if(finalPct <= 30 || finalPct >= 70){
+      if(finalPct <= 30) $('#pct-span').addClass('low-text');
+      if(finalPct >= 70) $('#pct-span').addClass('high-text');
+    }else{
+      $('#pct-span').removeClass('low-text');
+      $('#pct-span').removeClass('high-text');
+    }
   }
 }
 
