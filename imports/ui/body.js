@@ -156,9 +156,9 @@ function initContracts(){
         // noaaAddress = "0x782c883f8034e9ee52eba6dcea57a87851fce738";
         // nasaAddress = "0x836886d868e84529f1d327531e7e2d35f8f04705"; 
         //Stable coing deployment, 12-06-2018
-        hadrianAddress = 0x92c8c65d6ac2513b8041742d9d34ac22b0a5a865;
-        nasaAddress =  0x5387aee08b03f62b4774bb49e87195c85c509814;
-        witAddress = 0xbbc1b8b1f5af6b541ad0a2ae111ce2bbd77a467c;
+        hadrianAddress = "0x92c8c65d6ac2513b8041742d9d34ac22b0a5a865";
+        nasaAddress = "0x5387aee08b03f62b4774bb49e87195c85c509814";
+        witAddress = "0xbbc1b8b1f5af6b541ad0a2ae111ce2bbd77a467c";
         break
       case "42":
         $("#network-name").html("Kovan");
