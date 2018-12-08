@@ -38,7 +38,7 @@ Session.set("pastUser",-2);
 // var arbolAddress, arbolContract, arbolInstance; //tag for deletion
 var witAddress, witContract, witInstance;
 var noaaAddress, nasaAddress;
-var hadrianAddress;
+var hadrianAddress, hadrianContract, hadrianInstance;
 
 function initMainPage(){
   if (Meteor.isClient) {
@@ -178,6 +178,8 @@ function initContracts(){
     console.log("nasaAddress",nasaAddress)
     witContract = web3.eth.contract(WITABI);
     witInstance = witContract.at(witAddress);
+    hadrianContract = web3.eth.contract(HADRIANABI);
+    hadrianInstance = hadrianContract.at(hadrianAddress);
     Session.set("witAddress",witAddress)
     Session.set("noaaAddress",noaaAddress)
     Session.set("nasaAddress",nasaAddress)
@@ -285,7 +287,7 @@ var watchLatestProposal = -1;
 function latestProposals(){
   console.log("fn: latestProposals");
   watchLatestProposal = witInstance.ProposalOffered({},{fromBlock: 0, toBlock: 'latest'}).watch(function(error, result){
-    //updateBalance();
+    updateBalance();
     if(typeof result !== "undefined"){
       let store = addInfoFromProposalCreated(result);
       updateOpenProposals(store.openProposals);
@@ -300,7 +302,7 @@ function latestAcceptances(){
   console.log("fn: latestAcceptance");
   //do something as new proposal is accepted
   watchLatestAcceptance = witInstance.ProposalAccepted({},{fromBlock: 0, toBlock: 'latest'}).watch(function(error, result){
-    //updateBalance();
+    updateBalance();
     if(typeof result !== "undefined"){
       let store = addInfoFromProposalAccepted(result);
       updateOpenProposals(store.openProposals);
@@ -313,7 +315,7 @@ var watchLatestInvocation = -1;
 function latestInvocation(){
   console.log("fn: latestEvalInvoked");
   watchLatestInvocation = witInstance.WITEvaluationInvoked({},{fromBlock: 0, toBlock: 'latest'}).watch(function(error, result){
-    //updateBalance();
+    updateBalance();
     if(typeof result !== "undefined"){
       let store = addInfoFromEvaluationInvoked(result);
       updateOpenProposals(store.openProposals);
@@ -328,7 +330,7 @@ function latestEvaluations(){
   console.log("fn: latestEvaluation")
   //do something as new evaluation is accepted
   watchLatestEvaluation = witInstance.WITEvaluated({},{fromBlock: 0, toBlock: 'latest'}).watch(function(error, result){
-    //updateBalance();
+    updateBalance();
     if(typeof result !== "undefined"){
       let store = addInfoFromProposalEvaluated(result);
       updateOpenProposals(store.openProposals);
@@ -602,12 +604,14 @@ Template.formNewProtection.events({
       url: reversegeocodeURL
     }).done(function(data) {
       let r = data.result[0];
-      let adm1Name = "", adm2Name = "", city = "";
-      if(r.adm1Name) adm1Name = r.adm1Name + ", "; 
-      if(r.adm2Name) adm2Name = r.adm2Name + ", ";
-      if(r.city) city = r.city + ", ";
-      let location = city + adm2Name + adm1Name + r.countryCode;
-      $('#locname').val(location).trigger('input');
+      if(typeof r !== "undefined"){
+        let adm1Name = "", adm2Name = "", city = "";
+        if(r.adm1Name && r.adm1Name !== "unknown") adm1Name = r.adm1Name + ", "; 
+        if(r.adm2Name && r.adm2Name !== "unknown") adm2Name = r.adm2Name + ", ";
+        if(r.city && r.city !== "unknown") city = r.city + ", ";
+        let location = city + adm2Name + adm1Name + r.countryCode;
+        $('#locname').val(location).trigger('input');
+      }
     }).fail(function(){
       console.log('failed to reverse geocode');
     });
@@ -870,6 +874,11 @@ function resetCreateWIT(instance) {
   });
 }
 
+// var batch = web3.createBatch();
+// batch.add(web3.eth.getBalance.request('0x0000000000000000000000000000000000000000', 'latest', callback));
+// batch.add(web3.eth.contract(abi).at(address).balance.request(address, callback2));
+// batch.execute();
+
 async function createProposal(startDate,endDate,yourContr,totalPayout,location,index,thresholdRelation,thresholdPercent,thresholdAverage,self){
   console.log("fn: createProposal")
   const d1 = (new Date(startDate)).getTime()/1000; //convert to UNIX timestamp
@@ -885,9 +894,15 @@ async function createProposal(startDate,endDate,yourContr,totalPayout,location,i
   let makeStale = false; //TODO for deployment makeStale should be true in default
   console.log("ethPropose, ethAsk, above, address, numPPTH, location, d1, d2, makeStale");
   console.log(ethPropose, ethAsk, above, address, numPPTH, location, d1, d2, makeStale);
-
+  
   try {
-    await promisify(cb => witInstance.createWITProposal(ethPropose, ethAsk, above, address, numPPTH, location, d1, d2, makeStale, {from:Session.get("user"), value: ethPropose, gas: 2000000}, cb));
+    await promisify(cb => hadrianInstance.approve(witInstance.address, ethPropose, {from: Session.get("user")},cb));
+  } catch (error){
+    console.log(error)
+  }
+  try {
+    await promisify(cb => witInstance.createWITProposal(ethPropose, ethAsk, above, address, numPPTH, location, d1, d2, makeStale, true, {from:Session.get("user"), value: ethPropose, gas: 2000000}, cb));
+    // await promisify(cb => witInstance.createWITProposal(ethPropose, ethAsk, above, address, numPPTH, location, d1, d2, makeStale, true, {from:Session.get("user")}, cb));
     resetCreateWIT(self);    
   } catch (error) {
     console.log(error)
