@@ -457,19 +457,19 @@ function payoutText(weiAsking,weiContributing){
 	let ask = weiAsking.toNumber()
 	let propose = weiContributing.toNumber();
 	let totalPayout = propose + ask;
-	let totalPayoutText = `${clipNum(toEth(totalPayout))} Eth`;
+	let totalPayoutText = `${clipNum(toEth(totalPayout))} hUSD`;
 	return {v:totalPayout,t:totalPayoutText};
 }
 
 function askText(weiAsking){
 	let ask = weiAsking.toNumber();
-	let askText = `${clipNum(toEth(ask))} Eth`;
+	let askText = `${clipNum(toEth(ask))} hUSD`;
 	return {v:ask,t:askText};
 }
 
 function proposeText(weiContributing){
 	let propose = weiContributing.toNumber();
-	let proposeText = `${clipNum(toEth(propose))} Eth`;
+	let proposeText = `${clipNum(toEth(propose))} hUSD`;
 	return {v:propose,t:proposeText};
 }
 

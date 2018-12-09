@@ -236,6 +236,7 @@ async function updateBalance(){
     $('#user-balance').removeClass('green-text');
     $('#user-balance').addClass('red-text');
   } else {
+    // get Eth balance
     web3.eth.getBalance(Session.get("user"),function (error, result) {
       if (!error) {
         var e = toEth(result.toNumber());
@@ -252,6 +253,24 @@ async function updateBalance(){
         console.error(error);
       }
     });
+    // get HUSD balance
+    try{
+      var bal = await promisify(cb => hadrianInstance.balanceOf(Session.get("user"), cb));
+    }catch(error){
+      console.log(error);
+    }
+    console.log("HUSD balance",bal,bal.toNumber()/1e18)
+    //TODO convert this properly
+    var e = bal.toNumber()/1e18;
+    if(e === 0){
+      $('#user-balance-HUSD').html("0.000");
+      $('#user-balance-HUSD').removeClass('green-text');
+      $('#user-balance-HUSD').addClass('red-text');
+    }else{
+      $('#user-balance-HUSD').html(clipNum(e));
+      $('#user-balance-HUSD').removeClass('red-text');
+      $('#user-balance-HUSD').addClass('green-text');
+    } 
   }
 }
 
@@ -773,6 +792,7 @@ Template.formNewProtection.events({
       const yourContr = parseFloat($('#your-contrib').val());
       // console.log("yourContr",yourContr)
       const totalPayout = parseFloat($('#total-contrib').val());
+      const requestedContrib = parseFloat($('#requested-contrib').val());
       // console.log("totalPayout",totalPayout)
       // const location = "21.5331234,-3.1621234&0.14255"; //$('#location').val();
       const location = leafletToWitCoords(); //$('#location').val();
@@ -795,8 +815,8 @@ Template.formNewProtection.events({
 
       //ask for confirmation
       const confirmed = confirm ( "Please confirm your selection: \n\n"
-        + "  Your Contribution (Eth): " + yourContr + "\n"
-        + "  Total Payout (Eth): " + totalPayout + "\n"
+        + "  Your Contribution (hUSD): " + yourContr + "\n"
+        + "  Total Payout (hUSD): " + totalPayout + "\n"
         + "  Location: " + location + "\n"
         + "  Threshold: " + threshText(thresholdRelation,thresholdPercent,thresholdAverage) + "\n"
         + "  Start Date: " + startDate + "\n"
@@ -806,7 +826,7 @@ Template.formNewProtection.events({
       if (confirmed) {
         //submit info
         self = Template.instance();
-        createProposal(startDate,endDate,yourContr,totalPayout,location,index,thresholdRelation,thresholdPercent,thresholdAverage,self);
+        createProposal(startDate,endDate,yourContr,requestedContrib,location,index,thresholdRelation,thresholdPercent,thresholdAverage,self);
       } else {
         //let user continue to edit
       }
@@ -879,24 +899,25 @@ function resetCreateWIT(instance) {
 // batch.add(web3.eth.contract(abi).at(address).balance.request(address, callback2));
 // batch.execute();
 
-async function createProposal(startDate,endDate,yourContr,totalPayout,location,index,thresholdRelation,thresholdPercent,thresholdAverage,self){
+async function createProposal(startDate,endDate,yourContr,requestedContrib,location,index,thresholdRelation,thresholdPercent,thresholdAverage,self){
   console.log("fn: createProposal")
   const d1 = (new Date(startDate)).getTime()/1000; //convert to UNIX timestamp
   let dd2 = new Date(endDate);
   dd2.setDate(dd2.getDate() + 15);
   const d2 = dd2.getTime()/1000; //convert to UNIX timestamp
 
+  console.log("wei",yourContr,requestedContrib)
   let ethPropose = toWei(yourContr);
-  let ethAsk = toWei(totalPayout - yourContr);
+  let ethAsk = toWei(requestedContrib);
   let above = threshVal(thresholdRelation);
-  let numPPTH = threshValPPTH(thresholdPercent,thresholdAverage); // = 10000 * threshValFraction(thresholdPercent,thresholdAverage);
+  let numPPTH = threshValPPTH(thresholdPercent,thresholdAverage);
   let address = nasaAddress;
   let makeStale = false; //TODO for deployment makeStale should be true in default
   console.log("ethPropose, ethAsk, above, address, numPPTH, location, d1, d2, makeStale");
   console.log(ethPropose, ethAsk, above, address, numPPTH, location, d1, d2, makeStale);
 
   var batch = web3.createBatch();
-  batch.add(witInstance.createWITProposal.request(ethPropose, ethAsk, above, address, numPPTH, location, d1, d2, makeStale, true, {from:Session.get("user"), value: ethPropose, gas: "2000000"}));
+  batch.add(witInstance.createWITProposal.request(ethPropose, ethAsk, above, address, numPPTH, location, d1, d2, makeStale, true, {from:Session.get("user")},function(){resetCreateWIT(self)}));
   batch.add(hadrianInstance.approve.request(witInstance.address, ethPropose, {from: Session.get("user")}));
   batch.execute();
   
@@ -1009,18 +1030,24 @@ Template.sortableRows.events({
 
 async function acceptProposal(v){
   let vals = v.split(",");
-  let weiAsk = vals[0]
+  let weiAsk = vals[0];
+  let ethAsk = toEth(weiAsk);
   let id = vals[1];
 
   console.log("===> new WIT acceptance");
-  console.log("==> token ID",id,Session.get("user"),weiAsk)
+  console.log("==> token ID",id,Session.get("user"),weiAsk,ethAsk)
 
-  try {
-    //TODO don't let user accept their own proposal
-    await promisify(cb => witInstance.createWITAcceptance(id,{from: Session.get("user"), value:weiAsk, gas: 2000000},cb));
-  } catch (error) {
-    console.log(error);
-  }
+  var batch = web3.createBatch();
+  batch.add(witInstance.createWITAcceptance.request(id,{from: Session.get("user")}));
+  batch.add(hadrianInstance.approve.request(witInstance.address, ethAsk, {from: Session.get("user")}));
+  batch.execute();
+
+  // try {
+  //   //TODO don't let user accept their own proposal
+  //   await promisify(cb => witInstance.createWITAcceptance(id,{from: Session.get("user"), value:weiAsk, gas: 2000000},cb));
+  // } catch (error) {
+  //   console.log(error);
+  // }
 }
 
 
