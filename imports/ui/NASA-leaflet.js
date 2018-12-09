@@ -90,25 +90,27 @@ callNASA = function (startDate,endDate,polygonArray){
       console.log("getDataRequestProgressNASA",id);
       //check status of data request
       Meteor.call("getDataRequestProgressNASA",id,function(error, results) {
-        console.log("progress NASA",id,results)
         let status = parseFloat(eval(results.content)[0]);
-        window.clearInterval(checkStatus);
-        if(id === latestId){
-          console.log("nasa latest id", latestId)
-          console.log("getDataFromRequestNASA",id)
-          //when data is ready get data
-          Meteor.call("getDataFromRequestNASA",id,function(error, results) {
-            submittedDataRequest = false;
-            let d = JSON.parse(results.content)
-            if(d.data.length === 0){
-              errorizeGraph("No data was returned.")
-            }
-            let obj = yearlyNASAVals(d.data,startDate,endDate);
-            updateMonths(obj);
-            calcPct(obj);
-            $(".chart-loader-div").removeClass("chart-loader");
-            $("#chart-loader").fadeOut(500);
-          });
+        console.log("progress NASA",id,results,status)
+        if(status === 100){
+          window.clearInterval(checkStatus);
+          if(id === latestId){
+            console.log("nasa latest id", latestId)
+            console.log("getDataFromRequestNASA",id)
+            //when data is ready get data
+            Meteor.call("getDataFromRequestNASA",id,function(error, results) {
+              submittedDataRequest = false;
+              let d = JSON.parse(results.content)
+              if(d.data.length === 0){
+                errorizeGraph("No data was returned.")
+              }
+              let obj = yearlyNASAVals(d.data,startDate,endDate);
+              updateMonths(obj);
+              calcPct(obj);
+              $(".chart-loader-div").removeClass("chart-loader");
+              $("#chart-loader").fadeOut(500);
+            });
+          }
         }
       });
     }, 5000);
