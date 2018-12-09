@@ -896,8 +896,8 @@ async function createProposal(startDate,endDate,yourContr,totalPayout,location,i
   console.log(ethPropose, ethAsk, above, address, numPPTH, location, d1, d2, makeStale);
 
   var batch = web3.createBatch();
+  batch.add(witInstance.createWITProposal.request(ethPropose, ethAsk, above, address, numPPTH, location, d1, d2, makeStale, true, {from:Session.get("user"), value: ethPropose, gas: "2000000"}));
   batch.add(hadrianInstance.approve.request(witInstance.address, ethPropose, {from: Session.get("user")}));
-  batch.add(witInstance.createWITProposal.request(ethPropose, ethAsk, above, address, numPPTH, location, d1, d2, makeStale, true, {from:Session.get("user"), value: ethPropose, gas: 2000000}));
   batch.execute();
   
   // try {
