@@ -894,19 +894,24 @@ async function createProposal(startDate,endDate,yourContr,totalPayout,location,i
   let makeStale = false; //TODO for deployment makeStale should be true in default
   console.log("ethPropose, ethAsk, above, address, numPPTH, location, d1, d2, makeStale");
   console.log(ethPropose, ethAsk, above, address, numPPTH, location, d1, d2, makeStale);
+
+  var batch = web3.createBatch();
+  batch.add(hadrianInstance.approve.request(witInstance.address, ethPropose, {from: Session.get("user")}));
+  batch.add(witInstance.createWITProposal.request(ethPropose, ethAsk, above, address, numPPTH, location, d1, d2, makeStale, true, {from:Session.get("user"), value: ethPropose, gas: 2000000}));
+  batch.execute();
   
-  try {
-    await promisify(cb => hadrianInstance.approve(witInstance.address, ethPropose, {from: Session.get("user")},cb));
-  } catch (error){
-    console.log(error)
-  }
-  try {
-    await promisify(cb => witInstance.createWITProposal(ethPropose, ethAsk, above, address, numPPTH, location, d1, d2, makeStale, true, {from:Session.get("user"), value: ethPropose, gas: 2000000}, cb));
-    // await promisify(cb => witInstance.createWITProposal(ethPropose, ethAsk, above, address, numPPTH, location, d1, d2, makeStale, true, {from:Session.get("user")}, cb));
-    resetCreateWIT(self);    
-  } catch (error) {
-    console.log(error)
-  }
+  // try {
+  //   await promisify(cb => hadrianInstance.approve(witInstance.address, ethPropose, {from: Session.get("user")},cb));
+  // } catch (error){
+  //   console.log(error)
+  // }
+  // try {
+  //   await promisify(cb => witInstance.createWITProposal(ethPropose, ethAsk, above, address, numPPTH, location, d1, d2, makeStale, true, {from:Session.get("user"), value: ethPropose, gas: 2000000}, cb));
+  //   // await promisify(cb => witInstance.createWITProposal(ethPropose, ethAsk, above, address, numPPTH, location, d1, d2, makeStale, true, {from:Session.get("user")}, cb));
+  //   resetCreateWIT(self);    
+  // } catch (error) {
+  //   console.log(error)
+  // }
 }
 
 // async function createProposalTest(){
