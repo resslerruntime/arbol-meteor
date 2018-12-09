@@ -1028,6 +1028,9 @@ Template.sortableRows.events({
   }
 });
 
+    // await HUSD.approve(WIT.address, ethAsk, {from: accepterAccount});
+    // response = await WIT.createWITAcceptance(proposalID, {from: accepterAccount});
+
 async function acceptProposal(v){
   let vals = v.split(",");
   let weiAsk = vals[0];
