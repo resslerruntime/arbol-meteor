@@ -10,7 +10,7 @@ import './threshold.js';
 import './utilities.js'
 
 import './body.html';
-import './createProtection.html';
+import './html-files/createProtection.html';
 
 Router.route('/tutorial');
 Router.route('/', {
@@ -1028,14 +1028,6 @@ Template.sortableRows.events({
   }
 });
 
-    // await HUSD.approve(WIT.address, ethAsk, {from: accepterAccount});
-    // response = await WIT.createWITAcceptance(proposalID, {from: accepterAccount});
-
-  // var batch = web3.createBatch();
-  // batch.add(witInstance.createWITProposal.request(ethPropose, ethAsk, above, address, numPPTH, location, d1, d2, makeStale, true, {from:Session.get("user")},function(){resetCreateWIT(self)}));
-  // batch.add(hadrianInstance.approve.request(witInstance.address, ethPropose, {from: Session.get("user")}));
-  // batch.execute();
-
 async function acceptProposal(v){
   let vals = v.split(",");
   let weiAsk = vals[0];
@@ -1050,7 +1042,6 @@ async function acceptProposal(v){
   batch.execute();
 
   // try {
-  //   //TODO don't let user accept their own proposal
   //   await promisify(cb => witInstance.createWITAcceptance(id,{from: Session.get("user"), value:weiAsk, gas: 2000000},cb));
   // } catch (error) {
   //   console.log(error);

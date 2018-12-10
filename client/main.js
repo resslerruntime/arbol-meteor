@@ -300,45 +300,8 @@ function getAccounts(){
   contractInstance = contract.at("0x345ca3e014aaf5dca488057592ee47305d9b3e10");
 
   contractInstance.balanceOf("0x627306090abaB3A6e1400e9345bC60c78a8BEf57", function(error, result){ console.log(result.toNumber())});
- // contractInstance.methods.balanceOf("0x627306090abaB3A6e1400e9345bC60c78a8BEf57").call().then(function (result) {
-//        console.log(result);
 
   return accts;
 }
 
-// Template.body.helpers({
-//   balances: [
-//     { row: getAccounts()},
-//     { row: 'This is task 2' },
-//     { row: 'This is task 3' },
-//
-//   //  return web3.eth.accounts[0];
-//   ],
-// });
 
-/*
-  balance(address){
-        var contractAddress = "0x345ca3e014aaf5dca488057592ee47305d9b3e10";
-
-  contract = web3.eth.Contract(jsonabi, contractAddress);
-  return contract.methods.balanceOf(address).call();
-
-
-  }
-});
-
-/*
-
-Template.hello.helpers({
-  {
-     contract.methods.getAgreementssss().call().then(console.log);
-    }
-});
-
-Template.hello.events({
-  'click button'(event, instance) {
-    // increment the counter when button is clicked
-    instance.counter.set(instance.counter.get() + 1);
-  },
-});
-*/

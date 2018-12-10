@@ -190,26 +190,18 @@ function makeContainer(startDate,endDate){
   let sdm = parseInt(startDate.month), edm = parseInt(endDate.month);
   let sy = parseInt(startDate.year), ey = sy;
   for(var i = 0; i < 30; i++){
-  // while(ey <= parseInt(endDate.year)){
     let ey = sdm <= edm ? sy : sy+1;
-    // let st = new Date(sy, sdm-1, 1);
-    // let et = new Date(ey, edm-1, 1);
 
     years.push({
       startYear: sy
       ,startMonth: sdm
-      // ,startDate: st
-      // ,startTimestamp: Math.floor(st.getTime()/1000)
       ,endYear: ey
       ,endMonth: edm
-      // ,endDate: et
-      // ,endTimestamp: Math.floor(et.getTime()/1000)
       ,objs: []
       ,val: 0
     });
     //increment start year
     sy += 1;
-  // }
   }
   return years;
 }
@@ -283,7 +275,9 @@ selectedBounds = false;
 presentSelection = false;
 
 //find the proper way to make sure that the HTML is fully loaded before leaflet tries to attach the map
+console.log("mapDiv",document.getElementById("mapdiv"))
 var waitForLeaflet = setInterval(function(){
+  console.log("mapDiv",document.getElementById("mapdiv"));
   let leafletDiv = document.getElementById("mapdiv");
   if(leafletDiv){
     window.clearInterval(waitForLeaflet);
