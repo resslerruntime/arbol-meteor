@@ -81,7 +81,7 @@ callNASA = function (startDate,endDate,polygonArray){
   //submit initial data request
   Meteor.call("submitDataRequestNASA",startDate.mmddyyyy,endDate.mmddyyyy,stringifyCoords(invertedPolygon),function(error, results) {
     if(typeof results == 'undefined') { 
-      errorizeGraph("No data was returned.")
+      errorizeGraph("No data was returned. ClimateSERV API may be down.")
       return;        
     }
     let id = eval(results.content)[0];
@@ -90,30 +90,30 @@ callNASA = function (startDate,endDate,polygonArray){
       console.log("getDataRequestProgressNASA",id);
       //check status of data request
       Meteor.call("getDataRequestProgressNASA",id,function(error, results) {
-        console.log("progress NASA",id,results)
         let status = parseFloat(eval(results.content)[0]);
-        if (status == '-1') {
-          errorizeGraph("No data was returned. ClimateSERV API may be down.")
-          return;          
-        }
-        window.clearInterval(checkStatus);
-        if(id === latestId){
-          console.log("nasa latest id", latestId)
-          console.log("getDataFromRequestNASA",id)
-          //when data is ready get data
-          Meteor.call("getDataFromRequestNASA",id,function(error, results) {
-            submittedDataRequest = false;
-            let d = JSON.parse(results.content)
-            if(d.data.length === 0){
-              errorizeGraph("No data was returned.")
-              return;
-            }
-            let obj = yearlyNASAVals(d.data,startDate,endDate);
-            updateMonths(obj);
-            calcPct(obj);
-            $(".chart-loader-div").removeClass("chart-loader");
-            $("#chart-loader").fadeOut(500);
-          });
+        console.log("progress NASA",id,results,status)
+        if(status === 100){
+          window.clearInterval(checkStatus);
+          if(id === latestId){
+            console.log("nasa latest id", latestId)
+            console.log("getDataFromRequestNASA",id)
+            //when data is ready get data
+            Meteor.call("getDataFromRequestNASA",id,function(error, results) {
+              submittedDataRequest = false;
+              let d = JSON.parse(results.content)
+              if(d.data.length === 0){
+                errorizeGraph("No data was returned.")
+              }
+              let obj = yearlyNASAVals(d.data,startDate,endDate);
+              updateMonths(obj);
+              calcPct(obj);
+              $(".chart-loader-div").removeClass("chart-loader");
+              $("#chart-loader").fadeOut(500);
+            });
+          } else if (status == '-1') {
+            errorizeGraph("No data was returned. ClimateSERV API may be down.")
+            return;  
+          }        
         }
       });
     }, 5000);
@@ -124,96 +124,87 @@ callNASA = function (startDate,endDate,polygonArray){
       }
     
   });
-
 }
 
-// This function does not invert coordinates, and therefore will return incorrect results.
-let checkStatus2;
-callTestMonth = function (startDate,endDate,location){
-  //submit initial data request
-  Meteor.call("testMonth",startDate.mmddyyyy,endDate.mmddyyyy,location,function(error, results) {
-    if(typeof results != 'undefined'){
-      let id = eval(results.content)[0];
-      checkStatus2 = setInterval(function(){
-        //check status of data request
-        Meteor.call("getDataRequestProgressNASA",id,function(error, results) {
-          let status = parseFloat(eval(results.content)[0]);
-          if(status === 100){
-            window.clearInterval(checkStatus2);
-            //when data is ready get data
-            Meteor.call("getDataFromRequestNASA",id,function(error, results) {
-              let d = JSON.parse(results.content);
-              if(d.data.length !== 0 && d.data != "[-1]"){
-                console.log("testMonth",d.data) 
-              }else{
-                console.log("No data returned")
-              }            
-            });
-          }
-        });
-      }, 2000);
-    }else{
-      console.log("NASA server not responding: ",error.message);
-    }
-  });
-}
+// // This function does not invert coordinates, and therefore will return incorrect results.
+// let checkStatus2;
+// callTestMonth = function (startDate,endDate,location){
+//   //submit initial data request
+//   Meteor.call("testMonth",startDate.mmddyyyy,endDate.mmddyyyy,location,function(error, results) {
+//     if(typeof results != 'undefined'){
+//       let id = eval(results.content)[0];
+//       checkStatus2 = setInterval(function(){
+//         //check status of data request
+//         Meteor.call("getDataRequestProgressNASA",id,function(error, results) {
+//           let status = parseFloat(eval(results.content)[0]);
+//           if(status === 100){
+//             window.clearInterval(checkStatus2);
+//             //when data is ready get data
+//             Meteor.call("getDataFromRequestNASA",id,function(error, results) {
+//               let d = JSON.parse(results.content);
+//               if(d.data.length !== 0 && d.data != "[-1]"){
+//                 console.log("testMonth",d.data) 
+//               }else{
+//                 console.log("No data returned")
+//               }            
+//             });
+//           }
+//         });
+//       }, 2000);
+//     }else{
+//       console.log("NASA server not responding: ",error.message);
+//     }
+//   });
+// }
 
-// This function does not swap coordinates and therefore will return incorrect results.
-let checkStatus3;
-callTestDay = function (startDate,endDate,location){
-  //submit initial data request
-  Meteor.call("testDay",startDate.mmddyyyy,endDate.mmddyyyy,location,function(error, results) {
-    if(typeof results != 'undefined'){
-      let id = eval(results.content)[0];
-      checkStatus3 = setInterval(function(){
-        //check status of data request
-        Meteor.call("getDataRequestProgressNASA",id,function(error, results) {
-          let status = parseFloat(eval(results.content)[0]);
-          if(status === 100){
-            window.clearInterval(checkStatus3);
-            //when data is ready get data
-            Meteor.call("getDataFromRequestNASA",id,function(error, results) {
-              let d = JSON.parse(results.content);
-              if(d.data.length !== 0){
-                console.log("testDay",d.data) 
-              }else{
-                console.log("No data returned")
-              }            
-            });
-          }
-        });
-      }, 2000);
-    }else{
-      console.log("NASA server not responding: ",error.message);
-    }
-  });
-}
+// // This function does not swap coordinates and therefore will return incorrect results.
+// let checkStatus3;
+// callTestDay = function (startDate,endDate,location){
+//   //submit initial data request
+//   Meteor.call("testDay",startDate.mmddyyyy,endDate.mmddyyyy,location,function(error, results) {
+//     if(typeof results != 'undefined'){
+//       let id = eval(results.content)[0];
+//       checkStatus3 = setInterval(function(){
+//         //check status of data request
+//         Meteor.call("getDataRequestProgressNASA",id,function(error, results) {
+//           let status = parseFloat(eval(results.content)[0]);
+//           if(status === 100){
+//             window.clearInterval(checkStatus3);
+//             //when data is ready get data
+//             Meteor.call("getDataFromRequestNASA",id,function(error, results) {
+//               let d = JSON.parse(results.content);
+//               if(d.data.length !== 0){
+//                 console.log("testDay",d.data) 
+//               }else{
+//                 console.log("No data returned")
+//               }            
+//             });
+//           }
+//         });
+//       }, 2000);
+//     }else{
+//       console.log("NASA server not responding: ",error.message);
+//     }
+//   });
+// }
 
 function makeContainer(startDate,endDate){
   var years = [];
   let sdm = parseInt(startDate.month), edm = parseInt(endDate.month);
   let sy = parseInt(startDate.year), ey = sy;
   for(var i = 0; i < 30; i++){
-  // while(ey <= parseInt(endDate.year)){
     let ey = sdm <= edm ? sy : sy+1;
-    // let st = new Date(sy, sdm-1, 1);
-    // let et = new Date(ey, edm-1, 1);
 
     years.push({
       startYear: sy
       ,startMonth: sdm
-      // ,startDate: st
-      // ,startTimestamp: Math.floor(st.getTime()/1000)
       ,endYear: ey
       ,endMonth: edm
-      // ,endDate: et
-      // ,endTimestamp: Math.floor(et.getTime()/1000)
       ,objs: []
       ,val: 0
     });
     //increment start year
     sy += 1;
-  // }
   }
   return years;
 }
@@ -287,7 +278,9 @@ selectedBounds = false;
 presentSelection = false;
 
 //find the proper way to make sure that the HTML is fully loaded before leaflet tries to attach the map
+console.log("mapDiv",document.getElementById("mapdiv"))
 var waitForLeaflet = setInterval(function(){
+  console.log("mapDiv",document.getElementById("mapdiv"));
   let leafletDiv = document.getElementById("mapdiv");
   if(leafletDiv){
     window.clearInterval(waitForLeaflet);
@@ -385,6 +378,11 @@ var waitForLeaflet = setInterval(function(){
     regionmap.on('click', mouseClick);
   }
 },1000);
+
+//reset leaflet
+function resetLeaflet (){
+  //TODO
+}
 
 function stringifyCoords (a){
   let s = "[";

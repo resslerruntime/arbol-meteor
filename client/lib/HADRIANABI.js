@@ -1,14 +1,5 @@
-import { Template } from 'meteor/templating';
-import '../imports/ui/body.js';
-import './main.html';
-
-Template.body.onCreated(function cropOnCreated() {
-
-});
-
-function getAccounts(){
-        var jsonabi = [
-  {
+HADRIANABI = [
+    {
       "constant": true,
       "inputs": [],
       "name": "name",
@@ -26,11 +17,11 @@ function getAccounts(){
       "constant": false,
       "inputs": [
         {
-          "name": "_spender",
+          "name": "spender",
           "type": "address"
         },
         {
-          "name": "_value",
+          "name": "value",
           "type": "uint256"
         }
       ],
@@ -63,15 +54,15 @@ function getAccounts(){
       "constant": false,
       "inputs": [
         {
-          "name": "_from",
+          "name": "from",
           "type": "address"
         },
         {
-          "name": "_to",
+          "name": "to",
           "type": "address"
         },
         {
-          "name": "_value",
+          "name": "value",
           "type": "uint256"
         }
       ],
@@ -116,26 +107,17 @@ function getAccounts(){
     },
     {
       "constant": false,
-      "inputs": [],
-      "name": "SimpleToken",
-      "outputs": [],
-      "payable": false,
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "constant": false,
       "inputs": [
         {
-          "name": "_spender",
+          "name": "spender",
           "type": "address"
         },
         {
-          "name": "_subtractedValue",
+          "name": "addedValue",
           "type": "uint256"
         }
       ],
-      "name": "decreaseApproval",
+      "name": "increaseAllowance",
       "outputs": [
         {
           "name": "",
@@ -150,14 +132,14 @@ function getAccounts(){
       "constant": true,
       "inputs": [
         {
-          "name": "_owner",
+          "name": "owner",
           "type": "address"
         }
       ],
       "name": "balanceOf",
       "outputs": [
         {
-          "name": "balance",
+          "name": "",
           "type": "uint256"
         }
       ],
@@ -183,11 +165,34 @@ function getAccounts(){
       "constant": false,
       "inputs": [
         {
-          "name": "_to",
+          "name": "spender",
           "type": "address"
         },
         {
-          "name": "_value",
+          "name": "subtractedValue",
+          "type": "uint256"
+        }
+      ],
+      "name": "decreaseAllowance",
+      "outputs": [
+        {
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "name": "to",
+          "type": "address"
+        },
+        {
+          "name": "value",
           "type": "uint256"
         }
       ],
@@ -203,37 +208,14 @@ function getAccounts(){
       "type": "function"
     },
     {
-      "constant": false,
-      "inputs": [
-        {
-          "name": "_spender",
-          "type": "address"
-        },
-        {
-          "name": "_addedValue",
-          "type": "uint256"
-        }
-      ],
-      "name": "increaseApproval",
-      "outputs": [
-        {
-          "name": "",
-          "type": "bool"
-        }
-      ],
-      "payable": false,
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
       "constant": true,
       "inputs": [
         {
-          "name": "_owner",
+          "name": "owner",
           "type": "address"
         },
         {
-          "name": "_spender",
+          "name": "spender",
           "type": "address"
         }
       ],
@@ -249,26 +231,10 @@ function getAccounts(){
       "type": "function"
     },
     {
-      "anonymous": false,
-      "inputs": [
-        {
-          "indexed": true,
-          "name": "owner",
-          "type": "address"
-        },
-        {
-          "indexed": true,
-          "name": "spender",
-          "type": "address"
-        },
-        {
-          "indexed": false,
-          "name": "value",
-          "type": "uint256"
-        }
-      ],
-      "name": "Approval",
-      "type": "event"
+      "inputs": [],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "constructor"
     },
     {
       "anonymous": false,
@@ -291,17 +257,27 @@ function getAccounts(){
       ],
       "name": "Transfer",
       "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "name": "owner",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "name": "spender",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "name": "value",
+          "type": "uint256"
+        }
+      ],
+      "name": "Approval",
+      "type": "event"
     }
   ];
-
-  var accts = 0;
-  web3.eth.getAccounts(function(error, accounts) {console.log(accounts)});
-  contract = web3.eth.contract(jsonabi);
-  contractInstance = contract.at("0x345ca3e014aaf5dca488057592ee47305d9b3e10");
-
-  contractInstance.balanceOf("0x627306090abaB3A6e1400e9345bC60c78a8BEf57", function(error, result){ console.log(result.toNumber())});
-
-  return accts;
-}
-
-

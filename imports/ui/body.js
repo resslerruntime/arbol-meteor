@@ -10,7 +10,7 @@ import './threshold.js';
 import './utilities.js'
 
 import './body.html';
-import './createProtection.html';
+import './html-files/createProtection.html';
 
 Router.route('/tutorial');
 Router.route('/', {
@@ -38,6 +38,7 @@ Session.set("pastUser",-2);
 // var arbolAddress, arbolContract, arbolInstance; //tag for deletion
 var witAddress, witContract, witInstance;
 var noaaAddress, nasaAddress;
+var hadrianAddress, hadrianContract, hadrianInstance;
 
 function initMainPage(){
   if (Meteor.isClient) {
@@ -151,9 +152,13 @@ function initContracts(){
         // noaaAddress = "0x337c58a3c4142f3d382b1fe4027d281625315a0b";
         // nasaAddress = "0x5a958c25b04cdef8ff408bf79479837922bbff16";
         //NASA-leaflet deployment- backwards compatible 10-12-2018;
-        witAddress = "0xa2ed7be8cd73d94de8e6d8e7a7b5de9af43684bc";
-        noaaAddress = "0x782c883f8034e9ee52eba6dcea57a87851fce738";
-        nasaAddress = "0x836886d868e84529f1d327531e7e2d35f8f04705";        
+        // witAddress = "0xa2ed7be8cd73d94de8e6d8e7a7b5de9af43684bc";
+        // noaaAddress = "0x782c883f8034e9ee52eba6dcea57a87851fce738";
+        // nasaAddress = "0x836886d868e84529f1d327531e7e2d35f8f04705"; 
+        //Stable coing deployment, 12-06-2018
+        hadrianAddress = "0x92c8c65d6ac2513b8041742d9d34ac22b0a5a865";
+        nasaAddress = "0x5387aee08b03f62b4774bb49e87195c85c509814";
+        witAddress = "0xbbc1b8b1f5af6b541ad0a2ae111ce2bbd77a467c";
         break
       case "42":
         $("#network-name").html("Kovan");
@@ -173,6 +178,8 @@ function initContracts(){
     console.log("nasaAddress",nasaAddress)
     witContract = web3.eth.contract(WITABI);
     witInstance = witContract.at(witAddress);
+    hadrianContract = web3.eth.contract(HADRIANABI);
+    hadrianInstance = hadrianContract.at(hadrianAddress);
     Session.set("witAddress",witAddress)
     Session.set("noaaAddress",noaaAddress)
     Session.set("nasaAddress",nasaAddress)
@@ -229,6 +236,7 @@ async function updateBalance(){
     $('#user-balance').removeClass('green-text');
     $('#user-balance').addClass('red-text');
   } else {
+    // get Eth balance
     web3.eth.getBalance(Session.get("user"),function (error, result) {
       if (!error) {
         var e = toEth(result.toNumber());
@@ -245,6 +253,24 @@ async function updateBalance(){
         console.error(error);
       }
     });
+    // get HUSD balance
+    try{
+      var bal = await promisify(cb => hadrianInstance.balanceOf(Session.get("user"), cb));
+    }catch(error){
+      console.log(error);
+    }
+    console.log("HUSD balance",bal,bal.toNumber()/1e18)
+    //TODO convert this properly
+    var e = bal.toNumber()/1e18;
+    if(e === 0){
+      $('#user-balance-HUSD').html("0.000");
+      $('#user-balance-HUSD').removeClass('green-text');
+      $('#user-balance-HUSD').addClass('red-text');
+    }else{
+      $('#user-balance-HUSD').html(clipNum(e));
+      $('#user-balance-HUSD').removeClass('red-text');
+      $('#user-balance-HUSD').addClass('green-text');
+    } 
   }
 }
 
@@ -275,23 +301,17 @@ function resetSessionVars(){
   resetReception();
 }
 
-// function resetGlobalVariables(){
-//   console.log("_-_ fn: resetGlobalVariables")
-//   console.log("_-_", watchLatestProposal, watchLatestAcceptance, watchLatestEvaluation)
-//   if(watchLatestProposal !== -1) watchLatestProposal.stopWatching();
-//   if(watchLatestAcceptance !== -1) watchLatestAcceptance.stopWatching();
-//   if(watchLatestEvaluation !== -1) watchLatestEvaluation.stopWatching();
-// }
-
 //get all proposals, add new entries as they are created
 var watchLatestProposal = -1;
 function latestProposals(){
   console.log("fn: latestProposals");
   watchLatestProposal = witInstance.ProposalOffered({},{fromBlock: 0, toBlock: 'latest'}).watch(function(error, result){
     updateBalance();
-    let store = addInfoFromProposalCreated(result);
-    updateOpenProposals(store.openProposals);
-    updateMyProposals(store.myProposals);
+    if(typeof result !== "undefined"){
+      let store = addInfoFromProposalCreated(result);
+      updateOpenProposals(store.openProposals);
+      updateMyProposals(store.myProposals);
+    }
   });
 }
 
@@ -302,9 +322,11 @@ function latestAcceptances(){
   //do something as new proposal is accepted
   watchLatestAcceptance = witInstance.ProposalAccepted({},{fromBlock: 0, toBlock: 'latest'}).watch(function(error, result){
     updateBalance();
-    let store = addInfoFromProposalAccepted(result);
-    updateOpenProposals(store.openProposals);
-    updateMyProposals(store.myProposals);
+    if(typeof result !== "undefined"){
+      let store = addInfoFromProposalAccepted(result);
+      updateOpenProposals(store.openProposals);
+      updateMyProposals(store.myProposals);
+    }
   });
 }
 
@@ -313,9 +335,11 @@ function latestInvocation(){
   console.log("fn: latestEvalInvoked");
   watchLatestInvocation = witInstance.WITEvaluationInvoked({},{fromBlock: 0, toBlock: 'latest'}).watch(function(error, result){
     updateBalance();
-    let store = addInfoFromEvaluationInvoked(result);
-    updateOpenProposals(store.openProposals);
-    updateMyProposals(store.myProposals);
+    if(typeof result !== "undefined"){
+      let store = addInfoFromEvaluationInvoked(result);
+      updateOpenProposals(store.openProposals);
+      updateMyProposals(store.myProposals);
+    }
   })
 }
 
@@ -326,9 +350,11 @@ function latestEvaluations(){
   //do something as new evaluation is accepted
   watchLatestEvaluation = witInstance.WITEvaluated({},{fromBlock: 0, toBlock: 'latest'}).watch(function(error, result){
     updateBalance();
-    let store = addInfoFromProposalEvaluated(result);
-    updateOpenProposals(store.openProposals);
-    updateMyProposals(store.myProposals);
+    if(typeof result !== "undefined"){
+      let store = addInfoFromProposalEvaluated(result);
+      updateOpenProposals(store.openProposals);
+      updateMyProposals(store.myProposals);
+    }
   })
 }
 
@@ -478,6 +504,8 @@ Template.formNewProtection.onRendered(function(){
   $("#createwit-prev button").attr('disabled','disabled');
   // hide the submit button since this is the first step
   $("#createwit-submit").hide();
+  // hide the start over button since this is the first step
+  $("#createwit-cancel").hide();
   // initialize datepickers
   $('[data-toggle="datepicker"]').datepicker({
     autoHide: true,
@@ -516,22 +544,19 @@ Template.formNewProtection.events({
     $("#createwit .step").eq((self.createWITstep.get() - 1)).addClass('showing');
     // if this is the first step, disable the previous button
     if (self.createWITstep.get() < 2) {
+      console.log("^^^ A")
       $("#createwit-prev button").attr('disabled','disabled');
       $("#createwit-next").show();
       $("#createwit-submit").hide();
+      $("#createwit-cancel").hide();
       // reset the map
       if (typeof regionmap == "object") {
         regionmap.invalidateSize();
       }
     }
-    // if this is the last step, hide the next button and show the confirm button
-    else if (self.createWITstep.get() >= $("#createwit .step").length) {
-      $("#createwit-prev button").show().removeAttr('disabled');
-      $("#createwit-next").hide();
-      $("#createwit-submit").show();
-    }
     // otherwise, hide the confirm button, show the next button and enable the previous button
     else {
+      console.log("^^^ C")
       $("#createwit-prev button").show().removeAttr('disabled');
       $("#createwit-next").show();
       $("#createwit-submit").hide();
@@ -548,27 +573,21 @@ Template.formNewProtection.events({
       // show the correct step
       $("#createwit .step.showing").removeClass('showing');
       $("#createwit .step").eq((self.createWITstep.get() - 1)).addClass('showing');
-      // if this is the first step, disable the previous button and hide the submit button
-      if (self.createWITstep.get() < 2) {
-        $("#createwit-prev button").attr('disabled','disabled');
-        $("#createwit-next").show();
-        $("#createwit-submit").hide();
-        // reset the map
-        if (typeof regionmap == "object") {
-          regionmap.invalidateSize();
-        }
-      }
+
       // if this is the last step, hide the next button and show the confirm button
-      else if (self.createWITstep.get() >= $("#createwit .step").length) {
+      if (self.createWITstep.get() >= $("#createwit .step").length) {
+        console.log("^^^ E")
         $("#createwit-prev button").show().removeAttr('disabled');
         $("#createwit-next").hide();
         $("#createwit-submit").show();
       }
       // otherwise, hide the confirm button, show the next button and enable the previous button
       else {
+        console.log("^^^ F")
         $("#createwit-prev button").show().removeAttr('disabled');
         $("#createwit-next").show();
         $("#createwit-submit").hide();
+        $("#createwit-cancel").show();
       }
     }
   },
@@ -591,26 +610,34 @@ Template.formNewProtection.events({
   },
   'click #mapdiv'(event){
     let a = selectedBounds;
-    let lat = Math.round(1000 * a[0][0]) / 1000;
-    let lng = Math.round(1000 * a[0][1]) / 1000;
+    let lat = Math.round(1000 * (a[0][0]+0.125)) / 1000;
+    let lng = Math.round(1000 * (a[0][1]+0.125)) / 1000;
     $('#locname').val('latitude '+lat+'°, longitude '+lng+'°').trigger('input');
     let reversegeocodeURL = 'https://services.gisgraphy.com/reversegeocoding/search?format=json&lat='+lat+'&lng='+lng;
+
+    //TODO can we move this api call to server side?
     $.ajax({
       type: 'GET',
       crossDomain: true,
       dataType: 'jsonp',
       url: reversegeocodeURL
     }).done(function(data) {
-      let loc = data.result[0].formatedFull;
-      console.log(data.result[0].formatedFull);
-      $('#locname').val(loc).trigger('input');
+      let r = data.result[0];
+      if(typeof r !== "undefined"){
+        let adm1Name = "", adm2Name = "", city = "";
+        if(r.adm1Name && r.adm1Name !== "unknown") adm1Name = r.adm1Name + ", "; 
+        if(r.adm2Name && r.adm2Name !== "unknown") adm2Name = r.adm2Name + ", ";
+        if(r.city && r.city !== "unknown") city = r.city + ", ";
+        let location = city + adm2Name + adm1Name + r.countryCode;
+        $('#locname').val(location).trigger('input');
+      }
     }).fail(function(){
       console.log('failed to reverse geocode');
     });
+
   },
   'input #locname'(event){
     // this is a hidden input to hold a location region that is reverse geocoded from the map coordinate
-    console.log(event.currentTarget.value);
     self = Template.instance();
     selfdata = self.createWITdata.get();
     selfdata.locationRegion = event.currentTarget.value;
@@ -765,6 +792,7 @@ Template.formNewProtection.events({
       const yourContr = parseFloat($('#your-contrib').val());
       // console.log("yourContr",yourContr)
       const totalPayout = parseFloat($('#total-contrib').val());
+      const requestedContrib = parseFloat($('#requested-contrib').val());
       // console.log("totalPayout",totalPayout)
       // const location = "21.5331234,-3.1621234&0.14255"; //$('#location').val();
       const location = leafletToWitCoords(); //$('#location').val();
@@ -787,8 +815,8 @@ Template.formNewProtection.events({
 
       //ask for confirmation
       const confirmed = confirm ( "Please confirm your selection: \n\n"
-        + "  Your Contribution (Eth): " + yourContr + "\n"
-        + "  Total Payout (Eth): " + totalPayout + "\n"
+        + "  Your Contribution (hUSD): " + yourContr + "\n"
+        + "  Total Payout (hUSD): " + totalPayout + "\n"
         + "  Location: " + location + "\n"
         + "  Threshold: " + threshText(thresholdRelation,thresholdPercent,thresholdAverage) + "\n"
         + "  Start Date: " + startDate + "\n"
@@ -797,10 +825,8 @@ Template.formNewProtection.events({
 
       if (confirmed) {
         //submit info
-        createProposal(startDate,endDate,yourContr,totalPayout,location,index,thresholdRelation,thresholdPercent,thresholdAverage);
-        // createProposalTest();
         self = Template.instance();
-        resetCreateWIT(self);
+        createProposal(startDate,endDate,yourContr,requestedContrib,location,index,thresholdRelation,thresholdPercent,thresholdAverage,self);
       } else {
         //let user continue to edit
       }
@@ -868,27 +894,45 @@ function resetCreateWIT(instance) {
   });
 }
 
-async function createProposal(startDate,endDate,yourContr,totalPayout,location,index,thresholdRelation,thresholdPercent,thresholdAverage){
+// var batch = web3.createBatch();
+// batch.add(web3.eth.getBalance.request('0x0000000000000000000000000000000000000000', 'latest', callback));
+// batch.add(web3.eth.contract(abi).at(address).balance.request(address, callback2));
+// batch.execute();
+
+async function createProposal(startDate,endDate,yourContr,requestedContrib,location,index,thresholdRelation,thresholdPercent,thresholdAverage,self){
   console.log("fn: createProposal")
   const d1 = (new Date(startDate)).getTime()/1000; //convert to UNIX timestamp
   let dd2 = new Date(endDate);
   dd2.setDate(dd2.getDate() + 15);
   const d2 = dd2.getTime()/1000; //convert to UNIX timestamp
 
-  let ethPropose = toWei(yourContr);
-  let ethAsk = toWei(totalPayout - yourContr);
+  console.log("wei",yourContr,requestedContrib)
+  let weiPropose = toWei(yourContr);
+  let weiAsk = toWei(requestedContrib);
   let above = threshVal(thresholdRelation);
-  let numPPTH = threshValPPTH(thresholdPercent,thresholdAverage); // = 10000 * threshValFraction(thresholdPercent,thresholdAverage);
+  let numPPTH = threshValPPTH(thresholdPercent,thresholdAverage);
   let address = nasaAddress;
   let makeStale = false; //TODO for deployment makeStale should be true in default
-  console.log("ethPropose, ethAsk, above, address, numPPTH, location, d1, d2, makeStale");
-  console.log(ethPropose, ethAsk, above, address, numPPTH, location, d1, d2, makeStale);
+  console.log("weiPropose, weiAsk, above, address, numPPTH, location, d1, d2, makeStale");
+  console.log(weiPropose, weiAsk, above, address, numPPTH, location, d1, d2, makeStale);
 
-  try {
-    await promisify(cb => witInstance.createWITProposal(ethPropose, ethAsk, above, address, numPPTH, location, d1, d2, makeStale, {from:Session.get("user"), value: ethPropose, gas: 2000000}, cb));
-  } catch (error) {
-    console.log(error)
-  }
+  var batch = web3.createBatch();
+  batch.add(witInstance.createWITProposal.request(weiPropose, weiAsk, above, address, numPPTH, location, d1, d2, makeStale, true, {from:Session.get("user")},function(){resetCreateWIT(self)}));
+  batch.add(hadrianInstance.approve.request(witInstance.address, weiPropose, {from: Session.get("user")}));
+  batch.execute();
+  
+  // try {
+  //   await promisify(cb => hadrianInstance.approve(witInstance.address, weiPropose, {from: Session.get("user")},cb));
+  // } catch (error){
+  //   console.log(error)
+  // }
+  // try {
+  //   await promisify(cb => witInstance.createWITProposal(weiPropose, weiAsk, above, address, numPPTH, location, d1, d2, makeStale, true, {from:Session.get("user"), value: weiPropose, gas: 2000000}, cb));
+  //   // await promisify(cb => witInstance.createWITProposal(weiPropose, weiAsk, above, address, numPPTH, location, d1, d2, makeStale, true, {from:Session.get("user")}, cb));
+  //   resetCreateWIT(self);    
+  // } catch (error) {
+  //   console.log(error)
+  // }
 }
 
 // async function createProposalTest(){
@@ -935,7 +979,7 @@ function capVal(target){
 function validateCreateWITStep(step) {
   let validates = false;
   if ($("#createwit .step").eq(step).length > 0) {
-    console.log("valid step number to validate");
+    //console.log("valid step number to validate");
     validates = true;
     $("#createwit .step").eq(step).find('input,select').each(function(){
       if ($(this).val() === null || $(this).val() === '') {
@@ -946,8 +990,6 @@ function validateCreateWITStep(step) {
   }
   return validates;
 }
-
-
 
 ////////////////////////////////////////////
 // FUNCTIONS RELATED TO SORTABLE TABLES
@@ -988,18 +1030,22 @@ Template.sortableRows.events({
 
 async function acceptProposal(v){
   let vals = v.split(",");
-  let weiAsk = vals[0]
+  let weiAsk = vals[0];
   let id = vals[1];
 
   console.log("===> new WIT acceptance");
   console.log("==> token ID",id,Session.get("user"),weiAsk)
 
-  try {
-    //TODO don't let user accept their own proposal
-    await promisify(cb => witInstance.createWITAcceptance(id,{from: Session.get("user"), value:weiAsk, gas: 2000000},cb));
-  } catch (error) {
-    console.log(error);
-  }
+  var batch = web3.createBatch();
+  batch.add(witInstance.createWITAcceptance.request(id,{from: Session.get("user")}));
+  batch.add(hadrianInstance.approve.request(witInstance.address, weiAsk, {from: Session.get("user")}));
+  batch.execute();
+
+  // try {
+  //   await promisify(cb => witInstance.createWITAcceptance(id,{from: Session.get("user"), value:weiAsk, gas: 2000000},cb));
+  // } catch (error) {
+  //   console.log(error);
+  // }
 }
 
 
