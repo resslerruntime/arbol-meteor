@@ -907,28 +907,28 @@ async function createProposal(startDate,endDate,yourContr,requestedContrib,locat
   const d2 = dd2.getTime()/1000; //convert to UNIX timestamp
 
   console.log("wei",yourContr,requestedContrib)
-  let ethPropose = toWei(yourContr);
-  let ethAsk = toWei(requestedContrib);
+  let weiPropose = toWei(yourContr);
+  let weiAsk = toWei(requestedContrib);
   let above = threshVal(thresholdRelation);
   let numPPTH = threshValPPTH(thresholdPercent,thresholdAverage);
   let address = nasaAddress;
   let makeStale = false; //TODO for deployment makeStale should be true in default
-  console.log("ethPropose, ethAsk, above, address, numPPTH, location, d1, d2, makeStale");
-  console.log(ethPropose, ethAsk, above, address, numPPTH, location, d1, d2, makeStale);
+  console.log("weiPropose, weiAsk, above, address, numPPTH, location, d1, d2, makeStale");
+  console.log(weiPropose, weiAsk, above, address, numPPTH, location, d1, d2, makeStale);
 
   var batch = web3.createBatch();
-  batch.add(witInstance.createWITProposal.request(ethPropose, ethAsk, above, address, numPPTH, location, d1, d2, makeStale, true, {from:Session.get("user")},function(){resetCreateWIT(self)}));
-  batch.add(hadrianInstance.approve.request(witInstance.address, ethPropose, {from: Session.get("user")}));
+  batch.add(witInstance.createWITProposal.request(weiPropose, weiAsk, above, address, numPPTH, location, d1, d2, makeStale, true, {from:Session.get("user")},function(){resetCreateWIT(self)}));
+  batch.add(hadrianInstance.approve.request(witInstance.address, weiPropose, {from: Session.get("user")}));
   batch.execute();
   
   // try {
-  //   await promisify(cb => hadrianInstance.approve(witInstance.address, ethPropose, {from: Session.get("user")},cb));
+  //   await promisify(cb => hadrianInstance.approve(witInstance.address, weiPropose, {from: Session.get("user")},cb));
   // } catch (error){
   //   console.log(error)
   // }
   // try {
-  //   await promisify(cb => witInstance.createWITProposal(ethPropose, ethAsk, above, address, numPPTH, location, d1, d2, makeStale, true, {from:Session.get("user"), value: ethPropose, gas: 2000000}, cb));
-  //   // await promisify(cb => witInstance.createWITProposal(ethPropose, ethAsk, above, address, numPPTH, location, d1, d2, makeStale, true, {from:Session.get("user")}, cb));
+  //   await promisify(cb => witInstance.createWITProposal(weiPropose, weiAsk, above, address, numPPTH, location, d1, d2, makeStale, true, {from:Session.get("user"), value: weiPropose, gas: 2000000}, cb));
+  //   // await promisify(cb => witInstance.createWITProposal(weiPropose, weiAsk, above, address, numPPTH, location, d1, d2, makeStale, true, {from:Session.get("user")}, cb));
   //   resetCreateWIT(self);    
   // } catch (error) {
   //   console.log(error)
@@ -1031,18 +1031,22 @@ Template.sortableRows.events({
     // await HUSD.approve(WIT.address, ethAsk, {from: accepterAccount});
     // response = await WIT.createWITAcceptance(proposalID, {from: accepterAccount});
 
+  // var batch = web3.createBatch();
+  // batch.add(witInstance.createWITProposal.request(ethPropose, ethAsk, above, address, numPPTH, location, d1, d2, makeStale, true, {from:Session.get("user")},function(){resetCreateWIT(self)}));
+  // batch.add(hadrianInstance.approve.request(witInstance.address, ethPropose, {from: Session.get("user")}));
+  // batch.execute();
+
 async function acceptProposal(v){
   let vals = v.split(",");
   let weiAsk = vals[0];
-  let ethAsk = toEth(weiAsk);
   let id = vals[1];
 
   console.log("===> new WIT acceptance");
-  console.log("==> token ID",id,Session.get("user"),weiAsk,ethAsk)
+  console.log("==> token ID",id,Session.get("user"),weiAsk)
 
   var batch = web3.createBatch();
   batch.add(witInstance.createWITAcceptance.request(id,{from: Session.get("user")}));
-  batch.add(hadrianInstance.approve.request(witInstance.address, ethAsk, {from: Session.get("user")}));
+  batch.add(hadrianInstance.approve.request(witInstance.address, weiAsk, {from: Session.get("user")}));
   batch.execute();
 
   // try {
