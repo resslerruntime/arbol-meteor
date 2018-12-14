@@ -29,6 +29,7 @@ body {
 
 div.not-chrome-footer {
   background-color: #ffcec9 !important;
+  background-image: none !important;
   color: #ed735e !important;
 }
 

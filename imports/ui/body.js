@@ -10,7 +10,7 @@ import './threshold.js';
 import './utilities.js'
 
 import './body.html';
-import './html-files/createProtection.html';
+import './createProtection.html';
 
 Router.route('/tutorial');
 Router.route('/', {
@@ -73,6 +73,7 @@ function initMainPage(){
         $("#web3-onload").hide();
         $("#footer").addClass("not-chrome-footer");
       }else{
+        $('#demo-popup').show();
         $("#user").show();
         // Modern dapp browsers...
         if(window.ethereum) {
