@@ -880,6 +880,7 @@ function calcRating(){
 }
 
 function resetCreateWIT(instance) {
+  console.log("fn: resetCreateWIT")
   // reset the step to 1
   instance.createWITstep.set(1);
   // show the correct step

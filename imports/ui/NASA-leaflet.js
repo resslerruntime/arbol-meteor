@@ -60,7 +60,7 @@ prepareNasaCall = function (){
 }
 
 let latestId = "";
-let checkStatus;
+let checkStatus, statusArray = [];
 
 // Follow reasonable convention and take polygonArray with (lat, lon) ordering.
 callNASA = function (startDate,endDate,polygonArray){
@@ -81,8 +81,7 @@ callNASA = function (startDate,endDate,polygonArray){
   //submit initial data request
   Meteor.call("submitDataRequestNASA",startDate.mmddyyyy,endDate.mmddyyyy,stringifyCoords(invertedPolygon),function(error, results) {
     if(typeof results == 'undefined') { 
-      errorizeGraph("No data was returned. ClimateSERV API may be down.")
-      return;        
+      errorizeGraph("No data was returned. ClimateSERV API may be down.");      
     }
     let id = eval(results.content)[0];
     latestId = id;
@@ -93,13 +92,12 @@ callNASA = function (startDate,endDate,polygonArray){
         let status = parseFloat(eval(results.content)[0]);
         console.log("progress NASA",id,results,status)
         if(status === 100){
-          window.clearInterval(checkStatus);
+          statusArray.map(e => window.clearInterval(e));
           if(id === latestId){
             console.log("nasa latest id", latestId)
             console.log("getDataFromRequestNASA",id)
             //when data is ready get data
             Meteor.call("getDataFromRequestNASA",id,function(error, results) {
-              submittedDataRequest = false;
               let d = JSON.parse(results.content)
               if(d.data.length === 0){
                 errorizeGraph("No data was returned.")
@@ -110,13 +108,13 @@ callNASA = function (startDate,endDate,polygonArray){
               $(".chart-loader-div").removeClass("chart-loader");
               $("#chart-loader").fadeOut(500);
             });
-          } else if (status == '-1') {
-            errorizeGraph("No data was returned. ClimateSERV API may be down.")
-            return;  
-          }        
-        }
+          }      
+        } else if (status == '-1') {
+          errorizeGraph("No data was returned. ClimateSERV API may be down."); 
+        }  
       });
     }, 5000);
+    statusArray.push(checkStatus);
     errorizeGraph = function(consoleMessage){
       console.log(consoleMessage);
       $("#chart-loader").fadeOut(500);
