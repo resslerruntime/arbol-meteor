@@ -694,8 +694,7 @@ Template.formNewProtection.events({
     $("#your-contrib").removeClass("missing-info");
     $('#requested-contrib').val(Math.round(($('#total-contrib').val() - $('#your-contrib').val())*10000)/10000);
     // calculate and show wit rating
-    // $('#createwit .witrating').text( CalcWITRating() ).attr('class','witrating witrating-'+CalcWITLevel()); 
-    $("#createwit .helpbox.rating").show();
+    calcRating();
     // assign values to reactive variables
     self = Template.instance();
     selfdata = self.createWITdata.get();
@@ -722,13 +721,15 @@ Template.formNewProtection.events({
         // calculate the requested contribution
         $('#requested-contrib').val(Math.round((event.currentTarget.value - $('#your-contrib').val())*10000)/10000);
         // calculate and show wit rating
-        // $('#createwit .witrating').text( CalcWITRating() ).attr('class','witrating witrating-'+CalcWITLevel()); 
-        $("#createwit .helpbox.rating").show();
+        calcRating(); 
       }
     }
     else {
       // disable other contribution fields
       $("#your-contrib-hint").hide();
+      $("#createwit .helpbox.rating").hide();
+      $('#requested-contrib').val('');
+      $('#your-contrib').val('');
       $("#your-contrib, #requested-contrib").attr('disabled','disabled');
       $("#your-contrib, #requested-contrib").prev().attr('disabled','disabled');
     }
@@ -745,6 +746,8 @@ Template.formNewProtection.events({
     $('#your-contrib').val($(event.currentTarget).text());
     // also have to reset the requested contribution
     $('#requested-contrib').val(Math.round(($('#total-contrib').val() - $('#your-contrib').val())*10000)/10000);
+    calcRating();
+
     self = Template.instance();
     selfdata = self.createWITdata.get();
     selfdata['your-contrib'] = $('#your-contrib').val();
@@ -835,6 +838,47 @@ Template.formNewProtection.events({
   }
 });
 
+function calcRating(){
+  let contrib = parseFloat($('#your-contrib').val());
+  let hint = parseFloat($('#your-contrib-hint-value').text());
+
+  if(contrib !== 0 && !isNaN(contrib)){
+    $("#createwit .helpbox.rating").show();
+
+    let ratio, rating, sign, sign2 = 1, text, less;
+    if(hint > contrib){
+      ratio = hint/contrib;
+      sign = "-";
+      sign2 = -1;
+      text = "less than";
+      less = true;
+    } 
+    if(contrib >= hint){
+      ratio = contrib/hint;
+      sign = "+";
+      text = "greater than";
+      less = false;
+    }
+    let val = Math.round((ratio-1)*100);
+    let shortText = `${sign}${val}%`;
+    let longText = `${val}% ${text}`;
+
+    $('.witrating').text(`${shortText}`);
+    $('.witrating-text').text(`${longText}`);
+    if(!less){
+      $(".witrating").removeClass("witrating-bad");
+      $(".witrating").addClass("witrating-good");
+    }else{
+      $(".witrating").removeClass("witrating-good");
+      $(".witrating").addClass("witrating-bad");
+    } 
+    return sign2*val;
+  }else{
+    $("#createwit .helpbox.rating").hide();
+    return 'NaN';
+  }
+}
+
 function resetCreateWIT(instance) {
   // reset the step to 1
   instance.createWITstep.set(1);
@@ -870,6 +914,11 @@ function resetCreateWIT(instance) {
   // clear the chart
   clearChart();
   // clear and hide the recommended contribution and wit rating
+  $('#total-contrib').val('');
+  $('#requested-contrib').val('');
+  $('#your-contrib').val('');
+  $("#your-contrib, #requested-contrib").attr('disabled','disabled');
+  $("#your-contrib, #requested-contrib").prev().attr('disabled','disabled');  
   $('#your-contrib-hint-value').text('').parent().hide();
   $("#createwit .helpbox.rating").hide();
   // make initial selection for the map

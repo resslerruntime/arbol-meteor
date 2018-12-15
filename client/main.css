@@ -822,10 +822,15 @@ button.action:hover {
   padding:10px;
   text-align:center;
 }
-.witrating.witrating-good {
+.witrating-good {
   background-color:#c4eec6;
   border-color:#008800;
   color:#007700;
+}
+.witrating-bad {
+  background-color:#ffcec9;
+  border-color:#ed735e;
+  color:#ed735e;
 }
 #your-contrib-hint {
   color:var(--app-color-text-disabled);
