@@ -264,11 +264,11 @@ async function updateBalance(){
     //TODO convert this properly
     var e = bal.toNumber()/1e18;
     if(e === 0){
-      $('#user-balance-HUSD').html("0.000");
+      $('#user-balance-HUSD').html("0");
       $('#user-balance-HUSD').removeClass('green-text');
       $('#user-balance-HUSD').addClass('red-text');
     }else{
-      $('#user-balance-HUSD').html(clipNum(e));
+      $('#user-balance-HUSD').html(e);
       $('#user-balance-HUSD').removeClass('red-text');
       $('#user-balance-HUSD').addClass('green-text');
     } 
@@ -690,11 +690,29 @@ Template.formNewProtection.events({
     if($(event.currentTarget).attr('id') == "date-end") prepareNasaCall();
   },
   'input #your-contrib'(event){
-    capVal(event.currentTarget);
+    //don't allow your contribution to be higher than total contribution
+    var num = parseFloat(event.currentTarget.value);
+    var step = parseFloat($('#your-contrib')[0].step);
+    let next = num + step;
+    $('#total-contrib')[0].min = next;
+
+    let tot = parseFloat($('#total-contrib')[0].value);
+    if(num >= tot) {
+      $('#total-contrib')[0].value = next;
+      // recalculate recommended contribution
+      if ($('#pct-span').attr('data-tenYrProb')) {
+        var recommendedValue = Math.round((next * $('#pct-span').attr('data-tenYrProb'))*10)/1000;
+        $('#your-contrib-hint-value').text(recommendedValue).parent().show();
+        $('#your-contrib').attr("placeholder",recommendedValue);
+      }    
+    }
+
     $("#your-contrib").removeClass("missing-info");
     $('#requested-contrib').val(Math.round(($('#total-contrib').val() - $('#your-contrib').val())*10000)/10000);
+
     // calculate and show wit rating
     calcRating();
+
     // assign values to reactive variables
     self = Template.instance();
     selfdata = self.createWITdata.get();
@@ -714,10 +732,7 @@ Template.formNewProtection.events({
       if ($('#pct-span').attr('data-tenYrProb')) {
         var recommendedValue = Math.round((event.currentTarget.value * $('#pct-span').attr('data-tenYrProb'))*10)/1000;
         $('#your-contrib-hint-value').text(recommendedValue).parent().show();
-        // if the your contribution field is blank, zero, or invalid (greater than the total), set to recommended value 
-        if ($('#your-contrib').val() === '' || $('#your-contrib').val() === 0 || $('#your-contrib').val() >= event.currentTarget.value) {
-          $('#your-contrib').val(recommendedValue);
-        }
+        $('#your-contrib').attr("placeholder",recommendedValue);
         // calculate the requested contribution
         $('#requested-contrib').val(Math.round((event.currentTarget.value - $('#your-contrib').val())*10000)/10000);
         // calculate and show wit rating
@@ -799,7 +814,8 @@ Template.formNewProtection.events({
       const requestedContrib = parseFloat($('#requested-contrib').val());
       // console.log("totalPayout",totalPayout)
       // const location = "21.5331234,-3.1621234&0.14255"; //$('#location').val();
-      const location = leafletToWitCoords(); //$('#location').val();
+      const location = leafletToWitCoords(); //
+      const locationDisplay = $('#locname').val();
       // console.log("return location nasa",location)
       const thresholdRelation = $('#threshold-relation').val();
       // console.log("thresholdRelation",thresholdRelation)
@@ -821,7 +837,7 @@ Template.formNewProtection.events({
       const confirmed = confirm ( "Please confirm your selection: \n\n"
         + "  Your Contribution (hUSD): " + yourContr + "\n"
         + "  Total Payout (hUSD): " + totalPayout + "\n"
-        + "  Location: " + location + "\n"
+        + "  Location: " + locationDisplay + "\n"
         + "  Threshold: " + threshText(thresholdRelation,thresholdPercent,thresholdAverage) + "\n"
         + "  Start Date: " + startDate + "\n"
         + "  End Date: " + endDate + "\n"
@@ -1008,24 +1024,6 @@ async function createProposal(startDate,endDate,yourContr,requestedContrib,locat
 //     console.log(error)
 //   }
 // }
-
-function capVal(target){
-  //change properties of the other date picker so that incorrect values can't be chosen
-  var num = parseFloat(target.value);
-  var step = parseFloat($('#your-contrib')[0].step);
-  let next = clipNum(num + step);
-  $('#total-contrib')[0].min = next;
-
-  let tot = parseFloat($('#total-contrib')[0].value);
-  if(num >= tot) {
-    $('#total-contrib')[0].value = next;
-    // recalculate recommended contribution
-    if ($('#pct-span').attr('data-tenYrProb')) {
-      var recommendedValue = Math.round((next * $('#pct-span').attr('data-tenYrProb'))*10)/1000;
-      $('#your-contrib-hint-value').text(recommendedValue).parent().show();
-    }    
-  }
-}
 
 function validateCreateWITStep(step) {
   let validates = false;
