@@ -757,16 +757,16 @@ Template.formNewProtection.events({
     self.createWITdata.set(selfdata);
   },
   'click #your-contrib-hint-value'(event) {
-    // clicking on the recommended value should reset the your contrib field to this value
-    $('#your-contrib').val($(event.currentTarget).text());
-    // also have to reset the requested contribution
-    $('#requested-contrib').val(Math.round(($('#total-contrib').val() - $('#your-contrib').val())*10000)/10000);
-    calcRating();
+    // // clicking on the recommended value should reset the your contrib field to this value
+    // $('#your-contrib').val($(event.currentTarget).text());
+    // // also have to reset the requested contribution
+    // $('#requested-contrib').val(Math.round(($('#total-contrib').val() - $('#your-contrib').val())*10000)/10000);
+    // calcRating();
 
-    self = Template.instance();
-    selfdata = self.createWITdata.get();
-    selfdata['your-contrib'] = $('#your-contrib').val();
-    self.createWITdata.set(selfdata);
+    // self = Template.instance();
+    // selfdata = self.createWITdata.get();
+    // selfdata['your-contrib'] = $('#your-contrib').val();
+    // self.createWITdata.set(selfdata);
   },
   'input #threshold'(event) {
     changeThreshold();
