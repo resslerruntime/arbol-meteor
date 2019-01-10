@@ -11,7 +11,7 @@ body {
   --header-height: 60px;
   --footer-height: 100px;
   --web3-onload-padding: 25px;
-  font-family:arial,sans-serif;
+  font-family:Montserrat,sans-serif;
   margin: 0px;
   overflow-x: hidden;
 }
@@ -180,7 +180,7 @@ td.inf-body {
 td.inf {
   text-align:left;
   letter-spacing: 2px;
-  font: 15px arial;
+  font: 15px Montserrat;
 }
 
 td.inf div {
@@ -190,7 +190,7 @@ td.inf div {
 td.inf-name {
   text-align:right;
   letter-spacing: 2px;
-  font: bold 18px arial;
+  font: bold 18px Montserrat;
   /*color: var(--main-bg-color);*/
   color: black;
   text-transform: uppercase;
@@ -231,9 +231,9 @@ td.inf-name, td.inf div {
 .tabs {
   padding: 20px;
   letter-spacing: 5px;
-  font: bold 20px arial;
+  font: bold 20px Montserrat;
   color: black;
-  text-transform: uppercase;
+ /* text-transform: uppercase;*/
   transition: transform .2s ease-in-out;
 }
 
@@ -313,7 +313,7 @@ hr {
 
 #links table tr td {
   padding: 5px;
-  font: bold 12px arial;
+  font: bold 12px Montserrat;
 }
 
 #links table tr td a {
@@ -342,7 +342,7 @@ hr {
   border: 2.5px solid gray;
   padding-top: 5px;
   padding-bottom: 5px;
-  font: bold 15px arial;
+  font: bold 15px Montserrat;
   text-transform: uppercase;
   text-align: center;
 
@@ -356,7 +356,7 @@ hr {
 }
 
 .table-sorter td div {
-  font: 15px arial;
+  font: 15px Montserrat;
   text-align: center;
 
   line-height: 1.1em;
@@ -412,7 +412,7 @@ hr {
 
 .page-count span {
   letter-spacing: 5px;
-  font: bold 20px arial;
+  font: bold 20px Montserrat;
 }
 
 /* --------------------------------------------------------
@@ -426,7 +426,7 @@ hr {
 
 #form-inner-div form table tr td {
   padding: 5px;
-  font: bold 14px arial;
+  font: bold 14px Montserrat;
   /* text-transform: uppercase; */
   /* width: 120px; */
   text-align: right;
@@ -436,7 +436,7 @@ hr {
   /* margin-left: 125px; */
   margin-top: 20px;
 
-  font: bold 15px arial;
+  font: bold 15px Montserrat;
   text-transform: uppercase;
 
   background: lightgray;
