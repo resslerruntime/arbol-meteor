@@ -8,7 +8,7 @@ body {
 
   /*--main-bg-color: #f9f9ef;*/
   --main-bg-color: #ffffff;
-  --header-height: 60px;
+  --header-height: 55px;
   --footer-height: 100px;
   --web3-onload-padding: 25px;
   font-family:Montserrat,sans-serif;
@@ -153,8 +153,8 @@ div.not-chrome-footer {
 #header{
   width: 100%;
   height: var(--header-height);
-  background-color:white;
-  background-image: linear-gradient(to bottom right, white, #C4EFC5);
+  background-color:#white;
+ /* background-image: linear-gradient(to bottom right, white, #C4EFC5); */
   /*background-image: linear-gradient(to bottom right, white, #C4EFC5, #8AD88C);*/
   /*background-color: lightgray;*/
 }
@@ -165,10 +165,11 @@ div.not-chrome-footer {
 }
 
 #arbol2 {
-  margin-left: 10px;
-  text-align:left;
+  margin-top: 15px;
+  margin-left: 50px;
+  text-align:center;
   letter-spacing: 5px;
-  font: bold 45px verdana;
+  font: bold 45px Trueno-Black;
   color: #4BAE4D;
 }
 
@@ -292,8 +293,8 @@ hr {
   width: 100%;
   height: var(--footer-height);
   /*background-color: lightgray;*/
-  background-color: #2FAD6E;
-  background-image: linear-gradient(to bottom right, #C4EFC5, #8AD88C, #4BAE4D);
+  background-color: #white;
+  /*background-image: linear-gradient(to bottom right, #C4EFC5, #8AD88C, #4BAE4D);*/
   /*background-image: linear-gradient(to bottom right, #1B2946, #2FAD6E);*/
 }
 
@@ -307,7 +308,7 @@ hr {
 
 #links {
   position:relative;
-  left: 100px;
+  left: 10px;
   bottom: 70px;
 }
 
@@ -439,15 +440,22 @@ hr {
   font: bold 15px Montserrat;
   text-transform: uppercase;
 
-  background: lightgray;
-  border: none;
+  background: white;
   padding: 10px;
-  outline: inherit;
+  outline: black;
   cursor: pointer;
+  border: 1px var(--app-color-border) solid;
+  border-radius: 3px;
+
 }
 
 #create-proposal:hover {
-  color: blue;
+  border-bottom: 2px solid black;
+  border-left: 2px solid black;
+  border-right: 2px solid black;
+  border-top: 2px solid black;
+
+  padding:9px;
 }
 
 #map-inner-div {
@@ -645,13 +653,13 @@ button.action:hover {
 
 
 #createwit {
-  --app-color-text-active:#0069ff;
+  --app-color-text-active:#000000;
   --app-color-text-disabled:#999999;
-  --app-color-background:#f9f9ef;
-  --app-color-border:#999999;
-  --app-color-border-active:#0069ff;
-  --app-color-shaded:#e6e6e6;
-  --app-color-shaded-active:#c4dcff;
+  --app-color-background:#ffffff;
+  --app-color-border:#000000;
+  --app-color-border-active:#000000;
+  --app-color-shaded:#ffffff;
+  --app-color-shaded-active:#ffffff;
   position:relative;
 }
 #createwit * {
@@ -768,7 +776,7 @@ button.action:hover {
   padding:20px;
 }
 #createwit .helpbox {
-  color:#666;
+  color:#000000;
   margin-top:20px;
   max-width:300px;
 }
