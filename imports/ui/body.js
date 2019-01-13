@@ -246,7 +246,7 @@ async function updateBalance(){
           $('#user-balance').removeClass('green-text');
           $('#user-balance').addClass('red-text');
         }else{
-          $('#user-balance').html(clipNum(e));
+          $('#user-balance').html("Ξ"+clipNum(e));
           $('#user-balance').removeClass('red-text');
           $('#user-balance').addClass('green-text');
         }
@@ -262,13 +262,14 @@ async function updateBalance(){
     }
     console.log("HUSD balance",bal,bal.toNumber()/1e18)
     //TODO convert this properly
-    var e = bal.toNumber()/1e18;
+    var e = parseInt(toEth(bal)).toFixed(2)
+  //  var e = bal.toNumber()/1e18;
     if(e === 0){
       $('#user-balance-HUSD').html("0");
       $('#user-balance-HUSD').removeClass('green-text');
       $('#user-balance-HUSD').addClass('red-text');
     }else{
-      $('#user-balance-HUSD').html(e);
+      $('#user-balance-HUSD').html("$"+e);
       $('#user-balance-HUSD').removeClass('red-text');
       $('#user-balance-HUSD').addClass('green-text');
     } 

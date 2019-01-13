@@ -15,7 +15,7 @@
           <h3>Select a location</h3>
           <input type="hidden" id="locname" name="locname" value="">
           <div class="helpbox">
-            <h4>Crop Region Selector</h4>
+            <h4>Region Selector</h4>
             <p>Select the geographic area covered by the contract by clicking on a region in the map.</p>
           </div>
         </div>
@@ -119,16 +119,16 @@
         <div class="cell">
           <h3>Pick Contribution and Payout Amounts</h3>
           <div class="field">
-            <label>Total Desired Payout (hUSD):</label>
+            <label>Total Desired Payout (US Dollars):</label>
             <input type="number" id="total-contrib" name="payout" class="contribution" step="1" value="" min="0">
           </div>
           <div class="field">
-            <label disabled="disabled">Your Contribution (hUSD):</label>
+            <label disabled="disabled">Your Contribution (US Dollars):</label>
             <input disabled="disabled" type="number" id="your-contrib" name="buyer" class="contribution" step="1" value="" min="0" placeholder="">
-            <span id="your-contrib-hint" style="display:none;">Suggested contribution based on payout probability is <span id="your-contrib-hint-value"></span></span>
+            <span id="your-contrib-hint" style="display:none;">Suggested contribution based on payout probability is $<span id="your-contrib-hint-value"></span></span>
           </div>
           <div class="field">
-            <label disabled="disabled">Requested Contribution (hUSD):</label>
+            <label disabled="disabled">Requested Contribution (US Dollars):</label>
             <input disabled="disabled" type="number" id="requested-contrib" readonly="readonly" name="seller" class="contribution" step="1" value="" min="0">
           </div>
         </div>
@@ -155,8 +155,8 @@
       </div>
       <div class="step-1col">
           <div class="summarybox">
-            <p>I am contributing {{ data 'your-contrib' }} hUSD</p>
-            <p>I will receive {{ data 'total-contrib' }} hUSD if the following conditions are met, and 0 hUSD if they are not:</p>
+            <p>You are contributing ${{ data 'your-contrib' }}</p>
+            <p>You will receive ${{ data 'total-contrib' }} if the following conditions are met, and $0 if they are not:</p>
             <p>
               <strong>
                 {{ data 'weatherIndex' }} at
@@ -166,7 +166,7 @@
                 {{ data 'date-end' }}.
               </strong>
             </p>
-            <p>My {{ data 'your-contrib' }} hUSD will be taken into escrow immediately. I can cancel this WIT and get my hUSD back by clicking “Cancel and redeem {{ data 'your-contrib' }}” in “Your WITs”.</p>
+            <p>Your ${{ data 'your-contrib' }} will be taken into escrow immediately. You can cancel this WIT and get your hUSD back by clicking “Cancel and redeem {{ data 'your-contrib' }}” in “Your WITs”.</p>
             <br>
             <p align="center"><input type="submit" id="create-proposal" value="Create Proposal"></p>
           </div>
