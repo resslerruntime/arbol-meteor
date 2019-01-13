@@ -262,8 +262,8 @@ async function updateBalance(){
     }
     console.log("HUSD balance",bal,bal.toNumber()/1e18)
     //TODO convert this properly
-    var e = parseInt(toEth(bal)).toFixed(2)
-  //  var e = bal.toNumber()/1e18;
+    var e = parseInt(toEth(bal.toNumber())).toFixed(2);
+    //var e = bal.toNumber()/1e18;
     if(e === 0){
       $('#user-balance-HUSD').html("0");
       $('#user-balance-HUSD').removeClass('green-text');

@@ -42,7 +42,14 @@ isChrome = function (){
 }
 
 //conversion
-toEth = n => w3.utils.fromWei(`${n}`);
+toEth = function (n){
+  let ns = `${n}`;
+  let i = ns.indexOf("e+");
+  console.log("toEth",n,ns.indexOf("e+"))
+
+  if(i === -1) return w3.utils.fromWei(`${n}`);
+  else return n/1e18;
+}
 
 toWei = n => w3.utils.toWei(`${n}`);
 
