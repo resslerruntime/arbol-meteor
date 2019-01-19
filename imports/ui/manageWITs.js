@@ -18,7 +18,7 @@ function StoreEntry(){
 	this.end;
 	this.start;
 	this.location;
-	this.makeStale;
+    this.rating;
 
 	this.weiAsking;			//amount of wei asked for by the proposing party
 	this.weiContributing;	//amount of wei contributed by the proposing party
@@ -68,7 +68,8 @@ function Entry(o){
 
   	this.type = "bodyRow";
   	this.column = [
-    	{type:"text",key:o.location,name:o.locationText.t}
+  		{type:"num",key:o.rating,name:o.rating}
+    	,{type:"text",key:o.location,name:o.locationText.t}
     	,{type:"text",key:thresh,name:thresh}
     	,{type:"text",key:"NASA Rainfall",name:"NASA Rainfall"}
     	,{type:"num",key:o.startText.v,name:o.startText.t}
@@ -238,7 +239,7 @@ addInfoFromProposalCreated = function(r){
 			//update store with new info
 			//pass by reference might be sufficient in this case
 			e[idx] = fillDataProposalCreated(e[idx],r);
-			console.log("+++= p update",r.args.WITID.toNumber(),e.length)
+			console.log("+++= p update",r.args.witID.toNumber(),e.length)
 			return getStore();
 		}
 	}else{
@@ -246,7 +247,7 @@ addInfoFromProposalCreated = function(r){
 		let o = new StoreEntry();
 		o = fillDataProposalCreated(o,r);
 		e.push(o);
-		console.log("+++= p new",r.args.WITID.toNumber(),e.length)
+		console.log("+++= p new",r.args.witID.toNumber(),e.length)
 		return getStore();
 	}	
 }
@@ -277,7 +278,7 @@ function fillDataProposalCreated(o,r){
 	o.end = r.args.end;
 	o.start = r.args.start;
 	o.location = r.args.location;
-	o.makeStale = r.args.makeStale;
+	o.rating = r.args.rating.toNumber();
 
 	o.weiAsking = r.args.weiAsking;
 	o.weiContributing = r.args.weiContributing;
@@ -297,6 +298,7 @@ addInfoFromProposalAccepted = function(r){
 	acceptanceReceived = true;
 	//check for obj in eventStore
 	let idx = findInStore(r.args.aboveID,r.args.belowID);
+	console.log("ASDFASDF: " + JSON.stringify(r))
 	if(typeof idx === "number"){
 		if(e[idx].accepted){
 			//duplicate event was fired
@@ -307,15 +309,18 @@ addInfoFromProposalAccepted = function(r){
 			//update store with new info
 			//pass by reference might be sufficient in this case
 			e[idx] = fillDataProposalAccepted(e[idx],r);
-			console.log("+++= a update",r.args.WITID.toNumber(),e.length)
+			console.log("+++= a update",r.args.witID.toNumber(),e.length)
 			return getStore();
 		}
 	}else{
 		//create new obj for the event store
+		console.log("ASDFthree: ")
+
 		let o = new StoreEntry();
 		o = fillDataProposalAccepted(o,r);
+		console.log("ASDFTWO: " + JSON.stringify(o))
 		e.push(o);
-		console.log("+++= a new",r.args.WITID.toNumber(),e.length)
+		console.log("+++= a new",r.args.witID.toNumber(),e.length)
 		return getStore();
 	}		
 }
@@ -332,14 +337,14 @@ function fillDataProposalAccepted(o,r){
 	o.aboveOwner = r.args.aboveOwner;
 
 	//add proposer and accepter
-	if(o.belowID.toNumber() === r.args.WITID.toNumber()){
+	if(o.belowID.toNumber() === r.args.witID.toNumber()){
 		o.accepter = o.aboveOwner;
 		o.accepterID = o.aboveID;
 		o.proposer = o.belowOwner
 		o.proposerID = o.belowID;
 		o.proposerIsAbove = false;
 	}
-	if(o.aboveID.toNumber() === r.args.WITID.toNumber()){
+	if(o.aboveID.toNumber() === r.args.witID.toNumber()){
 		o.accepter = o.belowOwner;
 		o.accepterID = o.belowID;
 		o.proposer = o.aboveOwner
@@ -352,7 +357,7 @@ function fillDataProposalAccepted(o,r){
 	o.end = r.args.end;
 	o.start = r.args.start;
 	o.location = r.args.location;
-	o.makeStale = r.args.makeStale;
+	o.rating = r.args.rating.toNumber();
 
 	o.weiAsking = r.args.weiAsking;
 	o.weiContributing = r.args.weiContributing;
@@ -371,7 +376,7 @@ addInfoFromEvaluationInvoked = function(r){
 	console.log("+++++++++++++++++++++",r)
 	invocationReceived = true;
 	//check for obj in eventStore
-	let idx = findInStore(r.args.WITID,r.args.WITID);
+	let idx = findInStore(r.args.witID,r.args.witID);
 	if(typeof idx === "number"){
 		if(e[idx].evaluated){
 			//duplicate event was fired
@@ -382,7 +387,7 @@ addInfoFromEvaluationInvoked = function(r){
 			//update store with new info
 			//pass by reference might be sufficient in this case
 			e[idx] = fillDataEvaluationInvoked(e[idx],r);
-			console.log("+++= se update",r.args.WITID.toNumber(),e.length)
+			console.log("+++= se update",r.args.witID.toNumber(),e.length)
 			return getStore();
 		}
 	}else{
@@ -390,7 +395,7 @@ addInfoFromEvaluationInvoked = function(r){
 		let o = new StoreEntry();
 		o = fillDataEvaluationInvoked(o,r);
 		e.push(o);
-		console.log("+++= se new",r.args.WITID.toNumber(),e.length)
+		console.log("+++= se new",r.args.witID.toNumber(),e.length)
 		return getStore();
 	}	
 }
@@ -418,7 +423,7 @@ addInfoFromProposalEvaluated = function(r){
 			//update store with new info
 			//pass by reference might be sufficient in this case
 			e[idx] = fillDataProposalEvaluated(e[idx],r);
-			console.log("+++= e update",r.args.WITID.toNumber(),e.length)
+			console.log("+++= e update",r.args.witID.toNumber(),e.length)
 			return getStore();
 		}
 	}else{
@@ -426,7 +431,7 @@ addInfoFromProposalEvaluated = function(r){
 		let o = new StoreEntry();
 		o = fillDataProposalEvaluated(o,r);
 		e.push(o);
-		console.log("+++= e new",r.args.WITID.toNumber(),e.length)
+		console.log("+++= e new",r.args.witID.toNumber(),e.length)
 		return getStore();
 	}		
 }
@@ -446,6 +451,7 @@ function fillDataProposalEvaluated(o,r){
 	o.weiPayout = r.args.weiPayout;
 
 	o.state.evaluated = true;
+	o.rating = r.args.rating.toNumber();
 	return o;
 }
 
@@ -494,7 +500,7 @@ function dateText(dObj){
 //TODO in this approach it reconstructs the list of openProposals and myProposal everytime there is a change
 // a less niave approach would be to only change the ones that are update by the event
 getStore = function(){
-	if(proposalReceived && acceptanceReceived && invocationReceived && evaluationReceived){
+	if(proposalReceived) { //} && acceptanceReceived && invocationReceived && evaluationReceived){
 		return buildStore();
 	} else {
 		return {openProposals:[],myProposals:[]};	

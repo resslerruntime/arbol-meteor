@@ -157,9 +157,9 @@ function initContracts(){
         // noaaAddress = "0x782c883f8034e9ee52eba6dcea57a87851fce738";
         // nasaAddress = "0x836886d868e84529f1d327531e7e2d35f8f04705"; 
         //Stable coing deployment, 12-06-2018
-        hadrianAddress = "0x92c8c65d6ac2513b8041742d9d34ac22b0a5a865";
-        nasaAddress = "0x5387aee08b03f62b4774bb49e87195c85c509814";
-        witAddress = "0xbbc1b8b1f5af6b541ad0a2ae111ce2bbd77a467c";
+        hadrianAddress = "0x10159b0bd6b60009be286753b153aaabd386a949";
+        nasaAddress = "0xec3819a25261535594fda1425c702dc8240a5c5c";
+        witAddress = "0xa6080a40c9e1149f943ca6a3543e361f8604d290";
         break
       case "42":
         $("#network-name").html("Kovan");
@@ -833,6 +833,7 @@ Template.formNewProtection.events({
       const startDate = `${sy}-${sm}`;
       const endDate = `${ey}-${em}`;
       const index = "Precipitation";
+      const rating = calcRating();
 
       //ask for confirmation
       const confirmed = confirm ( "Please confirm your selection: \n\n"
@@ -847,7 +848,7 @@ Template.formNewProtection.events({
       if (confirmed) {
         //submit info
         self = Template.instance();
-        createProposal(startDate,endDate,yourContr,requestedContrib,location,index,thresholdRelation,thresholdPercent,thresholdAverage,self);
+        createProposal(startDate,endDate,yourContr,requestedContrib,location,index,thresholdRelation,thresholdPercent,thresholdAverage,rating,self);
       } else {
         //let user continue to edit
       }
@@ -967,7 +968,7 @@ function resetCreateWIT(instance) {
 // batch.add(web3.eth.contract(abi).at(address).balance.request(address, callback2));
 // batch.execute();
 
-async function createProposal(startDate,endDate,yourContr,requestedContrib,location,index,thresholdRelation,thresholdPercent,thresholdAverage,self){
+async function createProposal(startDate,endDate,yourContr,requestedContrib,location,index,thresholdRelation,thresholdPercent,thresholdAverage,rating,self){
   console.log("fn: createProposal")
   const d1 = (new Date(startDate)).getTime()/1000; //convert to UNIX timestamp
   let dd2 = new Date(endDate);
@@ -980,12 +981,11 @@ async function createProposal(startDate,endDate,yourContr,requestedContrib,locat
   let above = threshVal(thresholdRelation);
   let numPPTH = threshValPPTH(thresholdPercent,thresholdAverage);
   let address = nasaAddress;
-  let makeStale = false; //TODO for deployment makeStale should be true in default
-  console.log("weiPropose, weiAsk, above, address, numPPTH, location, d1, d2, makeStale");
-  console.log(weiPropose, weiAsk, above, address, numPPTH, location, d1, d2, makeStale);
+  console.log("weiPropose, weiAsk, above, address, numPPTH, location, d1, d2, rating");
+  console.log(weiPropose, weiAsk, above, address, numPPTH, location, d1, d2, rating);
 
   var batch = web3.createBatch();
-  batch.add(witInstance.createWITProposal.request(weiPropose, weiAsk, above, address, numPPTH, location, d1, d2, makeStale, true, {from:Session.get("user")},function(){resetCreateWIT(self)}));
+  batch.add(witInstance.createWITProposal.request(weiPropose, weiAsk, above, address, numPPTH, location, d1, d2, parseInt(rating), {from:Session.get("user")},function(){resetCreateWIT(self)}));
   batch.add(hadrianInstance.approve.request(witInstance.address, weiPropose, {from: Session.get("user")}));
   batch.execute();
   
@@ -1103,7 +1103,7 @@ async function evaluateWIT(id){
   //evaluate WIT once its period h gas elapsed
   try {
     console.log("==> token ID", id, Session.get("user"));
-    await promisify(cb => witInstance.evaluate(id,"",{from: Session.get("user"), gas: 2000000},cb));
+    await promisify(cb => witInstance.evaluate(id,"",{from: Session.get("user"), gas: 6000000},cb));
   } catch (error) {
     console.log(error)
   }
@@ -1118,7 +1118,7 @@ Template.headerRow.events({
   },
   'click th': function(e,template){
     var t = e.target;
-    $(t).fadeIn(100).fadeOut(100).fadeIn(100); //.fadeOut(100).fadeIn(100);
+    $(t).fadeIn(100).fadeOut(100).fadeIn(100);
     //sort the json based on the header
     let array = [];
     let colIndex = 0;
@@ -1126,13 +1126,14 @@ Template.headerRow.events({
       let d = Session.get("descending");
       array = Session.get("openProtectionsData");
       //sort array based on the click header
-      if(t.innerText.indexOf("LOCATION") != -1) colIndex = 0;
-      if(t.innerText.indexOf("THRESHOLD") != -1) colIndex = 1;
-      if(t.innerText.indexOf("INDEX") != -1) colIndex = 2;
-      if(t.innerText.indexOf("START") != -1) colIndex = 3;
-      if(t.innerText.indexOf("END") != -1) colIndex = 4;
-      if(t.innerText.indexOf("TOTAL PAYOUT") != -1) colIndex = 5;
-      if(t.innerText.indexOf("PRICE") != -1) colIndex = 6;
+      if(t.innerText.indexOf("RATING") != -1) colIndex = 0;
+      if(t.innerText.indexOf("LOCATION") != -1) colIndex = 1;
+      if(t.innerText.indexOf("THRESHOLD") != -1) colIndex = 2;
+      if(t.innerText.indexOf("INDEX") != -1) colIndex = 3;
+      if(t.innerText.indexOf("START") != -1) colIndex = 4;
+      if(t.innerText.indexOf("END") != -1) colIndex = 5;
+      if(t.innerText.indexOf("TOTAL PAYOUT") != -1) colIndex = 6;
+      if(t.innerText.indexOf("PRICE") != -1) colIndex = 7;
       Session.set("sortIndex",colIndex);
       //set variable to new sorted array
       let list = sortArray(array,colIndex,d);
@@ -1257,7 +1258,8 @@ Template.openProtectionsTable.helpers({
       {
         type: "headerRow"
         ,column: [
-          {name:"Location"}
+          {name:"Rating"}
+          ,{name:"Location"}
           ,{name:"Threshold"}
           ,{name:"Index"}
           ,{name:"Start"}

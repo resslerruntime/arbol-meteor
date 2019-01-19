@@ -101,6 +101,20 @@
     },
     {
       "constant": true,
+      "inputs": [],
+      "name": "SYSTEM_FEE_WALLET",
+      "outputs": [
+        {
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": true,
       "inputs": [
         {
           "name": "tokenId",
@@ -156,6 +170,34 @@
       "type": "function"
     },
     {
+      "constant": true,
+      "inputs": [],
+      "name": "theOwner",
+      "outputs": [
+        {
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "arbolcoin",
+      "outputs": [
+        {
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
       "constant": false,
       "inputs": [
         {
@@ -184,7 +226,21 @@
     {
       "constant": true,
       "inputs": [],
-      "name": "the_owner",
+      "name": "SYSTEM_FEE_PPM",
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "stableERC20",
       "outputs": [
         {
           "name": "",
@@ -237,7 +293,7 @@
       "inputs": [
         {
           "indexed": true,
-          "name": "WITID",
+          "name": "witID",
           "type": "uint256"
         },
         {
@@ -297,13 +353,8 @@
         },
         {
           "indexed": false,
-          "name": "makeStale",
-          "type": "bool"
-        },
-        {
-          "indexed": false,
-          "name": "stakingStablecoin",
-          "type": "bool"
+          "name": "rating",
+          "type": "uint256"
         }
       ],
       "name": "ProposalAccepted",
@@ -314,7 +365,7 @@
       "inputs": [
         {
           "indexed": true,
-          "name": "WITID",
+          "name": "witID",
           "type": "uint256"
         },
         {
@@ -374,13 +425,8 @@
         },
         {
           "indexed": false,
-          "name": "makeStale",
-          "type": "bool"
-        },
-        {
-          "indexed": false,
-          "name": "stakingStablecoin",
-          "type": "bool"
+          "name": "rating",
+          "type": "uint256"
         }
       ],
       "name": "ProposalOffered",
@@ -391,7 +437,7 @@
       "inputs": [
         {
           "indexed": true,
-          "name": "WITID",
+          "name": "witID",
           "type": "uint256"
         },
         {
@@ -426,8 +472,8 @@
         },
         {
           "indexed": false,
-          "name": "stakingStablecoin",
-          "type": "bool"
+          "name": "rating",
+          "type": "uint256"
         }
       ],
       "name": "WITEvaluated",
@@ -438,7 +484,7 @@
       "inputs": [
         {
           "indexed": true,
-          "name": "WITID",
+          "name": "witID",
           "type": "uint256"
         },
         {
@@ -450,11 +496,6 @@
           "indexed": true,
           "name": "amountRedeemed",
           "type": "uint256"
-        },
-        {
-          "indexed": false,
-          "name": "stakingStablecoin",
-          "type": "bool"
         }
       ],
       "name": "WITCancelled",
@@ -487,7 +528,7 @@
       "inputs": [
         {
           "indexed": true,
-          "name": "WITID",
+          "name": "witID",
           "type": "uint256"
         },
         {
@@ -607,19 +648,11 @@
           "type": "address"
         },
         {
-          "name": "NOAAPrecipAggregate",
+          "name": "stableERC20Address",
           "type": "address"
         },
         {
-          "name": "NASA",
-          "type": "address"
-        },
-        {
-          "name": "_stableERC20",
-          "type": "address"
-        },
-        {
-          "name": "_testMode",
+          "name": "useTestMode",
           "type": "bool"
         }
       ],
@@ -665,12 +698,8 @@
           "type": "uint256"
         },
         {
-          "name": "makeStale",
-          "type": "bool"
-        },
-        {
-          "name": "stakingStablecoin",
-          "type": "bool"
+          "name": "rating",
+          "type": "uint256"
         }
       ],
       "name": "createWITProposal",
@@ -715,7 +744,7 @@
       "constant": false,
       "inputs": [
         {
-          "name": "WITID",
+          "name": "witID",
           "type": "uint256"
         },
         {
