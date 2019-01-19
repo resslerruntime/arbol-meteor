@@ -67,5 +67,10 @@ Meteor.startup(() => {
       console.log("reverse",url)
       return HTTP.call("GET",url);
     }
+    ,testIPFS: function(num){
+      let url = 'https://ipfs.io/ipfs/QmXhEGQvQE2DoLvu7mk9MYM771axyKsyzscU8ZL5Ef8a2m/-49.625/-69.875/01';
+      this.unblock();
+      return HTPP.call("GET",url);
+    }
   });
 });

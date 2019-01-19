@@ -637,6 +637,22 @@ Template.formNewProtection.events({
       console.log('failed to reverse geocode');
     });
 
+    //test IPFS
+    console.log("test ipfs 2")
+    let testURL = 'https://ipfs.io/ipfs/QmXhEGQvQE2DoLvu7mk9MYM771axyKsyzscU8ZL5Ef8a2m/-49.625/-69.875/01';
+
+    //TODO can we move this api call to server side?
+    $.ajax({
+      type: 'GET',
+      crossDomain: true,
+      dataType: 'jsonp',
+      url: testURL
+    }).done(function(data) {
+      console.log("ipfs2",data)
+    }).fail(function(){
+      console.log('failed to ipfs2');
+    });
+
   },
   'input #locname'(event){
     // this is a hidden input to hold a location region that is reverse geocoded from the map coordinate
