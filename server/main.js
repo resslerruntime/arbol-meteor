@@ -68,9 +68,11 @@ Meteor.startup(() => {
       return HTTP.call("GET",url);
     }
     ,testIPFS: function(num){
-      let url = 'https://ipfs.io/ipfs/QmXhEGQvQE2DoLvu7mk9MYM771axyKsyzscU8ZL5Ef8a2m/-49.625/-69.875/01';
+       //'https://ipfs.io/ipfs/QmXhEGQvQE2DoLvu7mk9MYM771axyKsyzscU8ZL5Ef8a2m/-49.625/-69.875/01';
+      let url = 'https://ipfs.io/ipfs/QmXhEGQvQE2DoLvu7mk9MYM771axyKsyzscU8ZL5Ef8a2m/-49.625/-70.125/01';
+      // let url = 'https://www.google.com'
       this.unblock();
-      return HTPP.call("GET",url);
+      return HTTP.call("GET",url);
     }
   });
 });

@@ -65,12 +65,10 @@ let checkStatus, statusArray = [];
 // Follow reasonable convention and take polygonArray with (lat, lon) ordering.
 callNASA = function (startDate,endDate,polygonArray){
 
-  Meteor.call("getDataRequestProgressNASA","_",function(error, results){
-    console.log("ipfs",results)
-    console.log("ipfs",error)
-    
-  });
-
+  // Meteor.call("testIPFS","_",function(error, results){
+  //   console.log("ipfs",results)
+  //   console.log("ipfs",error)
+  // });
 
   $("#error-msg").fadeOut(500);
   $("#error-msg2").fadeOut(500);

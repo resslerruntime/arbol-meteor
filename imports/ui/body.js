@@ -639,13 +639,13 @@ Template.formNewProtection.events({
 
     //test IPFS
     console.log("test ipfs 2")
-    let testURL = 'https://ipfs.io/ipfs/QmXhEGQvQE2DoLvu7mk9MYM771axyKsyzscU8ZL5Ef8a2m/-49.625/-69.875/01';
+    let testURL = 'https://ipfs.io/ipfs/QmXhEGQvQE2DoLvu7mk9MYM771axyKsyzscU8ZL5Ef8a2m/-49.625/-70.125/01';
 
     //TODO can we move this api call to server side?
     $.ajax({
       type: 'GET',
       crossDomain: true,
-      dataType: 'jsonp',
+      //dataType: 'jsonp',
       url: testURL
     }).done(function(data) {
       console.log("ipfs2",data)
