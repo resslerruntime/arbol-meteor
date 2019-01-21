@@ -60,17 +60,17 @@ Meteor.startup(() => {
       this.unblock();
       return HTTP.call("GET",url);
     }
-    //reverse geocoding
+    //reverse geocoding- doesn't work
     ,getLocationfromLatLon: function(lat,lng){
       let url = `https://services.gisgraphy.com/reversegeocoding/search?format=json&lat=${lat}&lng=${lng}`;
       this.unblock();
       console.log("reverse",url)
       return HTTP.call("GET",url);
     }
+    //get data hosted on ipfs- doesn't work
     ,testIPFS: function(num){
        //'https://ipfs.io/ipfs/QmXhEGQvQE2DoLvu7mk9MYM771axyKsyzscU8ZL5Ef8a2m/-49.625/-69.875/01';
       let url = 'https://ipfs.io/ipfs/QmXhEGQvQE2DoLvu7mk9MYM771axyKsyzscU8ZL5Ef8a2m/-49.625/-70.125/01';
-      // let url = 'https://www.google.com'
       this.unblock();
       return HTTP.call("GET",url);
     }
