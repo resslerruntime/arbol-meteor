@@ -688,9 +688,9 @@ Template.formNewProtection.events({
     self.createWITdata.set(selfdata); 
 
     //call NASA
-    if($(event.currentTarget).attr('id') == "date-end") prepareNasaCall();
-    //test
-    prepareIpfsCall();
+    //if($(event.currentTarget).attr('id') == "date-end") prepareNasaCall();
+    //call IPFS
+    if($(event.currentTarget).attr('id') == "date-end") prepareIpfsCall();
   },
   'input #your-contrib'(event){
     //don't allow your contribution to be higher than total contribution
