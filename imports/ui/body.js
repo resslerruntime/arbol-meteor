@@ -803,6 +803,11 @@ Template.formNewProtection.events({
     }
   },
   'submit .new-protection'(event) {
+    if ($("#createwit-next").is(":visible")) {
+      $("#createwit-next button").click();
+      return false;
+    }
+
     if (Session.get("user") === -1){
       alert("Please login to MetaMask to create a proposal.");
       return false;
