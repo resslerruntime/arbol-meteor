@@ -908,6 +908,12 @@ function resetCreateWIT(instance) {
   console.log("fn: resetCreateWIT")
   // reset the step to 1
   instance.createWITstep.set(1);
+  
+  // reset leaflet
+  resetLeaflet();
+  // reset selected location
+  $('#locname').val(null)
+
   // show the correct step
   $("#createwit .step.showing").removeClass('showing');
   $("#createwit .step").eq(0).addClass('showing');
